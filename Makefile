@@ -14,7 +14,7 @@ default:
 	@echo "  doc          create documentation"
 
 build:
-	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop  preuve_prop.native
+	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop  proof_prop.native
 
 test:
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test prop_test.native  && \
