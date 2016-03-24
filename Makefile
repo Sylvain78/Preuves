@@ -3,7 +3,8 @@
 default:
 	@echo "available targets:"
 	@echo "  build        compile prop"
-	@echo "  test         compile prop_tests, a test suite"
+	@echo "  test         compile and run prop_test, a test suite"
+	@echo "  test.debug   compile and run in debug mode prop_test, a test suite"
 	@echo "  coverage     compile prop_test with instrumented bisect_ppx coverage"
 	@echo "  cov_report   create a coverage report from the latest coverage run"
 	@echo "  clean        remove build directory"
