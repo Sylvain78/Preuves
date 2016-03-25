@@ -51,8 +51,12 @@ let coupure f p =
 
 let theoremes_prop = ref []
 
-exception Demonstration_invalide of pformule * pformule list
-
+exception Demonstration_invalide of pformule * pformule list;;
+Printexc.register_printer (function Demonstration_invalide(f,t) -> 
+        Some("Demonstration invalide : " ^ (to_string f) ^ "\n[[\n" ^
+                (List.fold_left  (fun acc f-> acc ^ (to_string f) ^ "\n") ""  t) ^ "\n]]\n") 
+                                        | _ -> None)
+;;
 let rec verif t = function
         | [] -> true
         | f_i:: p ->
@@ -65,7 +69,7 @@ let rec verif t = function
                 then verif t p
                 else raise (Demonstration_invalide (f_i,List.rev p))
 
-let verification_preuve ~hyp:hypotheses f ~proof: preuve =
+let proof_verification ~hyp:hypotheses f ~proof: preuve =
 	(* f est bien à la fin de la preuve *)
 	let is_fin_preuve f t =
 		let rev_t = List.rev t
@@ -82,18 +86,155 @@ let verification_preuve ~hyp:hypotheses f ~proof: preuve =
 		verif hypotheses (List.rev preuve)
 ;;
 
-theoremes_prop := {nom_axiome_prop="C8 Bourbaki"; axiome_prop=(x1=>.x1);}::!theoremes_prop;;
-theoremes_prop := {nom_axiome_prop="???"; axiome_prop=((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)));}::!theoremes_prop;;
-theoremes_prop := {nom_axiome_prop="contraposée"; axiome_prop=(((neg x1)=>.(neg x2))=>.(x2=>.x1));}::!theoremes_prop;;
-theoremes_prop := {nom_axiome_prop="S1 Bourbaki"; axiome_prop=((x1 ||.x1)=>.x1);}::!theoremes_prop;;
-theoremes_prop := {nom_axiome_prop="tiers-exclus"; axiome_prop=(x1 ||. neg x1);}::!theoremes_prop;;
+(* |- F=>F *)
+proof_verification ~hyp:[] (x1=>.x1) 
+~proof:[
+	(x1 =>.((x1 =>. x1)=>.x1)) =>.
+	(( x1 =>. (x1 =>. x1)) =>. (x1 =>. x1));
+	x1=>.((x1=>.x1)=>.x1);
+	(x1 =>. (x1 =>. x1)) =>. (x1 =>. x1);
+	x1=>.(x1=>.x1);
+	x1=>.x1
+];;
 
-(*TODO Decomment when proved *)
-(*let 
-        a,b,c=x1,x2,x3
-        in
-        let a_entraine_c = (a=>.c)
-        and b_entraine_c = (b=>.c) in
-theoremes_prop := {nom_axiome_prop="???????"; axiome_prop=(a_entraine_c=>.(a=>.b_entraine_c));}::!theoremes_prop;;
-*)	
+theoremes_prop := {nom_axiome_prop="C8 Bourbaki"; axiome_prop=(x1=>.x1);}::!theoremes_prop;;
+
+(* |- (F=>.G)=>.(G=>.H)=>.(F=>.H)*)
+proof_verification ~hyp:[] ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))
+~proof:[
+	(x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3));
+	((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3)))=>.((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))));
+	((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))));
+	((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))=>.(((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))));
+	(((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))));
+	((x2=>.x3)=>. (x1=>.(x2=>.x3)));
+	((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)));
+	((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)))=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)));
+	(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)));
+	(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))=>.((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))));	
+	((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))));
+                        
+	(*k*)
+	((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)));
+	
+	(*s*)
+	((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))) =>.
+	(((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3))));
+	
+	((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)));
+	((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))
+];;
+theoremes_prop := {nom_axiome_prop="???"; axiome_prop=((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)));}::!theoremes_prop;;
+
+(*non A =>. non B |- B =>. A*)
+let h = ((neg (neg x2))=>.(neg (neg x1)))	
+and a_ou_b =((neg (neg x1))=>. x1)
+and i = ((neg (neg x2))=>. x1)	
+and a2=	(x2=>.neg (neg x2))
+in
+proof_verification ~hyp:[] (((neg x1)=>.(neg x2))=>.(x2=>.x1))
+~proof:[
+
+a_ou_b;
+a_ou_b=>.(h=>.a_ou_b);
+h=>.a_ou_b;
+h =>.(a_ou_b=>.i);
+(h =>.(a_ou_b=>.i))=>.((h=>.a_ou_b)=>.(h=>.i));
+((h=>.a_ou_b)=>.(h=>.i));
+h=>.i;
+a2;
+a2=>.(h=>.a2);
+h=>.a2;
+a2=>.(i=>.(x2=>.x1));
+(a2=>.(i=>.(x2=>.x1)))=>. (h=>.(a2=>.(i=>.(x2=>.x1))));
+(h=>.(a2=>.(i=>.(x2=>.x1))));
+(h=>.(a2=>.(i=>.(x2=>.x1)))) =>. ((h=>.a2)=>.(h=>.(i=>.(x2=>.x1))));
+(h=>.a2)=>.(h=>.(i=>.(x2=>.x1)));
+h=>.(i=>.(x2=>.x1));
+(h=>.(i=>.(x2=>.x1)))=>.((h=>.i)=>.(h=>.(x2=>.x1)));
+(h=>.i)=>.(h=>.(x2=>.x1));
+h=>.(x2=>.x1);
+(((neg x1)=>.(neg x2))=>. h);
+(((neg x1)=>.(neg x2))=>. h)=>.((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)));
+((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)));
+(((neg x1)=>.(neg x2))=>.(x2=>.x1));
+];;
+theoremes_prop := {nom_axiome_prop="contraposée"; axiome_prop=(((neg x1)=>.(neg x2))=>.(x2=>.x1));}::!theoremes_prop;;
+
+(* |- F ou F =>. F *)
+proof_verification ~hyp:[] ((x1 ||. x1)=>.x1)
+~proof:[
+((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1));
+((neg x1)=>. ((x1 ||. x1) =>. x1));
+((neg x1)=>. ((x1 ||. x1) =>. x1))=>.((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))));
+((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))));
+((neg x1)=>.((neg x1) =>. neg (x1||.x1)));
+((neg x1)=>.((neg x1) =>. neg (x1||.x1)))=>. (((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))));
+((neg x1) =>. (neg x1));
+(((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))));
+((neg x1)=>.(neg (x1||.x1)));
+((neg x1)=>.(neg (x1||.x1)))=>. ((x1||.x1) =>.x1);
+(x1||.x1) =>. x1;
+];;
+theoremes_prop := {nom_axiome_prop="S1 Bourbaki"; axiome_prop=((x1 ||.x1)=>.x1);}::!theoremes_prop;;
+
+(*|- A ou neg A*)
+let z = x1 ||. neg x1
+and tout = neg (x1=>.x1)
+in
+proof_verification ~hyp:[] (z)
+~proof:[
+
+(x1=>.x1);(**)
+(x1=>.x1) =>. (neg tout); (**)
+neg tout;(*OK*)
+ 
+(neg z)=>.(neg z);(*OK*)
+
+x1=>.z;(**)
+(x1=>.z)=>.((neg z) =>. (x1=>.z));(**)
+(neg z)=>.(x1=>.(z));(*OK*)
+
+((x1=>.z)=>.((neg z)=>.(neg x1))); (**)
+((x1=>.z)=>.((neg z)=>.(neg x1))) =>. ((neg z)=>. ((x1=>.z)=>.((neg z)=>.(neg x1)))); (**)
+(neg z)=>.((x1=>.z)=>.((neg z)=>.(neg x1))); (*OK*)
+
+(x1=>.z)=>.((neg z) =>. neg x1);(**)
+((neg z) =>. neg x1);(**)
+((neg z) =>. neg x1)=>. ((neg z)=>.((neg z) =>. neg x1));(**)
+(neg z)=>.((neg z)=>.(neg x1));(*OK*)
+
+((neg z)=>.((neg z)=>.(neg x1)))=>.(((neg z)=>.(neg z))=>.((neg z)=>.(neg x1)));(**)
+((neg z)=>.(neg z))=>.((neg z)=>.(neg x1));(**)
+(neg z)=>.(neg x1);(*OK*)
+
+(neg x1)=>. z;(**)
+((neg x1)=>. z)=>. ((neg z)=>.((neg x1)=>. z));(**)
+(neg z)=>.((neg x1)=>.(z));(*OK*)
+((neg z)=>.((neg x1)=>.(z)))=>.(((neg z)=>. (neg x1))=>. ((neg z)=>. z));(**)
+((neg z)=>. (neg x1))=>. ((neg z)=>. z);(**)
+(neg z)=>.(z);(*OK*)
+
+(neg z)=>.((neg tout)=>.(neg z));(*OK*)
+
+((neg tout)=>.(neg z))=>.((z)=>.(tout));(**)
+(((neg tout)=>.(neg z))=>.((z)=>.(tout)))=>.
+((neg z)=>. (((neg tout)=>.(neg z))=>.((z)=>.(tout))));(**)
+
+(neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout)));(*OK*)
+((neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout))))=>.
+(((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)));(**)
+(((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)));(**)
+(neg z)=>.((z)=>.(tout));(*OK*)
+((neg z)=>.((z)=>.(tout)))=>.
+(((neg z)=>.z) =>. ((neg z) =>. tout));(**)
+(((neg z)=>.z) =>. ((neg z) =>. tout));(**)
+(neg z)=>.(tout);(*OK*)
+((neg z)=>.(tout))=>.((neg tout)=>.(neg(neg z)));(*OK*)
+(neg tout)=>.(neg(neg z));(*OK*)
+(neg(neg z))=>.(z);(*OK*)
+neg(neg z);(*OK*)
+z
+];;
+theoremes_prop := {nom_axiome_prop="tiers-exclus"; axiome_prop=(x1 ||. neg x1);}::!theoremes_prop;;
 

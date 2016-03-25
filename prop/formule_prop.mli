@@ -12,3 +12,4 @@ val (||.) : pformule -> pformule -> pformule;;
 val neg  : pformule -> pformule;;
 
 val printer_pformule : Format.formatter -> pformule -> unit
+val to_string : pformule -> string

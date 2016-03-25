@@ -29,7 +29,7 @@ let printer_pformule ff f =
 		in
 		function
 		| PVar i -> Format.fprintf ff "P%d" i
-		| PNeg g -> Format.fprintf ff "¬"; printer_pformule_aux ff "neg" g;
+		| PNeg g -> Format.fprintf ff "!"; printer_pformule_aux ff "neg" g;
 		| PAnd(f, g) ->
 				if (seq = "and" ||  seq ="init")
 				then
@@ -48,5 +48,38 @@ let printer_pformule ff f =
 				else
 					print_par (fun () -> print_bin "impl" "=>" f g);
 	in
-	printer_pformule_aux ff "init" f;;
+	printer_pformule_aux ff "init" f
+
+(**
+String conversion
+*)
+let to_string f =
+	let rec to_string_bin seq op f g =
+		(to_string_aux seq f) ^ " " ^ op ^ " " ^ (to_string_aux  seq g)
+	and to_string_aux seq =
+		let to_string_par f =
+			  "(" ^ f ^ ")"
+		in
+		function
+		| PVar i ->  "P" ^ (string_of_int i)
+		| PNeg g ->  "!" ^ (to_string_aux  "neg" g);
+		| PAnd(f, g) ->
+				if (seq = "and" ||  seq ="init")
+				then
+					to_string_bin "and" "/\\" f g
+				else
+					to_string_par (to_string_bin "and" "/\\" f g)
+		| POr(f, g) ->
+				if (seq = "or" || seq ="init")
+				then
+					to_string_bin "or" "\\/" f g
+				else
+					to_string_par (to_string_bin "or" "\\/" f g)
+		| PImpl(f, g) -> if (seq ="init")
+				then
+					to_string_bin "impl" "=>" f g
+				else
+					to_string_par (to_string_bin "impl" "=>" f g);
+	in
+	to_string_aux  "init" f;;
 
