@@ -1,4 +1,3 @@
 --Translate in English
---Solve the diamond demonstration
---Move back the demonstrations in axiomes, for soundness inforcement
 --Understand why bisect-report doesn't show the test_instance in green
+--Add a Readme

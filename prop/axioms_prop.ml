@@ -1,10 +1,10 @@
 open Util
-open Formule_prop
+open Formula_prop
 
-type axiome_prop =
+type axiom_prop =
 	{
-	 nom_axiome_prop : string;
-	 axiome_prop : pformule;
+	 name_axiom_prop : string;
+	 axiom_prop : formula_prop;
 	}
 
 let x1 = PVar (new_var())
@@ -26,49 +26,49 @@ let a9 = x1 =>. (x1 ||. x2);;
 let a10 = x2 =>. (x1 ||. x2);;
 let a11 = (neg x1) =>. ((x1 ||. x2) =>. x2);;
 
-let axiomes_prop = [
+let axioms_prop = [
 	{
-	 nom_axiome_prop="A1";
-	 axiome_prop=a1;
+	 name_axiom_prop="A1";
+	 axiom_prop=a1;
 	};
 	{
-	 nom_axiome_prop="A2";
-	 axiome_prop=a2;
+	 name_axiom_prop="A2";
+	 axiom_prop=a2;
 	};
 	{
-	 nom_axiome_prop="A3";
-	 axiome_prop=a3;
+	 name_axiom_prop="A3";
+	 axiom_prop=a3;
 	};
 	{
-	 nom_axiome_prop="A4";
-	 axiome_prop=a4;
+	 name_axiom_prop="A4";
+	 axiom_prop=a4;
 	};
 	{
-	 nom_axiome_prop="A5";
-	 axiome_prop=a5;
+	 name_axiom_prop="A5";
+	 axiom_prop=a5;
 	};
 	{
-	 nom_axiome_prop="A6";
-	 axiome_prop=a6;
+	 name_axiom_prop="A6";
+	 axiom_prop=a6;
 	};
 	{
-	 nom_axiome_prop="A7";
-	 axiome_prop=a7;
+	 name_axiom_prop="A7";
+	 axiom_prop=a7;
 	};
 	{
-	 nom_axiome_prop="A8";
-	 axiome_prop=a8;
+	 name_axiom_prop="A8";
+	 axiom_prop=a8;
 	};
 	{
-	 nom_axiome_prop="A9";
-	 axiome_prop=a9;
+	 name_axiom_prop="A9";
+	 axiom_prop=a9;
 	};
 	{
-	 nom_axiome_prop="A10";
-	 axiome_prop=a10;
+	 name_axiom_prop="A10";
+	 axiom_prop=a10;
 	};
 	{
-	 nom_axiome_prop="A11";
-	 axiome_prop=a11;
+	 name_axiom_prop="A11";
+	 axiom_prop=a11;
 	};
 	];;

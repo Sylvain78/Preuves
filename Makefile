@@ -2,7 +2,7 @@
 
 default:
 	@echo "available targets:"
-	@echo "  build        compile prop"
+	@echo "  build        compile prop and first_order"
 	@echo "  test         compile and run prop_test, a test suite"
 	@echo "  test.debug   compile and run in debug mode prop_test, a test suite"
 	@echo "  coverage     compile prop_test with instrumented bisect_ppx coverage"
@@ -14,7 +14,8 @@ default:
 	@echo "  doc          create documentation"
 
 build:
-	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop  proof_prop.native
+	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop proof_prop.native
+	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop -I first_order theory.native
 
 test:
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test prop_test.native  && \

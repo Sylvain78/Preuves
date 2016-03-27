@@ -1,11 +1,11 @@
 (*open Prop_parser*)
 
-type pformule =
+type formula_prop =
 	| PVar of int
-	| PNeg of pformule
-	| PAnd of pformule * pformule
-	| POr of pformule * pformule
-	| PImpl of pformule * pformule
+	| PNeg of formula_prop
+	| PAnd of formula_prop * formula_prop
+	| POr of formula_prop * formula_prop
+	| PImpl of formula_prop * formula_prop
 ;;
 
 let (=>.) f g = PImpl(f, g);;
@@ -14,14 +14,14 @@ let (||.) f g = POr(f, g);;
 let neg f = PNeg f;;
 
 (**
-Formateurs d'affichage
+Print formatters
 *)
-let printer_pformule ff f =
+let printer_formula_prop ff f =
 	let rec print_bin seq op f g =
-		printer_pformule_aux ff seq f;
+		printer_formula_prop_aux ff seq f;
 		Format.fprintf ff "%s" (" "^op^" ");
-		printer_pformule_aux ff seq g;
-	and printer_pformule_aux ff seq =
+		printer_formula_prop_aux ff seq g;
+	and printer_formula_prop_aux ff seq =
 		let	print_par f =
 			Format.fprintf ff "(";
 			f();
@@ -29,7 +29,7 @@ let printer_pformule ff f =
 		in
 		function
 		| PVar i -> Format.fprintf ff "P%d" i
-		| PNeg g -> Format.fprintf ff "!"; printer_pformule_aux ff "neg" g;
+		| PNeg g -> Format.fprintf ff "!"; printer_formula_prop_aux ff "neg" g;
 		| PAnd(f, g) ->
 				if (seq = "and" ||  seq ="init")
 				then
@@ -48,7 +48,7 @@ let printer_pformule ff f =
 				else
 					print_par (fun () -> print_bin "impl" "=>" f g);
 	in
-	printer_pformule_aux ff "init" f
+	printer_formula_prop_aux ff "init" f
 
 (**
 String conversion

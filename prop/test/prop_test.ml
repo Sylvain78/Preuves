@@ -1,6 +1,6 @@
 open OUnit2
-open Formule_prop
-open Axiomes_prop
+open Formula_prop
+open Axioms_prop
 open Proof_prop
 
 (* |- F=>.F *)
@@ -15,7 +15,7 @@ let verif_tauto = (proof_verification ~hyp:[] (x1=>.x1)
 ]);;
 
 (* |- (F=>.G)=>.(G=>.H)=>.(F=>.H)*)
-let verif_coupure = (proof_verification ~hyp:[] ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))
+let verif_cut = (proof_verification ~hyp:[] ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))
 ~proof:[
 	(x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3));
 	((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3)))=>.((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))));
@@ -576,7 +576,7 @@ c=>.(b_entraine_c=>.c);*)
 *)
 
 let test_tauto test_ctxt = assert_bool "tauto"  (verif_tauto)
-let test_coupure test_ctxt = assert_bool "coupure"  (verif_coupure)
+let test_cut test_ctxt = assert_bool "cut"  (verif_cut)
 let test_contraposee test_ctxt = assert_bool "contraposee"  (verif_contraposee)
 let test_tiers_exclus test_ctxt = assert_bool "tiers exclus"  (verif_tiers_exclus)
 let test_rajout_hypothese test_ctxt = assert_bool "rajout hypothese"  (verif_rajout_hypothese)
@@ -594,7 +594,7 @@ let instance_suite =
 let prop_suite =
         "Prop">:::
                 [ "test_tauto" >:: test_tauto ;
-                  "test_coupure" >:: test_coupure ; 
+                  "test_cut" >:: test_cut ; 
                   "test_contraposee" >:: test_contraposee ; 
                   "test_tiers_exclus" >:: test_tiers_exclus ; 
                   "test_rajout_hypothese" >:: test_rajout_hypothese ; 

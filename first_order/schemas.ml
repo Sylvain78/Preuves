@@ -1,10 +1,10 @@
 open Signature
-open Formule
+open Formula
 
 module Schema  (Sig:SIGNATURE) =
   struct
-    module Schema_Formule = Formule(Sig)
-    open Schema_Formule
+    module Schema_Formula = Formula(Sig)
+    open Schema_Formula
 
     type schema = {
       nom : string;
@@ -12,7 +12,7 @@ module Schema  (Sig:SIGNATURE) =
       groupe_variables_neutres : var;
       variable_schematique : Sig.symbole;
       variables_libres_utilisees_predicat : var list;
-      formule : formule;
+      formula : formula;
 
     }
    
@@ -20,49 +20,49 @@ module Schema  (Sig:SIGNATURE) =
 
     let apply_schema ~schema ~predicat =
       let verification_variables_reservees p =
-        let vars_of_p = variables_libres_formule p
+        let vars_of_p = free_variables_of_formula p
         in
         List.iter (fun v -> if (SetVar.mem v vars_of_p) 
                             then raise (Variable_reservee v)) 
                   schema.variables_reservees
       in
-      let rec apply_schema_formule schema_formule predicat =
+      let rec apply_schema_formula schema_formula predicat =
         verification_variables_reservees predicat;    
-      match schema_formule  with
-        | Neg s -> Neg (apply_schema_formule s predicat)
-        | Or(s,t) -> Or(apply_schema_formule s predicat, apply_schema_formule t predicat)
-        | And(s,t) -> And(apply_schema_formule s predicat, apply_schema_formule t predicat)
-        | Imply(s,t) -> Imply(apply_schema_formule s predicat, apply_schema_formule t predicat)
-        | Formule_atomique(Eq(_,_)) -> schema_formule
+      match schema_formula  with
+        | Neg s -> Neg (apply_schema_formula s predicat)
+        | Or(s,t) -> Or(apply_schema_formula s predicat, apply_schema_formula t predicat)
+        | And(s,t) -> And(apply_schema_formula s predicat, apply_schema_formula t predicat)
+        | Imply(s,t) -> Imply(apply_schema_formula s predicat, apply_schema_formula t predicat)
+        | Formula_atomique(Eq(_,_)) -> schema_formula
         (* Cas spéciaux *)
-        | Formule_atomique(Relation(r,args)) ->
+        | Formula_atomique(Relation(r,args)) ->
                         let args' = List.filter (fun v -> v <> (V schema.groupe_variables_neutres)) args
                         in
                         if (r = schema.variable_schematique)
                         then substitution_simultanee schema.variables_libres_utilisees_predicat args' predicat
-                        else schema_formule
+                        else schema_formula
         | Exists(v,s) -> if (v = schema.groupe_variables_neutres) 
                          then 
-                           let s' = apply_schema_formule s predicat
+                           let s' = apply_schema_formula s predicat
                            and variables_neutres =  
                                  List.filter (function v -> not (List.mem v schema.variables_libres_utilisees_predicat))
-                                             (SetVar.elements (variables_libres_formule predicat))
+                                             (SetVar.elements (free_variables_of_formula predicat))
                            in
                            List.fold_right ( fun v f -> Exists(v,f)) variables_neutres s'      
                          else 
-                           Exists(v,apply_schema_formule s predicat)       
+                           Exists(v,apply_schema_formula s predicat)       
         | Forall(v,s) -> if (v = schema.groupe_variables_neutres) 
                          then 
-                           let s' = apply_schema_formule s predicat
+                           let s' = apply_schema_formula s predicat
                            and variables_neutres =  
                                  List.filter (function v -> not (List.mem v schema.variables_libres_utilisees_predicat))
-                                             (SetVar.elements (variables_libres_formule predicat))
+                                             (SetVar.elements (free_variables_of_formula predicat))
                            in
                            List.fold_right ( fun v f -> Forall(v,f)) variables_neutres s'      
                          else 
-                           Forall(v,apply_schema_formule s predicat)        
+                           Forall(v,apply_schema_formula s predicat)        
       in
-      apply_schema_formule schema.formule predicat
+      apply_schema_formula schema.formula predicat
    
     type quantif = 
     | Univ 
@@ -75,9 +75,9 @@ module Schema  (Sig:SIGNATURE) =
            consomme_variables_neutres q ~liste_var_util:l p'
         | _ -> p 
      
-    exception Instance of (formule * formule)  
-    exception Missing_var_groupe_var_neutres of formule
-    exception Parametres_metapredicat of formule
+    exception Instance of (formula * formula)  
+    exception Missing_var_groupe_var_neutres of formula
+    exception Parametres_metapredicat of formula
     (* Les méta prédicats sont seulements appliqués à des variables ou des
      * constantes ; si besoin de les appliquer à des opérations, le faire de la
      * manière suivante :
@@ -89,7 +89,7 @@ module Schema  (Sig:SIGNATURE) =
     let is_instance ~schema ~predicat =
       let rec candidat = ref None
       in
-      let rec (find_metapredicat : formule -> formule -> unit)  = fun s p ->
+      let rec (find_metapredicat : formula -> formula -> unit)  = fun s p ->
           let update_candidat s args p =
             let normalize_args args =
               (*Supprime la variable groupe_variables_neutres qui doit
@@ -127,14 +127,14 @@ module Schema  (Sig:SIGNATURE) =
                  candidat := Some (substitution_simultanee lv lt s)
           in
           match s, p with
-          | Formule_atomique (Eq(_,_)), Formule_atomique (Eq(_,_)) -> 
+          | Formula_atomique (Eq(_,_)), Formula_atomique (Eq(_,_)) -> 
               if (s=p) 
               then ()
               else raise (Instance (s,p))
-          | Formule_atomique(Relation(rs,args_s)), _ when rs = schema.variable_schematique ->
+          | Formula_atomique(Relation(rs,args_s)), _ when rs = schema.variable_schematique ->
              (* Instanciation de la variable schématique*)        
                           update_candidat s args_s p;
-          | Formule_atomique(Relation(rs,args_s)), Formule_atomique(Relation(rp,args_p)) when rs <> schema.variable_schematique ->
+          | Formula_atomique(Relation(rs,args_s)), Formula_atomique(Relation(rp,args_p)) when rs <> schema.variable_schematique ->
              if Pervasives.(||) (rs <> rp) (List.exists2 (<>)  args_s args_p)
              then raise  (Instance (s,p))
           | Neg s', Neg p' -> find_metapredicat s' p'
@@ -157,7 +157,7 @@ module Schema  (Sig:SIGNATURE) =
                    find_metapredicat s' p''
           | _ -> raise (Instance(s,predicat))
       in
-      let s = schema.formule
+      let s = schema.formula
       in
       find_metapredicat s predicat; (*Mise à jour du candidat*)
       match !candidat with 

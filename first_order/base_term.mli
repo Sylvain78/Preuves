@@ -1,4 +1,4 @@
-module type TERME =
+module type TERM =
   functor (Sig : Signature.SIGNATURE) ->
     sig
       type var = Var of int | Metavar of string
@@ -33,31 +33,31 @@ module type TERME =
           val find : elt -> t -> elt
           val of_list : elt list -> t
         end
-      type terme
-      val printers_constantes :
+      type term
+      val printers_constants :
         (Sig.symbole, Format.formatter -> unit) Hashtbl.t
       val printers_operations :
-        (Sig.symbole, Format.formatter -> terme -> unit) Hashtbl.t
+        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
       val printers_relations :
-        (Sig.symbole, Format.formatter -> terme -> unit) Hashtbl.t
-      val variables_terme : terme -> SetVar.t
-      val substitution_simultanee_terme : var list -> terme list -> terme -> terme
-      val print_terme : Format.formatter -> terme -> unit
+        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
+      val variables_term : term -> SetVar.t
+      val simultaneous_substitution_term : var list -> term list -> term -> term
+      val print_term : Format.formatter -> term -> unit
     end
-module Terme :
+module Term :
   functor (Sig : Signature.SIGNATURE) ->
     sig
       type var = Var of int | Metavar of string
-      type terme =
+      type term =
           V of var
-        | Constante of Sig.symbole
-        | Operation of Sig.symbole * terme list
-      val printers_constantes :
+        | Constant of Sig.symbole
+        | Operation of Sig.symbole * term list
+      val printers_constants :
         (Sig.symbole, Format.formatter -> unit) Hashtbl.t
       val printers_operations :
-        (Sig.symbole, Format.formatter -> terme -> unit) Hashtbl.t
+        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
       val printers_relations :
-        (Sig.symbole, Format.formatter -> terme -> unit) Hashtbl.t
+        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
       val compare_var : var -> var -> int
       module SetVar :
         sig
@@ -90,10 +90,10 @@ module Terme :
           val find : elt -> t -> elt
           val of_list : elt list -> t
         end
-      val variables_terme : terme -> SetVar.t
-      val substitution_simultanee_terme : var list -> terme list -> terme -> terme
-      type substitution = terme -> terme
-      val unifier_terme : terme -> terme -> substitution
-      val unifier_liste_terme : (terme * terme) list -> substitution
-      val print_terme : Format.formatter -> terme -> unit
+      val variables_term : term -> SetVar.t
+      val substitution_simultanee_term : var list -> term list -> term -> term
+      type substitution = term -> term
+      val unifier_term : term -> term -> substitution
+      val unifier_liste_term : (term * term) list -> substitution
+      val print_term : Format.formatter -> term -> unit
     end
