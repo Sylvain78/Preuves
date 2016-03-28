@@ -587,10 +587,22 @@ let x1,x2 = PVar 1, PVar 2
 
 let test_instance test_ctxt = assert_bool "instance" (instance (x1 &&. x2) (x1 &&. x2))
 
+let test_printer_formula_pvar test_ctxt = printer_formula_prop Format.str_formatter (x1);
+let s = Format.flush_str_formatter()
+in assert_equal s "P1"
+                                                
+
+
 let instance_suite =
         "Instance">:::
                 [ "test_instance">::test_instance ;
                 ]
+
+let printer_formula_suite =
+        "printer_formula" >:::
+                [ "test printer_formula PVar">:: test_printer_formula_pvar;
+                ]
+
 let prop_suite =
         "Prop">:::
                 [ "test_tauto" >:: test_tauto ;
@@ -605,6 +617,7 @@ let prop_suite =
 
 let () =
         run_test_tt_main instance_suite;
+        run_test_tt_main printer_formula_suite;
         run_test_tt_main prop_suite
 ;;
 
