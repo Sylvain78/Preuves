@@ -2,7 +2,7 @@
 
 default:
 	@echo "available targets:"
-	@echo "  build        compile prop and first_order"
+	@echo "  build        compile prop, first_order, and Ensembles"
 	@echo "  test         compile and run prop_test, a test suite"
 	@echo "  test.debug   compile and run in debug mode prop_test, a test suite"
 	@echo "  coverage     compile prop_test with instrumented bisect_ppx coverage"
@@ -16,6 +16,7 @@ default:
 build:
 	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop proof_prop.native
 	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop -I first_order theory.native
+	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop -I first_order -I Ensembles ensembles.native
 
 test:
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test prop_test.native  && \
@@ -30,7 +31,8 @@ test.debug:
 	ocamldebug -I _build/prop -I _build/prop/test -I _build/util  ./prop_test
 
 coverage:
-	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx.fast -cflag -safe-string -I util -I prop -I prop/test prop_test.native
+	rm -f bisect*.out
+	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx.fast -cflag -safe-string -I util -I prop -I prop/test  prop_test.native
 	rm prop_test.native
 	mv _build/prop/test/prop_test.native prop_test_coverage
 	prop_test_coverage
@@ -71,4 +73,4 @@ doc:
 
 cov_report: 
 	cd _build && \
-	bisect-ppx-report -html ../report_dir ../$(shell ls -t bisect*.out | head -1)
+	bisect-ppx-report -html ../report_dir ../bisect*.out
