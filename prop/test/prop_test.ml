@@ -583,7 +583,7 @@ let test_rajout_hypothese test_ctxt = assert_bool "rajout hypothese"  (verif_raj
 let test_ou_idempotent test_ctxt = assert_bool "ou idempotent" (verif_ou_idempotent)
 (*let test_ou_diamant test_ctxt = assert_bool "ou diamant" (verif_ou_diamant)*)
 
-let x1,x2 = PVar 1, PVar 2
+let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 
 let test_instance test_ctxt = assert_bool "instance" (instance (x1 &&. x2) (x1 &&. x2))
 
@@ -591,7 +591,22 @@ let test_printer_formula_pvar test_ctxt = printer_formula_prop Format.str_format
 let s = Format.flush_str_formatter()
 in assert_equal s "P1"
                                                 
+let test_printer_formula_pneg test_ctxt = printer_formula_prop Format.str_formatter (neg x1);
+let s = Format.flush_str_formatter()
+in assert_equal s "!P1"
 
+let test_printer_formula_pand test_ctxt = printer_formula_prop Format.str_formatter (x1 &&. x2);
+let s = Format.flush_str_formatter()
+in assert_equal s "P1 /\\ P2"
+
+
+let test_printer_formula_por test_ctxt = printer_formula_prop Format.str_formatter (x1 ||. x2);
+let s = Format.flush_str_formatter()
+in assert_equal s "P1 \\/ P2"
+
+let test_printer_formula_pand_por test_ctxt = printer_formula_prop Format.str_formatter ((x1 &&. x2) ||. x3);
+let s = Format.flush_str_formatter()
+in assert_equal s "(P1 /\\ P2) \\/ P3"
 
 let instance_suite =
         "Instance">:::
@@ -601,6 +616,10 @@ let instance_suite =
 let printer_formula_suite =
         "printer_formula" >:::
                 [ "test printer_formula PVar">:: test_printer_formula_pvar;
+                  "test printer_formula PNeg">:: test_printer_formula_pneg;
+                  "test printer_formula PAnd">:: test_printer_formula_pand;
+                  "test printer_formula POr">:: test_printer_formula_por;
+                   "test_printer_formula_pand_por">:: test_printer_formula_pand_por;
                 ]
 
 let prop_suite =
