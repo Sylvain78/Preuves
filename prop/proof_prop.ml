@@ -53,8 +53,8 @@ let theorems_prop = ref []
 
 exception Invalid_demonstration of formula_prop * formula_prop list;;
 Printexc.register_printer (function Invalid_demonstration(f,t) -> 
-        Some("Invalid demonstration: " ^ (to_string f) ^ "\n[[\n" ^
-                (List.fold_left  (fun acc f-> acc ^ (to_string f) ^ "\n") ""  t) ^ "\n]]\n") 
+        Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
+                (List.fold_left  (fun acc f-> acc ^ (to_string_formula_prop f) ^ "\n") ""  t) ^ "\n]]\n") 
                                         | _ -> None)
 ;;
 let rec verif t = function

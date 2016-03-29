@@ -587,6 +587,40 @@ let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 
 let test_instance test_ctxt = assert_bool "instance" (instance (x1 &&. x2) (x1 &&. x2))
 
+(** Tests for to_string *)
+let test_to_string_formula_pvar test_ctxt =
+let s = to_string_formula_prop  (x1)
+in assert_equal s "P1"
+                                                
+let test_to_string_formula_pneg test_ctxt =
+let s = to_string_formula_prop  (neg x1)
+in assert_equal s "!P1"
+
+let test_to_string_formula_pand test_ctxt =
+let s =  to_string_formula_prop  (x1 &&. x2)
+in assert_equal s "P1 /\\ P2"
+
+let test_to_string_formula_por test_ctxt = 
+let s = to_string_formula_prop  (x1 ||. x2)
+in assert_equal s "P1 \\/ P2"
+
+let test_to_string_formula_pand_por test_ctxt = 
+let s = to_string_formula_prop  ((x1 &&. x2) ||. x3)
+in assert_equal s "(P1 /\\ P2) \\/ P3"
+
+let test_to_string_formula_por_pand test_ctxt = 
+let s = to_string_formula_prop  ((x1 ||. x2) &&. x3)
+in assert_equal s "(P1 \\/ P2) /\\ P3"
+
+let test_to_string_formula_impl test_ctxt = 
+let s = to_string_formula_prop  (x1 =>. x2)
+in assert_equal s "P1 => P2"
+
+let test_to_string_formula_and_impl test_ctxt = 
+let s = to_string_formula_prop  (x3 &&. (x1 =>. x2))
+in assert_equal s "P3 /\\ (P1 => P2)"
+
+(* Tests for printer_formula *)
 let test_printer_formula_pvar test_ctxt = printer_formula_prop Format.str_formatter (x1);
 let s = Format.flush_str_formatter()
 in assert_equal s "P1"
@@ -599,7 +633,6 @@ let test_printer_formula_pand test_ctxt = printer_formula_prop Format.str_format
 let s = Format.flush_str_formatter()
 in assert_equal s "P1 /\\ P2"
 
-
 let test_printer_formula_por test_ctxt = printer_formula_prop Format.str_formatter (x1 ||. x2);
 let s = Format.flush_str_formatter()
 in assert_equal s "P1 \\/ P2"
@@ -607,6 +640,18 @@ in assert_equal s "P1 \\/ P2"
 let test_printer_formula_pand_por test_ctxt = printer_formula_prop Format.str_formatter ((x1 &&. x2) ||. x3);
 let s = Format.flush_str_formatter()
 in assert_equal s "(P1 /\\ P2) \\/ P3"
+
+let test_printer_formula_por_pand test_ctxt = printer_formula_prop Format.str_formatter ((x1 ||. x2) &&. x3);
+let s = Format.flush_str_formatter()
+in assert_equal s "(P1 \\/ P2) /\\ P3"
+
+let test_printer_formula_impl test_ctxt = printer_formula_prop Format.str_formatter (x1 =>. x2);
+let s = Format.flush_str_formatter()
+in assert_equal s "P1 => P2"
+
+let test_printer_formula_and_impl test_ctxt = printer_formula_prop Format.str_formatter (x3 &&. (x1 =>. x2));
+let s = Format.flush_str_formatter()
+in assert_equal s "P3 /\\ (P1 => P2)"
 
 let instance_suite =
         "Instance">:::
@@ -619,8 +664,24 @@ let printer_formula_suite =
                   "test printer_formula PNeg">:: test_printer_formula_pneg;
                   "test printer_formula PAnd">:: test_printer_formula_pand;
                   "test printer_formula POr">:: test_printer_formula_por;
-                   "test_printer_formula_pand_por">:: test_printer_formula_pand_por;
+                  "test_printer_formula_pand_por">:: test_printer_formula_pand_por;
+                  "test_printer_formula_por_pand">::test_printer_formula_por_pand;
+                  "test_printer_formula_impl">::test_printer_formula_impl;
+                  "test_printer_formula_and_impl">::test_printer_formula_and_impl;
                 ]
+
+let to_string_formula_suite =
+        "to_string_formula" >:::
+                [ "test to_string_formula PVar">:: test_to_string_formula_pvar;
+                  "test to_string_formula PNeg">:: test_to_string_formula_pneg;
+                  "test to_string_formula PAnd">:: test_to_string_formula_pand;
+                  "test to_string_formula POr">:: test_to_string_formula_por;
+                  "test_to_string_formula_pand_por">:: test_to_string_formula_pand_por;
+                  "test_to_string_formula_por_pand">::test_to_string_formula_por_pand;
+                  "test_to_string_formula_impl">::test_to_string_formula_impl;
+                  "test_to_string_formula_and_impl">::test_to_string_formula_and_impl;
+                ]
+
 
 let prop_suite =
         "Prop">:::
@@ -637,6 +698,7 @@ let prop_suite =
 let () =
         run_test_tt_main instance_suite;
         run_test_tt_main printer_formula_suite;
+        run_test_tt_main to_string_formula_suite;
         run_test_tt_main prop_suite
 ;;
 

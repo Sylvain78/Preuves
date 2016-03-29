@@ -53,7 +53,7 @@ let printer_formula_prop ff f =
 (**
 String conversion
 *)
-let to_string f =
+let to_string_formula_prop f =
 	let rec to_string_bin seq op f g =
 		(to_string_aux seq f) ^ " " ^ op ^ " " ^ (to_string_aux  seq g)
 	and to_string_aux seq =

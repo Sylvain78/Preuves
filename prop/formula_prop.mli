@@ -12,4 +12,4 @@ val (||.) : formula_prop -> formula_prop -> formula_prop;;
 val neg  : formula_prop -> formula_prop;;
 
 val printer_formula_prop : Format.formatter -> formula_prop -> unit
-val to_string : formula_prop -> string
+val to_string_formula_prop : formula_prop -> string

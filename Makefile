@@ -3,9 +3,9 @@
 default:
 	@echo "available targets:"
 	@echo "  build        compile prop, first_order, and Ensembles"
-	@echo "  test         compile and run prop_test, a test suite"
+	@echo "  test         compile and run tests"
 	@echo "  test.debug   compile and run in debug mode prop_test, a test suite"
-	@echo "  coverage     compile prop_test with instrumented bisect_ppx coverage"
+	@echo "  coverage     compile and run tests with instrumented bisect_ppx coverage"
 	@echo "  cov_report   create a coverage report from the latest coverage run"
 	@echo "  clean        remove build directory"
 	@echo "  install      install via ocamlfind"
@@ -19,10 +19,10 @@ build:
 	ocamlbuild -use-ocamlfind -cflag -safe-string -I util -I prop -I first_order -I Ensembles ensembles.native
 
 test:
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test prop_test.native  && \
-	rm prop_test.native && \
-	mv _build/prop/test/prop_test.native prop_test && \
-	./prop_test
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test test_formula_prop.native  && \
+	rm test_formula_prop.native && \
+	mv _build/prop/test/test_formula_prop.native test_formula_prop && \
+	./test_formula_prop
 
 test.debug:
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test prop_test.d.byte  && \
