@@ -4,7 +4,7 @@ default:
 	@echo "available targets:"
 	@echo "  build        compile prop, first_order, and Ensembles"
 	@echo "  test         compile and run tests"
-	@echo "  test.debug   compile and run in debug mode prop_test, a test suite"
+	@echo "  test.debug   compile and run in debug mode test_formula_prop, a test suite"
 	@echo "  coverage     compile and run tests with instrumented bisect_ppx coverage"
 	@echo "  cov_report   create a coverage report from the latest coverage run"
 	@echo "  clean        remove build directory"
@@ -23,24 +23,32 @@ test:
 	rm test_formula_prop.native && \
 	mv _build/prop/test/test_formula_prop.native test_formula_prop && \
 	./test_formula_prop
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test test_proof_prop.native  && \
+	rm test_proof_prop.native && \
+	mv _build/prop/test/test_proof_prop.native test_proof_prop && \
+	./test_proof_prop
 
 test.debug:
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test prop_test.d.byte  && \
-	rm prop_test.d.byte && \
-	mv _build/prop/test/prop_test.d.byte prop_test && \
-	ocamldebug -I _build/prop -I _build/prop/test -I _build/util  ./prop_test
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test test_formula_prop.d.byte  && \
+	rm test_formula_prop.d.byte && \
+	mv _build/prop/test/test_formula_prop.d.byte test_formula_prop && \
+	ocamldebug -I _build/prop -I _build/prop/test -I _build/util  ./test_formula_prop
 
 coverage:
 	rm -f bisect*.out
-	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx.fast -cflag -safe-string -I util -I prop -I prop/test  prop_test.native
-	rm prop_test.native
-	mv _build/prop/test/prop_test.native prop_test_coverage
-	prop_test_coverage
+	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx.fast -cflag -safe-string -I util -I prop -I prop/test test_formula_prop.native
+	rm test_formula_prop.native
+	mv _build/prop/test/test_formula_prop.native test_formula_prop_coverage
+	./test_formula_prop_coverage
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -I util -I prop -I prop/test test_proof_prop.native
+	rm test_proof_prop.native
+	mv _build/prop/test/test_proof_prop.native test_proof_prop
+	./test_proof_prop
 
 clean:
 	ocamlbuild -clean && \
 	rm -f *.native && \
-	rm -f prop_test prop_test_coverage && \
+	rm -f test_formula_prop test_formula_prop_coverage && \
 	rm -f bisect*.out && \
 	rm -rf report_dir
 

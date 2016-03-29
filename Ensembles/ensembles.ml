@@ -1,28 +1,28 @@
 open Util
 open Signature
-open Theorie
+open Theory
 
 
 module ZF =
 struct
-	include Theorie(Signature.Ens);;
+	include Theory(Signature.Ens);;
 	(* TODO Lexer.liste_relbin := ["\\in"] *)
-	(** Notation de "élément de" *)
+	(** Notation for  "is element of" *)
         open Signature.Ens
 
         let of_string = Signature.Ens.of_string
-        let (&=) a b = Formule_atomique(Relation(is_in,[a; b]))
+        let (&=) a b = Atomic_formula(Relation(is_in,[a; b]))
 	
-	(** Ensemble vide *)
-	let def_vide =
+	(** Ensemble empty *)
+	let def_empty =
 		let x = Var (new_var())
 		and y = Var (new_var())
 		in
 		(?@(y, neg ((V y) &= (V x))))
-	and printer_vide_ascii ff = Format.fprintf ff "Ø"
-	and printer_vide_latex ff = Format.fprintf ff "\\empty"
+	and printer_empty_ascii ff = Format.fprintf ff "Ø"
+	and printer_empty_latex ff = Format.fprintf ff "\\empty"
 	
-	let vide = Constante (of_string "\\empty")
+	let empty = Constant (of_string "\\empty")
 	
 	
 	(** Axiomes standards *)
@@ -35,38 +35,38 @@ struct
         let f = Signature.Ens.create_meta_symbole(Signature.Ens.of_string "f") 
 	
 	let axiome_extensionnalite =
-          let formule_axiome_extensionnalite =
+          let formula_axiome_extensionnalite =
 		?@(a, ?@(b, (?@(x, (((V x) &= (V a)) <=> ((V x) &= (V b)))) => (V a) ^= (V b))))
 	  in
-        {nom_theoreme="Axiome d'extensionnalité"; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formule_axiome_extensionnalite}
+        {nom_theoreme="Axiome d'extensionnalité"; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_extensionnalite}
 
 	let axiome_paire =
-	  let formule_axiome_paire =
+	  let formula_axiome_paire =
                   ?@(a, ?@(b, ?&(c, (V a) &= (V c) && (V b) &= (V c))))
 	  in
-        {nom_theoreme="Axiome de la paire" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formule_axiome_paire}
+        {nom_theoreme="Axiome de la paire" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_paire}
 	
 	let axiome_union =
-	  let formule_axiome_union =
+	  let formula_axiome_union =
                   ?@ (a, ?& (b, ?@ (x, ( ?& (y, ((V x) &= (V y) && (V y) &= (V a))) => ((V x) &= (V b)) ))))
           in
-	{nom_theoreme="Axiome de l'union" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formule_axiome_union}
+	{nom_theoreme="Axiome de l'union" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_union}
 
         let axiome_parties =
-          let formule_axiome_parties =
+          let formula_axiome_parties =
 		?@(a, ?&(b, ?@(x, ( ?@(y, (((V y) &= (V x)) => ((V y) &= (V a)))) => ((V x) &= (V b)) ))))
           in
-	{nom_theoreme="Axiome de l'ensemble des parties" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formule_axiome_parties}
+	{nom_theoreme="Axiome de l'ensemble des parties" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_parties}
 	
         let axiome_separation =
-                let fx = Formule_atomique(Relation(f,[V x;V c]))
+                let fx = Atomic_formula(Relation(f,[V x;V c]))
                 in
                 {nom="Axiome de séparation";
                  variables_reservees = [a;b];
                  variable_schematique = f;
                  groupe_variables_neutres = c;
                  variables_libres_utilisees_predicat = [x];
-                 formule =  (?@(a, ?@(c, ?&(b, ?@(x, (V x) &= (V b) <=>
+                 formula =  (?@(a, ?@(c, ?&(b, ?@(x, (V x) &= (V b) <=>
                  ((V x) &= (V a) && fx))))))
                 }
 	
@@ -76,8 +76,8 @@ struct
                  variable_schematique = f;
                  variables_libres_utilisees_predicat = [x;y];
                  groupe_variables_neutres = c;
-                 formule = 
-                         let fxy,fxz=Formule_atomique(Relation(f,[V x;V y;V c])),Formule_atomique(Relation(f,[V x;V z;V c]))
+                 formula = 
+                         let fxy,fxz=Atomic_formula(Relation(f,[V x;V y;V c])),Atomic_formula(Relation(f,[V x;V z;V c]))
                          in
                          ?@(a,?@(c,((?@(x,?@(y,?@(z,
                               ((fxy && fxz) => ((V y) ^= (V z)))
@@ -86,22 +86,22 @@ struct
                 }
 			
 	let axiome_fondation=
-          let formule_axiome_fondation =
-		?@(a, (neg (V a ^= vide) )  => ?&(b, (V b &= V a && ((Operation(of_string "inter", [V b;V a])) ^= vide ))))
+          let formula_axiome_fondation =
+		?@(a, (neg (V a ^= empty) )  => ?&(b, (V b &= V a && ((Operation(of_string "inter", [V b;V a])) ^= empty ))))
           in
-        {nom_theoreme="Axiome de fondation"; parametres=[]; premisses=[]; preuve= []; conclusion=formule_axiome_fondation} 
+        {nom_theoreme="Axiome de fondation"; parametres=[]; premisses=[]; preuve= []; conclusion=formula_axiome_fondation} 
 
 	let successeur x = Operation(of_string "union",[x; Operation(of_string "singleton",[x])]);;
 		
 	
         let axiome_infini =
-          let formule_axiome_infini =
+          let formula_axiome_infini =
 	    let a = Var (new_var())
 	    and x = Var (new_var())
 	    in
-	  ?&(a, Constante (of_string "Ø") &= (V a) && ?@(x, (V x) &= (V a) => ((successeur (V x)) &= (V a))))
+	  ?&(a, Constant (of_string "Ø") &= (V a) && ?@(x, (V x) &= (V a) => ((successeur (V x)) &= (V a))))
 	  in
-        {nom_theoreme="Axiome de l'infini" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formule_axiome_infini}
+        {nom_theoreme="Axiome de l'infini" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_infini}
 
 	let (z_fini_dehornoy: theorie) =
 		{
@@ -117,7 +117,7 @@ struct
 	
 	
 	(** Définitions standards *)
-	intro_symbole_constante z_fini_dehornoy def_vide (of_string "Ø") printer_vide_ascii printer_vide_latex;;
+	intro_symbole_constante z_fini_dehornoy def_empty (of_string "Ø") printer_empty_ascii printer_empty_latex;;
 	
 	(**)
 let rec x = Var (new_var()) and vx = V x
@@ -129,7 +129,7 @@ let def_union =
 	?@ (z, vz &= vy <=> ?&(t, vt &= vx && vz &= vt)) 
 
 and printer_union_latex ff = function
-	| Operation(op, [x]) when op = of_string "U"-> Format.fprintf ff "\\cup("; print_terme ff x; Format.fprintf ff ")"
+	| Operation(op, [x]) when op = of_string "U"-> Format.fprintf ff "\\cup("; print_term ff x; Format.fprintf ff ")"
 	| _ -> failwith "printer_union_latex appelé sur autre chose que l'opérateur unaire U"
 	
 in
@@ -147,7 +147,7 @@ let def_paire =
 	 vz &= vt <=> vz ^= vx || vz ^=vy ) 
 	
 and printer_paire_latex ff = function
-	| Operation(op,[x;y]) when op = of_string "P" -> Format.fprintf ff "{"; print_terme ff x; Format.fprintf ff ",";print_terme ff y; Format.fprintf ff "}";
+	| Operation(op,[x;y]) when op = of_string "P" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff ",";print_term ff y; Format.fprintf ff "}";
 	| _ -> failwith "printer_paire_latex appelé sur autre chose que l'opérateur binaire P"
 	
 in
@@ -159,7 +159,7 @@ let def_singleton =
 	 vz &= vt <=> vz ^= vx) 
 
 and printer_singleton_latex ff = function
-	| Operation(op,[x]) when op = of_string "S" -> Format.fprintf ff "{"; print_terme ff x; Format.fprintf ff "}";
+	| Operation(op,[x]) when op = of_string "S" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff "}";
 	| _ -> failwith "printer_singleton_latex appelé sur autre chose que l'opérateur unaire S"
 	
 in
@@ -172,7 +172,7 @@ let def_couple =
 	(vz &=  Operation(p,[Operation(p,[vx;vy]);Operation(s,[vx])])) 
 	
 and printer_couple_latex ff = function
-	| Operation(op,[x;y]) when op = of_string "C" -> Format.fprintf ff "("; print_terme ff x; Format.fprintf ff ",";print_terme ff y; Format.fprintf ff ")";
+	| Operation(op,[x;y]) when op = of_string "C" -> Format.fprintf ff "("; print_term ff x; Format.fprintf ff ",";print_term ff y; Format.fprintf ff ")";
 	| _ -> failwith "printer_couple_latex appelé sur autre chose que l'opérateur binaire C"
 	
 in
@@ -189,7 +189,7 @@ let def_inclusion =
 	
 and printer_incl_latex ff = function
 	| Relation(rel,[x; y]) when rel = of_string "\\subset" -> Format.fprintf
-        ff "("; print_terme ff x; Format.fprintf ff " \\subset "; print_terme ff y; Format.fprintf ff ")";
+        ff "("; print_term ff x; Format.fprintf ff " \\subset "; print_term ff y; Format.fprintf ff ")";
 	| _ -> failwith "printer_incl_latex appelé sur autre chose que l'opérateur binaire \\subset"
 	
 in
