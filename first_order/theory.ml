@@ -2,7 +2,7 @@ open Util
 open Signature
 open Formula
 open Schemas
-module Theorie(Sig:SIGNATURE) =
+module Theory(Sig:SIGNATURE) =
 struct
 	
 	include First_order_axioms.Axioms(Sig) 
@@ -166,7 +166,7 @@ struct
 			
 			List.fold_right (fun v f -> (?@)(v, f)) 
                                         vl 
-                                        (Formula_atomique(Relation(symb, List.map (fun v -> V v) vl)) <=> def_rel)
+                                        (Atomic_formula(Relation(symb, List.map (fun v -> V v) vl)) <=> def_rel)
 		in
 		Hashtbl.add th.relations symb (vl,def);
 		Hashtbl.add printers_relations symb printer_rel_latex

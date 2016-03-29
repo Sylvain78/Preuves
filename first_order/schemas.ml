@@ -33,9 +33,9 @@ module Schema  (Sig:SIGNATURE) =
         | Or(s,t) -> Or(apply_schema_formula s predicat, apply_schema_formula t predicat)
         | And(s,t) -> And(apply_schema_formula s predicat, apply_schema_formula t predicat)
         | Imply(s,t) -> Imply(apply_schema_formula s predicat, apply_schema_formula t predicat)
-        | Formula_atomique(Eq(_,_)) -> schema_formula
+        | Atomic_formula(Eq(_,_)) -> schema_formula
         (* Cas spéciaux *)
-        | Formula_atomique(Relation(r,args)) ->
+        | Atomic_formula(Relation(r,args)) ->
                         let args' = List.filter (fun v -> v <> (V schema.groupe_variables_neutres)) args
                         in
                         if (r = schema.variable_schematique)
@@ -127,14 +127,14 @@ module Schema  (Sig:SIGNATURE) =
                  candidat := Some (substitution_simultanee lv lt s)
           in
           match s, p with
-          | Formula_atomique (Eq(_,_)), Formula_atomique (Eq(_,_)) -> 
+          | Atomic_formula (Eq(_,_)), Atomic_formula (Eq(_,_)) -> 
               if (s=p) 
               then ()
               else raise (Instance (s,p))
-          | Formula_atomique(Relation(rs,args_s)), _ when rs = schema.variable_schematique ->
+          | Atomic_formula(Relation(rs,args_s)), _ when rs = schema.variable_schematique ->
              (* Instanciation de la variable schématique*)        
                           update_candidat s args_s p;
-          | Formula_atomique(Relation(rs,args_s)), Formula_atomique(Relation(rp,args_p)) when rs <> schema.variable_schematique ->
+          | Atomic_formula(Relation(rs,args_s)), Atomic_formula(Relation(rp,args_p)) when rs <> schema.variable_schematique ->
              if Pervasives.(||) (rs <> rp) (List.exists2 (<>)  args_s args_p)
              then raise  (Instance (s,p))
           | Neg s', Neg p' -> find_metapredicat s' p'

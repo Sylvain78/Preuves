@@ -56,7 +56,7 @@ module Formula :
       val printers_relations :
         (Sig.symbole, Format.formatter -> atomic_formula -> unit) Hashtbl.t
       type formula =
-          Formula_atomique of atomic_formula
+          Atomic_formula of atomic_formula
         | Neg of formula
         | And of formula * formula
         | Or of formula * formula

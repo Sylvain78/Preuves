@@ -78,13 +78,13 @@ struct
 		| Imply(Forall(v, f), g) -> 
                         let rec find_term_instance_v f g= 
                          match f,g with 
-                            | Formula_atomique(Eq(f1,f2)),Formula_atomique(Eq(g1,g2)) -> 
+                            | Atomic_formula(Eq(f1,f2)),Atomic_formula(Eq(g1,g2)) -> 
                                             if (f1 = V v) 
                                             then g1
                                             else if (f2 = V v) 
                                                  then g2
                                                  else raise Not_found
-                            | Formula_atomique(Relation(rf,lf)), Formula_atomique(Relation(rg,lg)) ->
+                            | Atomic_formula(Relation(rf,lf)), Atomic_formula(Relation(rg,lg)) ->
                              if (rf=rg) 
                              then List.assoc (V v) (List.combine lf lg)
                              else raise Not_found
@@ -124,17 +124,17 @@ struct
 		and x3 = V(Var (3))
 		in
 		f = x1 ^= x1
-		or f = ((Formula_atomique (Eq(x1, x2))) => (Formula_atomique (Eq(x2, x1))))
-		or f = (((Formula_atomique (Eq(x1, x2))) && (Formula_atomique (Eq(x2, x3)))) => (Formula_atomique (Eq(x1, x3))))
+		or f = ((Atomic_formula (Eq(x1, x2))) => (Atomic_formula (Eq(x2, x1))))
+		or f = (((Atomic_formula (Eq(x1, x2))) && (Atomic_formula (Eq(x2, x3)))) => (Atomic_formula (Eq(x1, x3))))
 	
 	let verif_arite_et arite f =
 		let rec verif_arite_et_aux i arite f =
 			if i = arite
 			then
-				f = Formula_atomique(Eq(V(Var arite), V(Var (2 * arite))))
+				f = Atomic_formula(Eq(V(Var arite), V(Var (2 * arite))))
 			else
 				match f with
-				| And ((Formula_atomique(Eq(V(Var i), V(Var j)))), g) -> j = arite + 1 & verif_arite_et_aux (i + 1) arite g
+				| And ((Atomic_formula(Eq(V(Var i), V(Var j)))), g) -> j = arite + 1 & verif_arite_et_aux (i + 1) arite g
 				| _ -> false
 		in
 		verif_arite_et_aux 1 arite f
@@ -142,7 +142,7 @@ struct
 	let is_equality_op_axiom = function
 		| Imply(f, g) -> begin
 					match g with
-					| Formula_atomique (Eq(Operation(s,lt), Operation(s', lt'))) ->
+					| Atomic_formula (Eq(Operation(s,lt), Operation(s', lt'))) ->
 							let arite = List.length lt 
 							in
 							s = s' & (List.length lt = List.length lt')
@@ -162,8 +162,8 @@ struct
 	let is_equiv_rel_axiom = function
 		| Imply(f, g) -> begin
 					match g with
-					| And (Imply(Formula_atomique (Relation(r, lt)), Formula_atomique (Relation(r', lt'))),
-					Imply(Formula_atomique (Relation(r1, lt1)), Formula_atomique (Relation(r1', lt1')))) ->
+					| And (Imply(Atomic_formula (Relation(r, lt)), Atomic_formula (Relation(r', lt'))),
+					Imply(Atomic_formula (Relation(r1, lt1)), Atomic_formula (Relation(r1', lt1')))) ->
 							let arite,arite',arite1,arite1' =
 								List.length lt, List.length lt', List.length lt1, List.length lt1'
 							in

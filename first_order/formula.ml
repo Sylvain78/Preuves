@@ -14,7 +14,7 @@ struct
 	let (printers_relations : (Sig.symbole, Format.formatter -> atomic_formula -> unit) Hashtbl.t) = Hashtbl.create 3
 	
 	type formula =
-		| Formula_atomique of atomic_formula
+		| Atomic_formula of atomic_formula
 		| Neg of formula
 		| And of formula * formula
 		| Or of formula * formula
@@ -51,7 +51,7 @@ struct
 			
 	(** Remplace x par t dans une formula  **)
 	let rec substitution_simultanee lx lt = function
-		| Formula_atomique f_atomique -> Formula_atomique (
+		| Atomic_formula f_atomique -> Atomic_formula (
                         simultaneous_substitution_atomic_formula lx lt f_atomique ) 
 		| Neg f -> Neg (substitution_simultanee lx lt f )
 		| And (f1, f2) -> 
@@ -114,7 +114,7 @@ struct
 
 	(** Variables libres d'une formula. Une variable est considérée comme libre si au moins une occurence est libre. **)
 	let rec free_variables_of_formula = function
-		| Formula_atomique f -> free_variables_of_atomic_formula f
+		| Atomic_formula f -> free_variables_of_atomic_formula f
 		| Neg f -> free_variables_of_formula f
 		| And(f1,f2) | Or(f1,f2) | Imply(f1,f2) -> SetVar.union (free_variables_of_formula f1) (free_variables_of_formula f2)
 		| Forall(v,f) | Exists(v,f) -> SetVar.remove v (free_variables_of_formula f) 
@@ -124,7 +124,7 @@ struct
 		| Forall(v,f) | Exists(v,f) -> SetVar.add v (bound_variables_formula f)
 		| Neg f -> bound_variables_formula f
 		| And(f1,f2) | Or(f1,f2) | Imply(f1,f2) -> SetVar.union (bound_variables_formula f1) (bound_variables_formula f2)
-  		| Formula_atomique f -> SetVar.empty (*aucune variable liée dans une formula atomique*)
+  		| Atomic_formula f -> SetVar.empty (*aucune variable liée dans une formula atomique*)
 
 	
 	(** Les occurences des variables de t ne sont pas capturées lors d'une substitution à x dans f **)
@@ -134,7 +134,7 @@ struct
 		| And(f,g) | Or(f,g) | Imply(f,g) -> 
 			(term_libre_pour_var t x f) && (term_libre_pour_var t x g)
 		| Forall(v,f) | Exists(v,f) -> not (SetVar.mem v (variables_term t))
-		| Formula_atomique f_atomique -> true
+		| Atomic_formula f_atomique -> true
 
 	(* Unification par algorithme de Robinson *)
 	let unifieur_atomic_formula f g = 
@@ -162,7 +162,7 @@ struct
         (*TODO : Fonction à supprimmer*)
 
 	let rec application_unifieur unifieur = function
-		| Formula_atomique(f) -> Formula_atomique(application_unifieur_atomique unifieur f) 
+		| Atomic_formula(f) -> Atomic_formula(application_unifieur_atomique unifieur f) 
 		| Neg f -> Neg (application_unifieur unifieur f)
 		| And(f,g) -> And(application_unifieur unifieur f, application_unifieur unifieur g)  
 		| Or(f,g) -> Or(application_unifieur unifieur f, application_unifieur unifieur g)
@@ -179,8 +179,8 @@ struct
 	let (<=>) f g = And(Imply(f, g), Imply(g, f))
 	let (?&) = function (v, f) -> Exists(v, f)
 	let (?@) = function (v, f) -> Forall(v, f)
-	let (^=) a b = Formula_atomique(Eq(a, b))
-	let (^!=) a b = neg (Formula_atomique(Eq(a, b)))
+	let (^=) a b = Atomic_formula(Eq(a, b))
+	let (^!=) a b = neg (Atomic_formula(Eq(a, b)))
 	
 	(** Formateurs d'affichage **)
 	let rec printer_first_order_atomic_formula ff = function
@@ -318,7 +318,7 @@ struct
 							Format.fprintf ff " exists %s " i;
 							print_par (fun () -> printer_first_order_formula_aux ff "exists" f);
 						end
-		    | Formula_atomique f -> printer_first_order_atomic_formula ff f
+		    | Atomic_formula f -> printer_first_order_atomic_formula ff f
 		
 		in
 		printer_first_order_formula_aux ff "init" f

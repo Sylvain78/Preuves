@@ -27,6 +27,10 @@ test:
 	rm test_proof_prop.native && \
 	mv _build/prop/test/test_proof_prop.native test_proof_prop && \
 	./test_proof_prop
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I first_order -I first_order/test test_formula_first_order.native  && \
+	rm test_formula_first_order.native && \
+	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order && \
+	./test_formula_first_order
 
 test.debug:
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -I util -I prop -I prop/test test_formula_prop.d.byte  && \
@@ -44,6 +48,10 @@ coverage:
 	rm test_proof_prop.native
 	mv _build/prop/test/test_proof_prop.native test_proof_prop
 	./test_proof_prop
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -I util -I first_order -I first_order/test test_formula_first_order.native
+	rm test_formula_first_order.native
+	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order
+	./test_formula_first_order
 
 clean:
 	ocamlbuild -clean && \
