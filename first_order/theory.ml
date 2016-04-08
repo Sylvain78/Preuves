@@ -14,7 +14,7 @@ struct
 	(* schema "separation" "f" ["x"] "c" ["a","b"] (?@)(a,(?@)("c",(?&)(b,(?@)(x,x&=b <=>(x&=a && f(x,c)))) ))*)
 	
 	type formula_parametre_schema = {
-		nom_formula : Sig.symbole;
+		nom_formula : Sig.symbol;
 		variables : var list;
 		alias_variables_muettes : var;
 		}
@@ -46,9 +46,9 @@ struct
 		{
 			axiomes : theoreme list; (** Un axiome est un théorème sans prémisses *)
 			schemas : schema list;
-			constantes : (Sig.symbole,formula) Hashtbl.t;
-			operations : (Sig.symbole,formula) Hashtbl.t;
-			relations  : (Sig.symbole,(var list * formula)) Hashtbl.t;
+			constantes : (Sig.symbol,formula) Hashtbl.t;
+			operations : (Sig.symbol,formula) Hashtbl.t;
+			relations  : (Sig.symbol,(var list * formula)) Hashtbl.t;
                         theoremes : theoreme list ref
 		}
 
@@ -104,7 +104,7 @@ struct
                                 | TPInstanceSchema (f,(s,formula_schematique))  :: p ->  (f = apply_schema s formula_schematique) & (verif t p)
                                 | TPTheoreme  (f , (theoreme, parametres, premisses)) :: preuve -> (f = theoreme.conclusion) & 
                                                                                               (verif t preuve) & 
-                                                                                              (List.for_all (fun p -> let premisse = substitution_simultanee theoreme.parametres parametres p
+                                                                                              (List.for_all (fun p -> let premisse = simultaneous_substitution_formula theoreme.parametres parametres p
                                                                                                                       in
                                                                                                                       List.mem premisse (List.map term_preuve_vers_formula preuve)
                                                                                                             ) 
@@ -114,15 +114,15 @@ struct
 (******************************************************************************)
 
         let apply_theoreme theoreme params =
-               (substitution_simultanee theoreme.parametres params) theoreme.conclusion,
-               List.map (fun tp -> substitution_simultanee theoreme.parametres params (term_preuve_vers_formula tp)) theoreme.preuve
+               (simultaneous_substitution_formula theoreme.parametres params) theoreme.conclusion,
+               List.map (fun tp -> simultaneous_substitution_formula theoreme.parametres params (term_preuve_vers_formula tp)) theoreme.preuve
 
 (******************************************************************************)
 
 
 
 	(** Introduction de nouvelles constantes *)
-	let intro_symbole_constante th f symb printer_symb_ascii printer_symb_latex =
+	let intro_symbol_constante th f symb printer_symb_ascii printer_symb_latex =
 		let def =
 			let vl = SetVar.elements (free_variables_of_formula f)
 			in
@@ -137,7 +137,7 @@ struct
 	
 	
 	(** Introduction de nouvelles opérations *)
-	let intro_symbole_operation th def_op var symb arite printer_op_latex =
+	let intro_symbol_operation th def_op var symb arite printer_op_latex =
 		let def op =
 			let vl = SetVar.elements (free_variables_of_formula def_op)
 			in
@@ -157,7 +157,7 @@ struct
 		Hashtbl.add printers_operations symb printer_op_latex
 	
 	(** Introduction de nouvelles relations *)
-	let intro_symbole_relation th def_rel symb arite printer_rel_latex =
+	let intro_symbol_relation th def_rel symb arite printer_rel_latex =
                 let vl = SetVar.elements (free_variables_of_formula def_rel)
                 in
 		let def =

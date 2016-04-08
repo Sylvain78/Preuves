@@ -99,14 +99,14 @@ struct
                                 (* v lié,  on cherche une occurence libre*)
                                 if (Pervasives.(||) (v' = v) (v'' = v))
                                 then raise Not_found
-                                else find_term_instance_v f' (substitution_simultanee [v''] [V v'] f'')
+                                else find_term_instance_v f' (simultaneous_substitution_formula [v''] [V v'] f'')
                             | _ -> raise Not_found
                         in
                         (try 
                           let t = find_term_instance_v f g
 		  	  in
                           (* Vérification *)
-                          let f' = substitution_simultanee [v] [t] f
+                          let f' = simultaneous_substitution_formula [v] [t] f
 			  in
 			  f'=g & (term_libre_pour_var t v f)
                         with Not_found -> false)

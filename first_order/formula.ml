@@ -4,14 +4,14 @@ open Base_term
 
 
 
-module Formula (Sig:SIGNATURE)(*: (FORMULE)*) =
+module Formula (Sig:SIGNATURE) =
 struct
         include Term(Sig)
         
 	type atomic_formula =
 		| Eq of term * term
-		| Relation of Sig.symbole * term list
-	let (printers_relations : (Sig.symbole, Format.formatter -> atomic_formula -> unit) Hashtbl.t) = Hashtbl.create 3
+		| Relation of Sig.symbol * term list
+	let (printers_relations : (Sig.symbol, Format.formatter -> atomic_formula -> unit) Hashtbl.t) = Hashtbl.create 3
 	
 	type formula =
 		| Atomic_formula of atomic_formula
@@ -24,86 +24,55 @@ struct
 	
 	exception Failed_unification_atomic_formula of atomic_formula * atomic_formula
 	
-	(**	Ensemble des variables (libres) d'une formula atomique **)
-	let rec portee_atomique = function
-		| Eq(t1, t2) -> let libres1 = variables_term t1
-				and libres2 = variables_term t2
-				in
-				SetVar.union libres1 libres2,
-				[]
-		| Relation(s, lt) -> let liste_libre = List.map (variables_term) lt
-				in
-				List.fold_left SetVar.union SetVar.empty liste_libre,
-				[]
-	
-	(** Remplace la liste des x par la liste des t dans une formula atomique **)
+	(** Replace the list of x by the list of t in an atomic formula **) 
 	let rec simultaneous_substitution_atomic_formula lx lt = function
 		| Eq (t1, t2) -> 
-			let t'1,t'2 = substitution_simultanee_term lx lt t1,  
-				      substitution_simultanee_term lx lt t2
+			let t'1,t'2 = simultaneous_substitution_term lx lt t1,  
+				      simultaneous_substitution_term lx lt t2
 			in
 			Eq(t'1, t'2)
 		
 		| Relation(s,lt') -> 
-			let lt'' = List.map (substitution_simultanee_term lx lt) lt'
+			let lt'' = List.map (simultaneous_substitution_term lx lt) lt'
 			in 
 			Relation(s, lt'')
 			
-	(** Remplace x par t dans une formula  **)
-	let rec substitution_simultanee lx lt = function
-		| Atomic_formula f_atomique -> Atomic_formula (
-                        simultaneous_substitution_atomic_formula lx lt f_atomique ) 
-		| Neg f -> Neg (substitution_simultanee lx lt f )
+	(** Replace the list of x's by the list of terms t's  in a formula  **)
+	let rec simultaneous_substitution_formula lx lt = function
+		| Atomic_formula f_atomic -> Atomic_formula (
+                        simultaneous_substitution_atomic_formula lx lt f_atomic ) 
+		| Neg f -> Neg (simultaneous_substitution_formula lx lt f )
 		| And (f1, f2) -> 
-			let f'1,f'2 = substitution_simultanee lx lt f1,  
-                                      substitution_simultanee lx lt f2
+			let f'1,f'2 = simultaneous_substitution_formula lx lt f1,  
+                                      simultaneous_substitution_formula lx lt f2
 			in
 			And(f'1, f'2)
 		 | Or(f1,f2) -> 
-			let f'1,f'2 = substitution_simultanee lx lt f1,  
-				      substitution_simultanee lx lt f2
+			let f'1,f'2 = simultaneous_substitution_formula lx lt f1,  
+				      simultaneous_substitution_formula lx lt f2
 			in
 			Or(f'1, f'2)
 		 | Imply(f1,f2) -> 
-			let f'1,f'2 = substitution_simultanee lx lt f1,  
-				      substitution_simultanee lx lt f2
+			let f'1,f'2 = simultaneous_substitution_formula lx lt f1,  
+				      simultaneous_substitution_formula lx lt f2
 			in
 			Imply(f'1, f'2)
-		(*alpha-renommage de v si v capture une variable libre des terms substitués*)
-		| Forall(v,f1) as f -> if (List.mem v lx) 
-                                       then
-                                       f
-		                       else
-                                        let vars_lt = 
-                                          List.fold_right (fun t s -> SetVar.union (variables_term t) s) lt SetVar.empty 
+		(* alpha-renaming of v to enforce that v does not capture a free variable of the substituted terms
+                 * TODO : find a better algorithm with only the necessary renamings. *)
+		| Forall(v,f1) as f -> 
+                                        let new_v = Var(new_var()) 
+                                        in 
+                                        let f1' = simultaneous_substitution_formula [v] [(V new_v)] f1
                                         in
-                                        if (SetVar.mem v vars_lt) 
-                                        then 
-                                                let new_v = Var(new_var()) 
-                                                in 
-                                                let f1' = substitution_simultanee [v] [(V new_v)] f1
-                                                in
-                                                Forall (new_v,substitution_simultanee lx lt f1')
-                                        else
-                                                Forall (v,substitution_simultanee lx lt f1)  
-		| Exists(v,f1) as f -> if (List.mem v lx) 
-                                       then
-                                       f
-		                       else
-                                        let vars_lt = 
-                                          List.fold_right (fun t s -> SetVar.union (variables_term t) s) lt SetVar.empty 
+                                        Forall (new_v,simultaneous_substitution_formula lx lt f1')
+		| Exists(v,f1) as f ->
+                                        let new_v = Var(new_var()) 
+                                        in 
+                                        let f1' = simultaneous_substitution_formula [v] [(V new_v)] f1
                                         in
-                                        if (SetVar.mem v vars_lt) 
-                                        then 
-                                                let new_v = Var(new_var()) 
-                                                in 
-                                                let f1' = substitution_simultanee [v] [(V new_v)] f1
-                                                in
-                                                Exists (new_v,substitution_simultanee lx lt f1')
-                                        else
-                                                Exists (v,substitution_simultanee lx lt f1)  
+                                        Exists (new_v,simultaneous_substitution_formula lx lt f1')
 					 
-	(** Variables libres d'une formula atomique. Ce sont toutes les variables de la formula **)
+	(** Free variables of an atomic formula. These are all the variables of the formula *)
 	let free_variables_of_atomic_formula = function
 		| Eq(t1,t2) -> SetVar.union (variables_term t1) (variables_term t2)
 		| Relation(_, lt) -> List.fold_left SetVar.union SetVar.empty (List.map variables_term lt)
@@ -124,7 +93,7 @@ struct
 		| Forall(v,f) | Exists(v,f) -> SetVar.add v (bound_variables_formula f)
 		| Neg f -> bound_variables_formula f
 		| And(f1,f2) | Or(f1,f2) | Imply(f1,f2) -> SetVar.union (bound_variables_formula f1) (bound_variables_formula f2)
-  		| Atomic_formula f -> SetVar.empty (*aucune variable liée dans une formula atomique*)
+  		| Atomic_formula f -> SetVar.empty (*aucune variable liée dans une formula atomic*)
 
 	
 	(** Les occurences des variables de t ne sont pas capturées lors d'une substitution à x dans f **)
@@ -134,7 +103,7 @@ struct
 		| And(f,g) | Or(f,g) | Imply(f,g) -> 
 			(term_libre_pour_var t x f) && (term_libre_pour_var t x g)
 		| Forall(v,f) | Exists(v,f) -> not (SetVar.mem v (variables_term t))
-		| Atomic_formula f_atomique -> true
+		| Atomic_formula f_atomic -> true
 
 	(* Unification par algorithme de Robinson *)
 	let unifieur_atomic_formula f g = 
@@ -154,7 +123,7 @@ struct
 		in
 		unifier_aux ([(f,g)],(fun x->x))
 		
-	let application_unifieur_atomique unifieur = function
+	let application_unifieur_atomic unifieur = function
 		| Eq(t1,t2) -> Eq (unifieur t1, unifieur t2)
 		| Relation(r, args) -> Relation(r,List.map unifieur args)
 
@@ -162,7 +131,7 @@ struct
         (*TODO : Fonction à supprimmer*)
 
 	let rec application_unifieur unifieur = function
-		| Atomic_formula(f) -> Atomic_formula(application_unifieur_atomique unifieur f) 
+		| Atomic_formula(f) -> Atomic_formula(application_unifieur_atomic unifieur f) 
 		| Neg f -> Neg (application_unifieur unifieur f)
 		| And(f,g) -> And(application_unifieur unifieur f, application_unifieur unifieur g)  
 		| Or(f,g) -> Or(application_unifieur unifieur f, application_unifieur unifieur g)

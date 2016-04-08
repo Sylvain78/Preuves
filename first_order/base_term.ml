@@ -9,9 +9,9 @@ module type TERM = functor (Sig:SIGNATURE) ->
 		module SetVar : (Set.S with type elt = var) 
 		
 		type term
-		val printers_constants : (Sig.symbole, Format.formatter -> unit) Hashtbl.t
-		val printers_operations : (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
-		val printers_relations : (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
+		val printers_constants : (Sig.symbol, Format.formatter -> unit) Hashtbl.t
+		val printers_operations : (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
+		val printers_relations : (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
 		val variables_term : term -> SetVar.t
 		val simultaneous_substitution_term : var list -> term list -> term -> term
 		val print_term : Format.formatter -> term -> unit
@@ -25,8 +25,8 @@ type var =
 	
 	type term =
 	| V of var
-	| Constant of Sig.symbole
-	| Operation of Sig.symbole * term list
+	| Constant of Sig.symbol
+	| Operation of Sig.symbol * term list
 		
 	let printers_constants = Hashtbl.create 3;;
 	let printers_operations = Hashtbl.create 3;;
@@ -54,14 +54,14 @@ type var =
 
 		
 	(** Remplace la liste des variable lx par la liste des terms lt **)		
-	let rec substitution_simultanee_term lx lt = function
+	let rec simultaneous_substitution_term lx lt = function
 		| Constant _ as c -> c
 		| V x' as v -> 
 		   (try List.assoc x' (List.combine lx lt)
                     with | Not_found -> v 
                    )
 		| Operation(s,lt') -> 
-                    let lt'' = List.map (substitution_simultanee_term lx lt) lt'
+                    let lt'' = List.map (simultaneous_substitution_term lx lt) lt'
 		    in 
                     Operation(s,lt'')  
 	
@@ -78,7 +78,7 @@ type var =
 					if SetVar.mem var1 (variables_term u1) then
 						failwith "unification circulaire"
 					else
-						let mu1 = fun u -> substitution_simultanee_term [var1] [u1] u
+						let mu1 = fun u ->  simultaneous_substitution_term [var1] [u1] u
 						in 
 						let l1,l2 = List.split lt
 						in

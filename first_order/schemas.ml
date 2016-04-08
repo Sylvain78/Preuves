@@ -10,7 +10,7 @@ module Schema  (Sig:SIGNATURE) =
       nom : string;
       variables_reservees : var list;
       groupe_variables_neutres : var;
-      variable_schematique : Sig.symbole;
+      variable_schematique : Sig.symbol;
       variables_libres_utilisees_predicat : var list;
       formula : formula;
 
@@ -39,7 +39,7 @@ module Schema  (Sig:SIGNATURE) =
                         let args' = List.filter (fun v -> v <> (V schema.groupe_variables_neutres)) args
                         in
                         if (r = schema.variable_schematique)
-                        then substitution_simultanee schema.variables_libres_utilisees_predicat args' predicat
+                        then simultaneous_substitution_formula schema.variables_libres_utilisees_predicat args' predicat
                         else schema_formula
         | Exists(v,s) -> if (v = schema.groupe_variables_neutres) 
                          then 
@@ -124,7 +124,7 @@ module Schema  (Sig:SIGNATURE) =
               | Some s -> 
                  let (lv,lt) = normalize_args args 
                  in
-                 candidat := Some (substitution_simultanee lv lt s)
+                 candidat := Some (simultaneous_substitution_formula lv lt s)
           in
           match s, p with
           | Atomic_formula (Eq(_,_)), Atomic_formula (Eq(_,_)) -> 
@@ -145,13 +145,13 @@ module Schema  (Sig:SIGNATURE) =
               find_metapredicat s2 p2
           | Forall(vs,s'), Forall(vp,p') ->
               if  (vs <> schema.groupe_variables_neutres) 
-              then find_metapredicat s' (substitution_simultanee [vp] [V vs] p')
+              then find_metapredicat s' (simultaneous_substitution_formula [vp] [V vs] p')
               else let p'' = consomme_variables_neutres Univ schema.variables_libres_utilisees_predicat p
                    in
                    find_metapredicat s' p''
           | Exists (vs,s'),Exists(vp,p') -> 
               if  (vs <> schema.groupe_variables_neutres) 
-              then find_metapredicat s' (substitution_simultanee [vp] [V vs] p')
+              then find_metapredicat s' (simultaneous_substitution_formula [vp] [V vs] p')
               else let p'' = consomme_variables_neutres Exist schema.variables_libres_utilisees_predicat p
                    in
                    find_metapredicat s' p''

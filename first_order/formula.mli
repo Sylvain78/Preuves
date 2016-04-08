@@ -8,12 +8,12 @@ module Formula :
         | Metavar of string
       type term = Term(Sig).term =
         | V of var
-        | Constant of Sig.symbole
-        | Operation of Sig.symbole * term list
+        | Constant of Sig.symbol
+        | Operation of Sig.symbol * term list
       val printers_constants :
-        (Sig.symbole, Format.formatter -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> unit) Hashtbl.t
       val printers_operations :
-        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
       val compare_var : var -> var -> int
       module SetVar :
         sig
@@ -47,14 +47,14 @@ module Formula :
           val of_list : elt list -> t
         end
       val variables_term : term -> SetVar.t
-      val substitution_simultanee : var list -> term list -> term -> term
+      val simultaneous_substitution_term : var list -> term list -> term -> term
       type substitution = term -> term
       val print_term : Format.formatter -> term -> unit
       type atomic_formula =
           Eq of term * term
-        | Relation of Sig.symbole * term list
+        | Relation of Sig.symbol * term list
       val printers_relations :
-        (Sig.symbole, Format.formatter -> atomic_formula -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> atomic_formula -> unit) Hashtbl.t
       type formula =
           Atomic_formula of atomic_formula
         | Neg of formula
@@ -65,10 +65,9 @@ module Formula :
         | Forall of var * formula
       exception Failed_unification_atomic_formula of atomic_formula *
                   atomic_formula
-      val portee_atomique : atomic_formula -> SetVar.t * 'a list
       val simultaneous_substitution_atomic_formula :
         var list -> term list -> atomic_formula -> atomic_formula
-      val substitution_simultanee : var list -> term list -> formula -> formula
+      val simultaneous_substitution_formula : var list -> term list -> formula -> formula
       val free_variables_of_atomic_formula : atomic_formula -> SetVar.t
       val free_variables_of_formula : formula -> SetVar.t
       val bound_variables_formula : formula -> SetVar.t

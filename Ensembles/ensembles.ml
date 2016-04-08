@@ -32,7 +32,7 @@ struct
 	let x = Var (new_var())
 	let y = Var (new_var())
 	let z = Var (new_var())
-        let f = Signature.Ens.create_meta_symbole(Signature.Ens.of_string "f") 
+        let f = Signature.Ens.create_meta_symbol(Signature.Ens.of_string "f") 
 	
 	let axiome_extensionnalite =
           let formula_axiome_extensionnalite =
@@ -117,7 +117,7 @@ struct
 	
 	
 	(** Définitions standards *)
-	intro_symbole_constante z_fini_dehornoy def_empty (of_string "Ø") printer_empty_ascii printer_empty_latex;;
+	intro_symbol_constante z_fini_dehornoy def_empty (of_string "Ø") printer_empty_ascii printer_empty_latex;;
 	
 	(**)
 let rec x = Var (new_var()) and vx = V x
@@ -133,7 +133,7 @@ and printer_union_latex ff = function
 	| _ -> failwith "printer_union_latex appelé sur autre chose que l'opérateur unaire U"
 	
 in
-intro_symbole_operation z_fini_dehornoy def_union y (of_string "U") 1 printer_union_latex;;
+intro_symbol_operation z_fini_dehornoy def_union y (of_string "U") 1 printer_union_latex;;
 (*Hashtbl.find z_fini_dehornoy.operations_definies "U";;*)
  
 	
@@ -151,7 +151,7 @@ and printer_paire_latex ff = function
 	| _ -> failwith "printer_paire_latex appelé sur autre chose que l'opérateur binaire P"
 	
 in
-intro_symbole_operation z_fini_dehornoy def_paire t (of_string "P") 2 printer_paire_latex;;
+intro_symbol_operation z_fini_dehornoy def_paire t (of_string "P") 2 printer_paire_latex;;
 (*Hashtbl.find z_fini_dehornoy.operations_definies "P";;*)
 
 let def_singleton =
@@ -163,7 +163,7 @@ and printer_singleton_latex ff = function
 	| _ -> failwith "printer_singleton_latex appelé sur autre chose que l'opérateur unaire S"
 	
 in
-intro_symbole_operation z_fini_dehornoy def_singleton t (of_string "S") 1 printer_singleton_latex;;
+intro_symbol_operation z_fini_dehornoy def_singleton t (of_string "S") 1 printer_singleton_latex;;
 (*Hashtbl.find z_fini_dehornoy.operations_definies "S";;*)
 
 let def_couple =
@@ -176,7 +176,7 @@ and printer_couple_latex ff = function
 	| _ -> failwith "printer_couple_latex appelé sur autre chose que l'opérateur binaire C"
 	
 in
-intro_symbole_operation z_fini_dehornoy def_couple z (of_string "C") 2 printer_couple_latex;;
+intro_symbol_operation z_fini_dehornoy def_couple z (of_string "C") 2 printer_couple_latex;;
 (*Hashtbl.find z_fini_dehornoy.operations_definies "C";;*)
 
 
@@ -193,7 +193,7 @@ and printer_incl_latex ff = function
 	| _ -> failwith "printer_incl_latex appelé sur autre chose que l'opérateur binaire \\subset"
 	
 in
-intro_symbole_relation z_fini_dehornoy def_inclusion (of_string "\\subset") 2 printer_incl_latex;;
+intro_symbol_relation z_fini_dehornoy def_inclusion (of_string "\\subset") 2 printer_incl_latex;;
 (*Hashtbl.find z_fini_dehornoy.relations_definies "\subset";;*)
 
 	

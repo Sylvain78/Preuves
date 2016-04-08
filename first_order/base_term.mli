@@ -35,11 +35,11 @@ module type TERM =
         end
       type term
       val printers_constants :
-        (Sig.symbole, Format.formatter -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> unit) Hashtbl.t
       val printers_operations :
-        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
       val printers_relations :
-        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
       val variables_term : term -> SetVar.t
       val simultaneous_substitution_term : var list -> term list -> term -> term
       val print_term : Format.formatter -> term -> unit
@@ -50,14 +50,14 @@ module Term :
       type var = Var of int | Metavar of string
       type term =
           V of var
-        | Constant of Sig.symbole
-        | Operation of Sig.symbole * term list
+        | Constant of Sig.symbol
+        | Operation of Sig.symbol * term list
       val printers_constants :
-        (Sig.symbole, Format.formatter -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> unit) Hashtbl.t
       val printers_operations :
-        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
       val printers_relations :
-        (Sig.symbole, Format.formatter -> term -> unit) Hashtbl.t
+        (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
       val compare_var : var -> var -> int
       module SetVar :
         sig
@@ -91,7 +91,7 @@ module Term :
           val of_list : elt list -> t
         end
       val variables_term : term -> SetVar.t
-      val substitution_simultanee_term : var list -> term list -> term -> term
+      val simultaneous_substitution_term : var list -> term list -> term -> term
       type substitution = term -> term
       val unifier_term : term -> term -> substitution
       val unifier_liste_term : (term * term) list -> substitution
