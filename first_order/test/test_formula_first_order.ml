@@ -53,7 +53,7 @@ let test_simultaneous_substitution_formula_forall_nominal test_ctxt =
         in
         let f'1= (simultaneous_substitution_formula [v1 ] [x2]  ff1)
         in
-        let new_variable = match f'1 with Forall(v,_) -> v
+        let new_variable = match f'1 with Forall(v,_) -> v | _ -> failwith "unreachable"
         in
         assert_equal (Forall(new_variable, Atomic_formula(Eq(V new_variable, x2)))) f'1
 
@@ -62,10 +62,33 @@ let test_simultaneous_substitution_formula_forall_nominal_2 test_ctxt =
         in
         let f'2 = (simultaneous_substitution_formula [v1 ; v2 ] [x2 ; x3]  ff2)
         in
-        let new_variable = match f'2 with Forall(v,_) -> v
+        let new_variable = match f'2 with Forall(v,_) -> v | _ -> failwith "unreachable"
         in
         assert_equal (Forall(new_variable, Atomic_formula(Eq(V new_variable, x3)))) f'2 
 
+let test_simultaneous_substitution_formula_exists_nominal test_ctxt =
+        let ff1 = (Exists(v1, Atomic_formula f1)) 
+        in
+        let f'1= (simultaneous_substitution_formula [v1 ] [x2]  ff1)
+        in
+        let new_variable = match f'1 with Exists(v,_) -> v | _ -> failwith "unreachable"
+        in
+        assert_equal (Exists(new_variable, Atomic_formula(Eq(V new_variable, x2)))) f'1
+
+let test_simultaneous_substitution_formula_exists_nominal_2 test_ctxt =
+        let ff2 = (Exists(v1, Atomic_formula f1)) 
+        in
+        let f'2 = (simultaneous_substitution_formula [v1 ; v2 ] [x2 ; x3]  ff2)
+        in
+        let new_variable = match f'2 with Exists(v,_) -> v | _ -> failwith "unreachable"
+        in
+        assert_equal (Exists(new_variable, Atomic_formula(Eq(V new_variable, x3)))) f'2 
+
+let test_free_variables_of_atomic_formula_eq test_ctxt =
+        assert_equal (FormulaTest.SetVar.of_list [v1 ; v2]) (free_variables_of_atomic_formula (Eq(x1,x2)))
+
+let test_free_variables_of_atomic_formula_relation test_ctxt =
+        assert_equal (FormulaTest.SetVar.of_list [v1 ; v2 ; v3]) (free_variables_of_atomic_formula (Relation(SignatureMinimal.of_string "",[x1;x2;x2;x3])))
 
 let formula_suite = "First order formula tests">:::
         [ 
@@ -79,6 +102,10 @@ let formula_suite = "First order formula tests">:::
         "test_simultaneous_substitution_formula_imply">::test_simultaneous_substitution_formula_imply;
         "test_simultaneous_substitution_formula_forall_nominal">::test_simultaneous_substitution_formula_forall_nominal;
         "test_simultaneous_substitution_formula_forall_nominal2">::test_simultaneous_substitution_formula_forall_nominal_2;
+        "test_simultaneous_substitution_formula_exists_nominal">::test_simultaneous_substitution_formula_exists_nominal;
+        "test_simultaneous_substitution_formula_exists_nominal2">::test_simultaneous_substitution_formula_exists_nominal_2;
+        "test_free_variables_of_atomic_formula_eq">::test_free_variables_of_atomic_formula_eq;
+        "test_free_variables_of_atomic_formula_relation">::test_free_variables_of_atomic_formula_relation;
         ]
 
 let () = run_test_tt_main formula_suite

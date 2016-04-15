@@ -95,15 +95,15 @@ struct
                                                         end
                                                 else false)
                                         t
-                                    or is_generalisation f_i p
-				    or (coupure f_i p)
-                                    or is_axiome_premier_ordre f_i) 
+                                    || is_generalisation f_i p
+                                    || (coupure f_i p)
+                                    || is_axiome_premier_ordre f_i) 
                                   & (verif t p)
                                 | TPAxiome _ as th_ax :: p-> is_axiome_theorie theorie th_ax 
 						        & (verif t p)
                                 | TPInstanceSchema (f,(s,formula_schematique))  :: p ->  (f = apply_schema s formula_schematique) & (verif t p)
                                 | TPTheoreme  (f , (theoreme, parametres, premisses)) :: preuve -> (f = theoreme.conclusion) & 
-                                                                                              (verif t preuve) & 
+                                                                                              (verif t preuve) && 
                                                                                               (List.for_all (fun p -> let premisse = simultaneous_substitution_formula theoreme.parametres parametres p
                                                                                                                       in
                                                                                                                       List.mem premisse (List.map term_preuve_vers_formula preuve)

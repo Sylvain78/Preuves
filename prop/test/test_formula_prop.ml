@@ -699,6 +699,6 @@ let () =
         run_test_tt_main instance_suite;
         run_test_tt_main printer_formula_suite;
         run_test_tt_main to_string_formula_suite;
-        run_test_tt_main prop_suite
+        run_test_tt_main prop_suite;
 ;;
 

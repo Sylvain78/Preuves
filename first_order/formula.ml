@@ -59,18 +59,18 @@ struct
 			Imply(f'1, f'2)
 		(* alpha-renaming of v to enforce that v does not capture a free variable of the substituted terms
                  * TODO : find a better algorithm with only the necessary renamings. *)
-		| Forall(v,f1) as f -> 
-                                        let new_v = Var(new_var()) 
-                                        in 
-                                        let f1' = simultaneous_substitution_formula [v] [(V new_v)] f1
-                                        in
-                                        Forall (new_v,simultaneous_substitution_formula lx lt f1')
-		| Exists(v,f1) as f ->
-                                        let new_v = Var(new_var()) 
-                                        in 
-                                        let f1' = simultaneous_substitution_formula [v] [(V new_v)] f1
-                                        in
-                                        Exists (new_v,simultaneous_substitution_formula lx lt f1')
+		| Forall(v,f1) -> 
+                                let new_v = Var(new_var()) 
+                                in 
+                                let f1' = simultaneous_substitution_formula [v] [(V new_v)] f1
+                                in
+                                Forall (new_v,simultaneous_substitution_formula lx lt f1')
+		| Exists(v,f1) ->
+                                let new_v = Var(new_var()) 
+                                in 
+                                let f1' = simultaneous_substitution_formula [v] [(V new_v)] f1
+                                in
+                                Exists (new_v,simultaneous_substitution_formula lx lt f1')
 					 
 	(** Free variables of an atomic formula. These are all the variables of the formula *)
 	let free_variables_of_atomic_formula = function
@@ -142,8 +142,8 @@ struct
 	(** Opérateurs standards *)
 	let (=>) f g = Imply(f, g)
 	let (<=) f g = g => f
-	let (&&) f g = And(f, g)
-	let (||) f g = Or(f, g)
+	let (&&&) f g = And(f, g)
+	let (|||) f g = Or(f, g)
 	let neg f = Neg f
 	let (<=>) f g = And(Imply(f, g), Imply(g, f))
 	let (?&) = function (v, f) -> Exists(v, f)
@@ -184,29 +184,29 @@ struct
 			| And(f, g) -> begin
 						match f, g with
 						| Imply(h1, h2), Imply(h2', h1') ->
-								if (h1 = h1' & h2 = h2')
+								if (h1 = h1' && h2 = h2')
 								then print_bin "equiv" "<=>" h1 h2
 								else begin
-									if seq = "and" or seq ="init" or (seq ="forall") or (seq ="exists")
+									if seq = "and" || seq ="init" || (seq ="forall") || (seq ="exists")
 									then
 										print_bin "and" "/\\" f g
 									else
 										print_par (fun () -> print_bin "and" "/\\" f g)
 								end
 						| _ ->
-								if seq = "and" or seq ="init" or (seq ="forall") or (seq ="exists")
+								if seq = "and" || seq ="init" || (seq ="forall") || (seq ="exists")
 								then
 									print_bin "and" "/\\" f g
 								else
 									print_par (fun () -> print_bin "and" "/\\" f g)
 					end
 			| Or(f, g) ->
-					if seq = "or" or seq ="init" or (seq ="forall") or (seq ="exists")
+					if seq = "or" || seq ="init" || (seq ="forall") || (seq ="exists")
 					then
 						print_bin "or" "\\/" f g
 					else
 						print_par (fun () -> print_bin "or" "\\/" f g)
-			| Imply(f, g) -> if (seq ="init") or (seq ="forall") or (seq ="exists")
+			| Imply(f, g) -> if (seq ="init") || (seq ="forall") || (seq ="exists")
 					then
 						print_bin "impl" "=>" f g
 					else

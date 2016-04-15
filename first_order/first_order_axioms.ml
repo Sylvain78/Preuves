@@ -125,7 +125,7 @@ struct
 		in
 		f = x1 ^= x1
 		or f = ((Atomic_formula (Eq(x1, x2))) => (Atomic_formula (Eq(x2, x1))))
-		or f = (((Atomic_formula (Eq(x1, x2))) && (Atomic_formula (Eq(x2, x3)))) => (Atomic_formula (Eq(x1, x3))))
+		or f = (((Atomic_formula (Eq(x1, x2))) &&& (Atomic_formula (Eq(x2, x3)))) => (Atomic_formula (Eq(x1, x3))))
 	
 	let verif_arite_et arite f =
 		let rec verif_arite_et_aux i arite f =

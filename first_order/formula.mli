@@ -74,8 +74,8 @@ module Formula :
       val term_libre_pour_var : term -> 'a -> formula -> bool
       val ( => ) : formula -> formula -> formula
       val ( <= ) : formula -> formula -> formula
-      val ( && ) : formula -> formula -> formula
-      val ( || ) : formula -> formula -> formula
+      val ( &&& ) : formula -> formula -> formula
+      val ( ||| ) : formula -> formula -> formula
       val neg : formula -> formula
       val ( <=> ) : formula -> formula -> formula
       val ( ?& ) : var * formula -> formula
