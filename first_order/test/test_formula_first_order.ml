@@ -20,7 +20,8 @@ let x1,x2,x3,x4 = V v1, V v2, V v3, V v4
 let f1 = Eq(x1, x2)
 let f2 = Eq(x3, x4)
 
-let g1 = Forall(v1, Atomic_formula(Eq(x1, x3)))
+let g1 = Forall(v1, Atomic_formula(Eq(x1, x2)))
+let g2 = Exists(v1, Atomic_formula(Eq(x1, x2)))
 
 let nf1 = Neg (Atomic_formula f1)
 let nf2 = Neg (Atomic_formula f2)
@@ -105,6 +106,10 @@ let test_free_variables_of_formula_bin test_ctxt =
         assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.of_list [v1 ; v2 ; v3 ; v4]) (free_variables_of_formula (Or  (Atomic_formula f1, Atomic_formula f2))));
         assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.of_list [v1 ; v2 ; v3 ; v4]) (free_variables_of_formula (Imply (Atomic_formula f1, Atomic_formula f2))))
 
+let test_free_variables_of_formula_quant test_ctxt =
+        assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.singleton v2) (free_variables_of_formula g1));
+        assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.singleton v2) (free_variables_of_formula g1))
+
 let formula_suite = "First order formula tests">:::
         [ 
         "Test of initialization of printers_relations">::test_initialization_printers_relations;
@@ -124,6 +129,7 @@ let formula_suite = "First order formula tests">:::
         "test_free_variables_of_formula_atomic">::test_free_variables_of_formula_atomic;
         "test_free_variables_of_formula_neg>">::test_free_variables_of_formula_neg;
         "test_free_variables_of_formula_bin">::test_free_variables_of_formula_bin;
+        "test_free_variables_of_formula_quant">::test_free_variables_of_formula_quant;
         ]
 
 let () = run_test_tt_main formula_suite
