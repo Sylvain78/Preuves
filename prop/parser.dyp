@@ -9,4 +9,5 @@
 
 main: expr "\n" { $1 }
 expr:
-	| "X"['0''9']+ { PVar (int_of_string $1) }
+	| "X_"['0''9'] { PVar (int_of_string $2) }
+	| "X_{" ['0''9']+ "}" { PVar (int_of_string $2) }
