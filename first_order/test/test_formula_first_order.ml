@@ -11,7 +11,11 @@ module FormulaTest = struct
 end
 open FormulaTest
 
-let v1,v2,v3,v4 = Var (new_var()), Var (new_var()), Var (new_var()), Var (new_var())
+let v1 = Var (new_var())
+let v2 = Var (new_var())
+let v3 = Var (new_var())
+let v4 = Var (new_var())
+
 let x1,x2,x3,x4 = V v1, V v2, V v3, V v4
 let f1 = Eq(x1, x2)
 let f2 = Eq(x3, x4)
@@ -90,6 +94,17 @@ let test_free_variables_of_atomic_formula_eq test_ctxt =
 let test_free_variables_of_atomic_formula_relation test_ctxt =
         assert_equal (FormulaTest.SetVar.of_list [v1 ; v2 ; v3]) (free_variables_of_atomic_formula (Relation(SignatureMinimal.of_string "",[x1;x2;x2;x3])))
 
+let test_free_variables_of_formula_atomic test_ctxt =
+        assert_equal (FormulaTest.SetVar.of_list [v1 ; v2]) (free_variables_of_formula (Atomic_formula f1))
+
+let test_free_variables_of_formula_neg test_ctxt =
+        assert_equal (FormulaTest.SetVar.of_list [v1 ; v2]) (free_variables_of_formula (nf1))
+
+let test_free_variables_of_formula_bin test_ctxt =
+        assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.of_list [v1 ; v2 ; v3 ; v4]) (free_variables_of_formula (And (Atomic_formula f1, Atomic_formula f2))));
+        assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.of_list [v1 ; v2 ; v3 ; v4]) (free_variables_of_formula (Or  (Atomic_formula f1, Atomic_formula f2))));
+        assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.of_list [v1 ; v2 ; v3 ; v4]) (free_variables_of_formula (Imply (Atomic_formula f1, Atomic_formula f2))))
+
 let formula_suite = "First order formula tests">:::
         [ 
         "Test of initialization of printers_relations">::test_initialization_printers_relations;
@@ -106,6 +121,9 @@ let formula_suite = "First order formula tests">:::
         "test_simultaneous_substitution_formula_exists_nominal2">::test_simultaneous_substitution_formula_exists_nominal_2;
         "test_free_variables_of_atomic_formula_eq">::test_free_variables_of_atomic_formula_eq;
         "test_free_variables_of_atomic_formula_relation">::test_free_variables_of_atomic_formula_relation;
+        "test_free_variables_of_formula_atomic">::test_free_variables_of_formula_atomic;
+        "test_free_variables_of_formula_neg>">::test_free_variables_of_formula_neg;
+        "test_free_variables_of_formula_bin">::test_free_variables_of_formula_bin;
         ]
 
 let () = run_test_tt_main formula_suite
