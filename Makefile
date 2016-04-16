@@ -57,7 +57,7 @@ coverage:
 clean:
 	ocamlbuild -clean && \
 	rm -f *.native && \
-	rm -f test_formula_prop test_formula_prop_coverage && \
+	rm -f test_formula_prop test_formula_prop_coverage test_proof_prop test_formula_first_order && \
 	rm -f bisect*.out && \
 	rm -rf report_dir
 
