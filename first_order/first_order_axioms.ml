@@ -108,7 +108,7 @@ struct
                           (* Vérification *)
                           let f' = simultaneous_substitution_formula [v] [t] f
 			  in
-			  f'=g & (term_libre_pour_var t v f)
+			  f'=g & (term_free_for_var t v f)
                         with Not_found -> false)
 		| _ -> false
 	

@@ -70,8 +70,7 @@ module Formula :
       val simultaneous_substitution_formula : var list -> term list -> formula -> formula
       val free_variables_of_atomic_formula : atomic_formula -> SetVar.t
       val free_variables_of_formula : formula -> SetVar.t
-      val bound_variables_formula : formula -> SetVar.t
-      val term_libre_pour_var : term -> 'a -> formula -> bool
+      val term_free_for_var : term -> 'a -> formula -> bool
       val ( => ) : formula -> formula -> formula
       val ( <= ) : formula -> formula -> formula
       val ( &&& ) : formula -> formula -> formula

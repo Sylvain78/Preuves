@@ -77,31 +77,23 @@ struct
 		| Eq(t1,t2) -> SetVar.union (variables_term t1) (variables_term t2)
 		| Relation(_, lt) -> List.fold_left SetVar.union SetVar.empty (List.map variables_term lt)
 
-	(**s Variables libres et variables liées**)
-	(** Une variable peut être libre et liée dans la même formula. **)
+	(**s Free variables and bound variables **)
+	(** A variable can be free and bound in the very same formula. **)
 
 
-	(** Variables libres d'une formula. Une variable est considérée comme libre si au moins une occurence est libre. **)
+	(** Free variables of a formula. A variable is considered as free  if at least one of its occurence is free. **)
 	let rec free_variables_of_formula = function
 		| Atomic_formula f -> free_variables_of_atomic_formula f
 		| Neg f -> free_variables_of_formula f
 		| And(f1,f2) | Or(f1,f2) | Imply(f1,f2) -> SetVar.union (free_variables_of_formula f1) (free_variables_of_formula f2)
 		| Forall(v,f) | Exists(v,f) -> SetVar.remove v (free_variables_of_formula f) 
 		
-	(** Variables liées d'une formula. Une variable est considérée comme liée si au moins une occurence est liée. **)	
-	let rec bound_variables_formula = function
-		| Forall(v,f) | Exists(v,f) -> SetVar.add v (bound_variables_formula f)
-		| Neg f -> bound_variables_formula f
-		| And(f1,f2) | Or(f1,f2) | Imply(f1,f2) -> SetVar.union (bound_variables_formula f1) (bound_variables_formula f2)
-  		| Atomic_formula f -> SetVar.empty (*aucune variable liée dans une formula atomic*)
-
-	
-	(** Les occurences des variables de t ne sont pas capturées lors d'une substitution à x dans f **)
-	let rec term_libre_pour_var t x = function
+	(** The occurences of variables in t are not captured during a substition at the variable x in f **)
+	let rec term_free_for_var t x = function
 		| Neg f ->
-			term_libre_pour_var t x f
+			term_free_for_var t x f
 		| And(f,g) | Or(f,g) | Imply(f,g) -> 
-			(term_libre_pour_var t x f) && (term_libre_pour_var t x g)
+			(term_free_for_var  t x f) && (term_free_for_var t x g)
 		| Forall(v,f) | Exists(v,f) -> not (SetVar.mem v (variables_term t))
 		| Atomic_formula f_atomic -> true
 

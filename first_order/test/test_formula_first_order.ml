@@ -108,7 +108,12 @@ let test_free_variables_of_formula_bin test_ctxt =
 
 let test_free_variables_of_formula_quant test_ctxt =
         assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.singleton v2) (free_variables_of_formula g1));
-        assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.singleton v2) (free_variables_of_formula g1))
+        assert_equal 0 (FormulaTest.SetVar.compare (FormulaTest.SetVar.singleton v2) (free_variables_of_formula g2))
+
+let test_term_free_for_var_atomic test_ctxt =
+        let t,x = x1,v1
+        in
+        assert_bool "term not free for var" (term_free_for_var t x (Atomic_formula f1))
 
 let formula_suite = "First order formula tests">:::
         [ 
@@ -130,6 +135,7 @@ let formula_suite = "First order formula tests">:::
         "test_free_variables_of_formula_neg>">::test_free_variables_of_formula_neg;
         "test_free_variables_of_formula_bin">::test_free_variables_of_formula_bin;
         "test_free_variables_of_formula_quant">::test_free_variables_of_formula_quant;
+        "test_term_free_for_var_atomic">::test_term_free_for_var_atomic;
         ]
 
 let () = run_test_tt_main formula_suite
