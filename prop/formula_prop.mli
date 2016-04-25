@@ -6,10 +6,6 @@ type formula_prop =
   | PImpl of formula_prop * formula_prop
 ;;
 
-val (=>.) : formula_prop -> formula_prop -> formula_prop;;
-val (&&.) : formula_prop -> formula_prop -> formula_prop;;
-val (||.) : formula_prop -> formula_prop -> formula_prop;;
-val neg  : formula_prop -> formula_prop;;
 
 val printer_formula_prop : Format.formatter -> formula_prop -> unit
 val to_string_formula_prop : formula_prop -> string

@@ -3,11 +3,22 @@
 }
 
 %start main
-%layout [' ' '\t']
+%layout [' ' '\t' '\n']
 
 %parser
 
-main: expr "\n" { $1 }
+main: expr { $1 }
+
 expr:
 	| "X_"['0''9'] { PVar (int_of_string $2) }
 	| "X_{" ['0''9']+ "}" { PVar (int_of_string $2) }
+
+%%
+
+{
+let formula_from_string s = 
+   let l = (main (Dyp.from_string (pp ()) s))
+   in 
+   match l with [ (f,s) ] -> f
+              |   _   -> raise (Failure "[Prop] Parser.formula_from_string")
+}

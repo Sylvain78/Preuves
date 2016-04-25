@@ -1,5 +1,6 @@
 open Axioms_prop
 open Formula_prop
+open Parser 
 (*
 let (read_formule : string -> (formula_prop * string) list) = function s ->
         let lexbuf = Dyp.from_string (Prop_parser.pp ()) s
@@ -87,154 +88,155 @@ let proof_verification ~hyp:hypotheses f ~proof: proof =
 ;;
 
 (* |- F=>F *)
-proof_verification ~hyp:[] (x1=>.x1) 
-  ~proof:[
-    (x1 =>.((x1 =>. x1)=>.x1)) =>.
-    (( x1 =>. (x1 =>. x1)) =>. (x1 =>. x1));
-    x1=>.((x1=>.x1)=>.x1);
-    (x1 =>. (x1 =>. x1)) =>. (x1 =>. x1);
-    x1=>.(x1=>.x1);
-    x1=>.x1
-  ];;
+proof_verification ~hyp:[] (formula_from_string "x1=>.x1") 
+  ~proof:(List.map formula_from_string [
+    "(x1 =>.((x1 =>. x1)=>.x1)) =>.
+    (( x1 =>. (x1 =>. x1)) =>. (x1 =>. x1))";
+    "x1=>.((x1=>.x1)=>.x1)";
+    "(x1 =>. (x1 =>. x1)) =>. (x1 =>. x1)";
+    "x1=>.(x1=>.x1)";
+    "x1=>.x1"
+  ]);;
 
-theorems_prop := {name_axiom_prop="C8 Bourbaki"; axiom_prop=(x1=>.x1);}::!theorems_prop;;
+theorems_prop := {name_axiom_prop="C8 Bourbaki"; axiom_prop=formula_from_string "(x1=>.x1)";}::!theorems_prop;;
 
 (* |- (F=>.G)=>.(G=>.H)=>.(F=>.H)*)
-proof_verification ~hyp:[] ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))
-  ~proof:[
-    (x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3));
-    ((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3)))=>.((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))));
-    ((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))));
-    ((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))=>.(((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))));
-    (((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))));
-    ((x2=>.x3)=>. (x1=>.(x2=>.x3)));
-    ((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)));
-    ((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)))=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)));
-    (((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)));
-    (((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))=>.((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))));	
-    ((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))));
+proof_verification ~hyp:[] (formula_from_string "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))")
+  ~proof: (List.map formula_from_string [
+    "(x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))";
+    "((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3)))=>.((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))";
+    "((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))";
+    "((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))=>.(((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))))";
+    "(((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))))";
+    "((x2=>.x3)=>. (x1=>.(x2=>.x3)))";
+    "((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)))";
+    "((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)))=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))";
+    "(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))";
+    "(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))=>.((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))))";
+    "((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))))";
 
     (*k*)
-    ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)));
+    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))";
 
     (*s*)
-    ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))) =>.
-    (((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3))));
+    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))) =>.
+    (((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3))))";
 
-    ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)));
-    ((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))
-  ];;
-theorems_prop := {name_axiom_prop="???"; axiom_prop=((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)));}::!theorems_prop;;
+    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))";
+    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))"
+  ]);;
+theorems_prop := {name_axiom_prop="???"; axiom_prop=(formula_from_string "(x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3))");}::!theorems_prop;;
 
 (*non A =>. non B |- B =>. A*)
+(* TODO : delete once they are not needed anymore
 let h = ((neg (neg x2))=>.(neg (neg x1)))	
 and a_ou_b =((neg (neg x1))=>. x1)
 and i = ((neg (neg x2))=>. x1)	
 and a2=	(x2=>.neg (neg x2))
 in
-proof_verification ~hyp:[] (((neg x1)=>.(neg x2))=>.(x2=>.x1))
-  ~proof:[
+*)
+proof_verification ~hyp:[] (formula_from_string "(((neg x1)=>.(neg x2))=>.(x2=>.x1))")
+  ~proof:(List.map formula_from_string [
 
-    a_ou_b;
-    a_ou_b=>.(h=>.a_ou_b);
-    h=>.a_ou_b;
-    h =>.(a_ou_b=>.i);
-    (h =>.(a_ou_b=>.i))=>.((h=>.a_ou_b)=>.(h=>.i));
-    ((h=>.a_ou_b)=>.(h=>.i));
-    h=>.i;
-    a2;
-    a2=>.(h=>.a2);
-    h=>.a2;
-    a2=>.(i=>.(x2=>.x1));
-    (a2=>.(i=>.(x2=>.x1)))=>. (h=>.(a2=>.(i=>.(x2=>.x1))));
-    (h=>.(a2=>.(i=>.(x2=>.x1))));
-    (h=>.(a2=>.(i=>.(x2=>.x1)))) =>. ((h=>.a2)=>.(h=>.(i=>.(x2=>.x1))));
-    (h=>.a2)=>.(h=>.(i=>.(x2=>.x1)));
-    h=>.(i=>.(x2=>.x1));
-    (h=>.(i=>.(x2=>.x1)))=>.((h=>.i)=>.(h=>.(x2=>.x1)));
-    (h=>.i)=>.(h=>.(x2=>.x1));
-    h=>.(x2=>.x1);
-    (((neg x1)=>.(neg x2))=>. h);
-    (((neg x1)=>.(neg x2))=>. h)=>.((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)));
-    ((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)));
-    (((neg x1)=>.(neg x2))=>.(x2=>.x1));
-  ];;
-theorems_prop := {name_axiom_prop="contraposition"; axiom_prop=(((neg x1)=>.(neg x2))=>.(x2=>.x1));}::!theorems_prop;;
+    "a_ou_b";
+    "a_ou_b=>.(h=>.a_ou_b)";
+    "h=>.a_ou_b";
+    "h =>.(a_ou_b=>.i)";
+    "(h =>.(a_ou_b=>.i))=>.((h=>.a_ou_b)=>.(h=>.i))";
+    "((h=>.a_ou_b)=>.(h=>.i))";
+    "h=>.i";
+    "a2";
+    "a2=>.(h=>.a2)";
+    "h=>.a2";
+    "a2=>.(i=>.(x2=>.x1))";
+    "(a2=>.(i=>.(x2=>.x1)))=>. (h=>.(a2=>.(i=>.(x2=>.x1))))";
+    "(h=>.(a2=>.(i=>.(x2=>.x1))))";
+    "(h=>.(a2=>.(i=>.(x2=>.x1)))) =>. ((h=>.a2)=>.(h=>.(i=>.(x2=>.x1))))";
+    "(h=>.a2)=>.(h=>.(i=>.(x2=>.x1)))";
+    "h=>.(i=>.(x2=>.x1))";
+    "(h=>.(i=>.(x2=>.x1)))=>.((h=>.i)=>.(h=>.(x2=>.x1)))";
+    "(h=>.i)=>.(h=>.(x2=>.x1))";
+    "h=>.(x2=>.x1)";
+    "(((neg x1)=>.(neg x2))=>. h)";
+    "(((neg x1)=>.(neg x2))=>. h)=>.((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)))";
+    "((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)))";
+    "(((neg x1)=>.(neg x2))=>.(x2=>.x1))";
+  ]);;
+theorems_prop := {name_axiom_prop="contraposition"; axiom_prop=formula_from_string "(((neg x1)=>.(neg x2))=>.(x2=>.x1))";}::!theorems_prop;;
 
 (* |- F ou F =>. F *)
-proof_verification ~hyp:[] ((x1 ||. x1)=>.x1)
-  ~proof:[
-    ((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1));
-    ((neg x1)=>. ((x1 ||. x1) =>. x1));
-    ((neg x1)=>. ((x1 ||. x1) =>. x1))=>.((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))));
-    ((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))));
-    ((neg x1)=>.((neg x1) =>. neg (x1||.x1)));
-    ((neg x1)=>.((neg x1) =>. neg (x1||.x1)))=>. (((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))));
-    ((neg x1) =>. (neg x1));
-    (((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))));
-    ((neg x1)=>.(neg (x1||.x1)));
-    ((neg x1)=>.(neg (x1||.x1)))=>. ((x1||.x1) =>.x1);
-    (x1||.x1) =>. x1;
-  ];;
-theorems_prop := {name_axiom_prop="[Bourbaki]S1"; axiom_prop=((x1 ||.x1)=>.x1);}::!theorems_prop;;
+proof_verification ~hyp:[] (formula_from_string "(x1 ||. x1)=>.x1")
+  ~proof:(List.map formula_from_string [
+    "((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1))";
+    "((neg x1)=>. ((x1 ||. x1) =>. x1))";
+    "((neg x1)=>. ((x1 ||. x1) =>. x1))=>.((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))))";
+    "((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))))";
+    "((neg x1)=>.((neg x1) =>. neg (x1||.x1)))";
+    "((neg x1)=>.((neg x1) =>. neg (x1||.x1)))=>. (((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))))";
+    "((neg x1) =>. (neg x1))";
+    "(((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))))";
+    "((neg x1)=>.(neg (x1||.x1)))";
+    "((neg x1)=>.(neg (x1||.x1)))=>. ((x1||.x1) =>.x1)";
+    "(x1||.x1) =>. x1";
+  ]);;
+theorems_prop := {name_axiom_prop="[Bourbaki]S1"; axiom_prop=(formula_from_string "(x1 ||.x1)=>.x1");}::!theorems_prop;;
 
 (*|- A ou neg A*)
+(* TODO delete when not need anymore
 let z = x1 ||. neg x1
 and tout = neg (x1=>.x1)
 in
-proof_verification ~hyp:[] (z)
-  ~proof:[
+*)
+proof_verification ~hyp:[] (formula_from_string "x1 || neg x1")
+  ~proof:(List.map formula_from_string [
 
-    (x1=>.x1);(**)
-    (x1=>.x1) =>. (neg tout); (**)
-    neg tout;(*OK*)
+    "(x1=>.x1)";(**)
+    "(x1=>.x1) =>. (neg tout)"; (**)
+    "neg tout";(*OK*)
 
-    (neg z)=>.(neg z);(*OK*)
+    "(neg z)=>.(neg z)";(*OK*)
 
-    x1=>.z;(**)
-    (x1=>.z)=>.((neg z) =>. (x1=>.z));(**)
-    (neg z)=>.(x1=>.(z));(*OK*)
+    "x1=>.z";(**)
+    "(x1=>.z)=>.((neg z) =>. (x1=>.z))";(**)
+    "(neg z)=>.(x1=>.(z))";(*OK*)
 
-    ((x1=>.z)=>.((neg z)=>.(neg x1))); (**)
-    ((x1=>.z)=>.((neg z)=>.(neg x1))) =>. ((neg z)=>. ((x1=>.z)=>.((neg z)=>.(neg x1)))); (**)
-    (neg z)=>.((x1=>.z)=>.((neg z)=>.(neg x1))); (*OK*)
+    "((x1=>.z)=>.((neg z)=>.(neg x1)))"; (**)
+    "((x1=>.z)=>.((neg z)=>.(neg x1))) =>. ((neg z)=>. ((x1=>.z)=>.((neg z)=>.(neg x1))))"; (**)
+    "(neg z)=>.((x1=>.z)=>.((neg z)=>.(neg x1)))"; (*OK*)
 
-    (x1=>.z)=>.((neg z) =>. neg x1);(**)
-    ((neg z) =>. neg x1);(**)
-    ((neg z) =>. neg x1)=>. ((neg z)=>.((neg z) =>. neg x1));(**)
-    (neg z)=>.((neg z)=>.(neg x1));(*OK*)
+    "(x1=>.z)=>.((neg z) =>. neg x1)";(**)
+    "((neg z) =>. neg x1)";(**)
+    "((neg z) =>. neg x1)=>. ((neg z)=>.((neg z) =>. neg x1))";(**)
+    "(neg z)=>.((neg z)=>.(neg x1))";(*OK*)
 
-    ((neg z)=>.((neg z)=>.(neg x1)))=>.(((neg z)=>.(neg z))=>.((neg z)=>.(neg x1)));(**)
-    ((neg z)=>.(neg z))=>.((neg z)=>.(neg x1));(**)
-    (neg z)=>.(neg x1);(*OK*)
+    "((neg z)=>.((neg z)=>.(neg x1)))=>.(((neg z)=>.(neg z))=>.((neg z)=>.(neg x1)))";(**)
+    "((neg z)=>.(neg z))=>.((neg z)=>.(neg x1))";(**)
+    "(neg z)=>.(neg x1)";(*OK*)
 
-    (neg x1)=>. z;(**)
-    ((neg x1)=>. z)=>. ((neg z)=>.((neg x1)=>. z));(**)
-    (neg z)=>.((neg x1)=>.(z));(*OK*)
-    ((neg z)=>.((neg x1)=>.(z)))=>.(((neg z)=>. (neg x1))=>. ((neg z)=>. z));(**)
-    ((neg z)=>. (neg x1))=>. ((neg z)=>. z);(**)
-    (neg z)=>.(z);(*OK*)
+    "(neg x1)=>. z";(**)
+    "((neg x1)=>. z)=>. ((neg z)=>.((neg x1)=>. z))";(**)
+    "(neg z)=>.((neg x1)=>.(z))";(*OK*)
+    "((neg z)=>.((neg x1)=>.(z)))=>.(((neg z)=>. (neg x1))=>. ((neg z)=>. z))";(**)
+    "((neg z)=>. (neg x1))=>. ((neg z)=>. z)";(**)
+    "(neg z)=>.(z)";(*OK*)
 
-    (neg z)=>.((neg tout)=>.(neg z));(*OK*)
+    "(neg z)=>.((neg tout)=>.(neg z))";(*OK*)
 
-    ((neg tout)=>.(neg z))=>.((z)=>.(tout));(**)
-    (((neg tout)=>.(neg z))=>.((z)=>.(tout)))=>.
-    ((neg z)=>. (((neg tout)=>.(neg z))=>.((z)=>.(tout))));(**)
+    "((neg tout)=>.(neg z))=>.((z)=>.(tout))";(**)
+    "(((neg tout)=>.(neg z))=>.((z)=>.(tout)))=>.  ((neg z)=>. (((neg tout)=>.(neg z))=>.((z)=>.(tout))))";(**)
 
-    (neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout)));(*OK*)
-    ((neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout))))=>.
-    (((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)));(**)
-    (((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)));(**)
-    (neg z)=>.((z)=>.(tout));(*OK*)
-    ((neg z)=>.((z)=>.(tout)))=>.
-    (((neg z)=>.z) =>. ((neg z) =>. tout));(**)
-    (((neg z)=>.z) =>. ((neg z) =>. tout));(**)
-    (neg z)=>.(tout);(*OK*)
-    ((neg z)=>.(tout))=>.((neg tout)=>.(neg(neg z)));(*OK*)
-    (neg tout)=>.(neg(neg z));(*OK*)
-    (neg(neg z))=>.(z);(*OK*)
-    neg(neg z);(*OK*)
-    z
-  ];;
-theorems_prop := {name_axiom_prop="Excluded middle"; axiom_prop=(x1 ||. neg x1);}::!theorems_prop;;
+    "(neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout)))";(*OK*)
+    "((neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout))))=>. (((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)))";(**)
+    "(((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)))";(**)
+    "(neg z)=>.((z)=>.(tout))";(*OK*)
+    "((neg z)=>.((z)=>.(tout)))=>. (((neg z)=>.z) =>. ((neg z) =>. tout))";(**)
+    "(((neg z)=>.z) =>. ((neg z) =>. tout))";(**)
+    "(neg z)=>.(tout)";(*OK*)
+    "((neg z)=>.(tout))=>.((neg tout)=>.(neg(neg z)))";(*OK*)
+    "(neg tout)=>.(neg(neg z))";(*OK*)
+    "(neg(neg z))=>.(z)";(*OK*)
+    "neg(neg z)";(*OK*)
+    "z"
+  ]);;
+theorems_prop := {name_axiom_prop="Excluded middle"; axiom_prop=formula_from_string "(x1 ||. neg x1)";}::!theorems_prop;;
 

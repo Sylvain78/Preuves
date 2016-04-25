@@ -1,5 +1,3 @@
-(*open Prop_parser*)
-
 type formula_prop =
   | PVar of int
   | PNeg of formula_prop
@@ -7,11 +5,6 @@ type formula_prop =
   | POr of formula_prop * formula_prop
   | PImpl of formula_prop * formula_prop
 ;;
-
-let (=>.) f g = PImpl(f, g);;
-let (&&.) f g = PAnd(f, g);;
-let (||.) f g = POr(f, g);;
-let neg f = PNeg f;;
 
 (**
    Print formatters

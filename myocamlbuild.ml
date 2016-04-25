@@ -2,7 +2,6 @@ open Ocamlbuild_plugin;;
 dispatch begin function
   | After_rules ->
     rule "dypgen"
-      ~tags:["dypgen"]
       ~prods:["%.ml";]
       ~deps:["%.dyp"]
       begin fun env _ ->
