@@ -113,7 +113,9 @@ let test_free_variables_of_formula_quant test_ctxt =
 let test_term_free_for_var_atomic test_ctxt =
         let t,x = x1,v1
         in
-        assert_bool "term not free for var" (term_free_for_var t x (Atomic_formula f1))
+        assert_bool "term not free for var [Atomic formula]" (term_free_for_var t x (Atomic_formula f1));
+        assert_bool "term not free for var [Neg]" (term_free_for_var t x nf1);
+        assert_bool "term not free for var [And]" (term_free_for_var t x (And(nf1,nf2)))
 
 let formula_suite = "First order formula tests">:::
         [ 

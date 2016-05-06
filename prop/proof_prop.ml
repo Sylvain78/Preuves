@@ -55,7 +55,7 @@ let theorems_prop = ref []
 exception Invalid_demonstration of formula_prop * formula_prop list;;
 Printexc.register_printer (function Invalid_demonstration(f,t) -> 
     Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
-         (List.fold_left  (fun acc f-> acc ^ (to_string_formula_prop f) ^ "\n") ""  t) ^ "\n]]\n") 
+         (List.fold_left  (fun acc f-> acc ^ (to_string_formula_prop f) ^ "\n") ""  t) ^ "]]\n") 
                                   | _ -> None)
 ;;
 let rec verif t = function
@@ -87,156 +87,154 @@ let proof_verification ~hyp:hypotheses f ~proof: proof =
     verif hypotheses (List.rev proof)
 ;;
 
-(* |- F=>F *)
-proof_verification ~hyp:[] (formula_from_string "x1=>.x1") 
+(* |   F \\implies  *)
+proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1") 
   ~proof:(List.map formula_from_string [
-    "(x1 =>.((x1 =>. x1)=>.x1)) =>.
-    (( x1 =>. (x1 =>. x1)) =>. (x1 =>. x1))";
-    "x1=>.((x1=>.x1)=>.x1)";
-    "(x1 =>. (x1 =>. x1)) =>. (x1 =>. x1)";
-    "x1=>.(x1=>.x1)";
-    "x1=>.x1"
+    "(X_1  \\implies ((X_1  \\implies  X_1) \\implies X_1))  \\implies 
+    (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
+    "X_1 \\implies ((X_1 \\implies X_1) \\implies X_1)";
+    "(X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1)";
+    "X_1 \\implies (X_1 \\implies X_1)";
+    "X_1 \\implies X_1"
   ]);;
 
-theorems_prop := {name_axiom_prop="C8 Bourbaki"; axiom_prop=formula_from_string "(x1=>.x1)";}::!theorems_prop;;
+theorems_prop := {name_axiom_prop="C8 Bourbaki"; axiom_prop=formula_from_string "(X_1 \\implies X_1)";}::!theorems_prop;;
 
-(* |- (F=>.G)=>.(G=>.H)=>.(F=>.H)*)
-proof_verification ~hyp:[] (formula_from_string "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))")
+(* |   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)*)
+proof_verification ~hyp:[] (formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))")
   ~proof: (List.map formula_from_string [
-    "(x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))";
-    "((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3)))=>.((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))";
-    "((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))";
-    "((x2=>.x3)=>.((x1=>.(x2=>.x3))=>.((x1=>.x2)=>.(x1=>.x3))))=>.(((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))))";
-    "(((x2=>.x3)=>.(x1=>.(x2=>.x3)))=>.((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3))))";
-    "((x2=>.x3)=>. (x1=>.(x2=>.x3)))";
-    "((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)))";
-    "((x2=>.x3)=>.((x1=>.x2)=>.(x1=>.x3)))=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))";
-    "(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))";
-    "(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3)))=>.((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))))";
-    "((x1=>.x2)=>.(((x2=>.x3)=>.(x1=>.x2))=>.((x2=>.x3)=>.(x1=>.x3))))";
+    "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
+    "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "(((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "((X_2 \\implies X_3) \\implies  (X_1 \\implies (X_2 \\implies X_3)))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+    "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+    "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))) \\implies ((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+    "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
 
     (*k*)
-    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))";
+    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)))";
 
     (*s*)
-    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))) =>.
-    (((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3))))";
+    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))  \\implies 
+    (((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
 
-    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x2)))=>.((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))";
-    "((x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3)))"
+    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   ]);;
-theorems_prop := {name_axiom_prop="???"; axiom_prop=(formula_from_string "(x1=>.x2)=>.((x2=>.x3)=>.(x1=>.x3))");}::!theorems_prop;;
+theorems_prop := {name_axiom_prop="???"; axiom_prop=(formula_from_string "(X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))");}::!theorems_prop;;
 
-(*non A =>. non B |- B =>. A*)
+(*non A  \\implies  non B |   B  \\implies  A*)
 (* TODO : delete once they are not needed anymore
-let h = ((neg (neg x2))=>.(neg (neg x1)))	
-and a_ou_b =((neg (neg x1))=>. x1)
-and i = ((neg (neg x2))=>. x1)	
-and a2=	(x2=>.neg (neg x2))
+let h = ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))	
+and ((\\lnot (\\lnot X_1)) \\implies X_1) =((\\lnot (\\lnot X_1)) \\implies  X_1)
+and ((\\lnot (\\lnot X_2)) \\implies X_1) = ((\\lnot (\\lnot X_2)) \\implies  X_1)	
+and (X_2 \\implies \\lnot (\\lnot X_2))=	(X_2 \\implies \\lnot (\\lnot X_2))
 in
 *)
-proof_verification ~hyp:[] (formula_from_string "(((neg x1)=>.(neg x2))=>.(x2=>.x1))")
+proof_verification ~hyp:[] (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
   ~proof:(List.map formula_from_string [
 
-    "a_ou_b";
-    "a_ou_b=>.(h=>.a_ou_b)";
-    "h=>.a_ou_b";
-    "h =>.(a_ou_b=>.i)";
-    "(h =>.(a_ou_b=>.i))=>.((h=>.a_ou_b)=>.(h=>.i))";
-    "((h=>.a_ou_b)=>.(h=>.i))";
-    "h=>.i";
-    "a2";
-    "a2=>.(h=>.a2)";
-    "h=>.a2";
-    "a2=>.(i=>.(x2=>.x1))";
-    "(a2=>.(i=>.(x2=>.x1)))=>. (h=>.(a2=>.(i=>.(x2=>.x1))))";
-    "(h=>.(a2=>.(i=>.(x2=>.x1))))";
-    "(h=>.(a2=>.(i=>.(x2=>.x1)))) =>. ((h=>.a2)=>.(h=>.(i=>.(x2=>.x1))))";
-    "(h=>.a2)=>.(h=>.(i=>.(x2=>.x1)))";
-    "h=>.(i=>.(x2=>.x1))";
-    "(h=>.(i=>.(x2=>.x1)))=>.((h=>.i)=>.(h=>.(x2=>.x1)))";
-    "(h=>.i)=>.(h=>.(x2=>.x1))";
-    "h=>.(x2=>.x1)";
-    "(((neg x1)=>.(neg x2))=>. h)";
-    "(((neg x1)=>.(neg x2))=>. h)=>.((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)))";
-    "((h=>.(x2=>.x1))=>.(((neg x1)=>.(neg x2))=>.(x2=>.x1)))";
-    "(((neg x1)=>.(neg x2))=>.(x2=>.x1))";
+    "((\\lnot (\\lnot X_1)) \\implies X_1)";
+    "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)";
+    "(X_2 \\implies \\lnot (\\lnot X_2))";
+    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))";
+    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+    "((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies  (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))  \\implies  ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))))";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
   ]);;
-theorems_prop := {name_axiom_prop="contraposition"; axiom_prop=formula_from_string "(((neg x1)=>.(neg x2))=>.(x2=>.x1))";}::!theorems_prop;;
+theorems_prop := {name_axiom_prop="contraposition"; axiom_prop=formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}::!theorems_prop;;
 
-(* |- F ou F =>. F *)
-proof_verification ~hyp:[] (formula_from_string "(x1 ||. x1)=>.x1")
+(* |   F ou F  \\implies  F *)
+proof_verification ~hyp:[] (formula_from_string "(X_1 \\lor X_1) \\implies X_1")
   ~proof:(List.map formula_from_string [
-    "((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1))";
-    "((neg x1)=>. ((x1 ||. x1) =>. x1))";
-    "((neg x1)=>. ((x1 ||. x1) =>. x1))=>.((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))))";
-    "((((x1 ||.x1) =>. x1)=>.((neg x1) =>. neg (x1||.x1)))=>.((neg x1)=>.((neg x1) =>. neg (x1||.x1))))";
-    "((neg x1)=>.((neg x1) =>. neg (x1||.x1)))";
-    "((neg x1)=>.((neg x1) =>. neg (x1||.x1)))=>. (((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))))";
-    "((neg x1) =>. (neg x1))";
-    "(((neg x1) =>. (neg x1))=>.((neg x1)=>.(neg (x1||.x1))))";
-    "((neg x1)=>.(neg (x1||.x1)))";
-    "((neg x1)=>.(neg (x1||.x1)))=>. ((x1||.x1) =>.x1)";
-    "(x1||.x1) =>. x1";
+    "((X_1 \\lor X_1)  \\implies  X_1) \\implies ((\\lnot X_1)  \\implies  \\lnot (X_1\\lor X_1))";
+    "((\\lnot X_1) \\implies  ((X_1 \\lor X_1)  \\implies  X_1))";
+    "((\\lnot X_1) \\implies  ((X_1 \\lor X_1)  \\implies  X_1)) \\implies ((((X_1 \\lor X_1)  \\implies  X_1) \\implies ((\\lnot X_1)  \\implies  \\lnot (X_1\\lor X_1))) \\implies ((\\lnot X_1) \\implies ((\\lnot X_1)  \\implies  \\lnot (X_1\\lor X_1))))";
+    "((((X_1 \\lor X_1)  \\implies  X_1) \\implies ((\\lnot X_1)  \\implies  \\lnot (X_1\\lor X_1))) \\implies ((\\lnot X_1) \\implies ((\\lnot X_1)  \\implies  \\lnot (X_1\\lor X_1))))";
+    "((\\lnot X_1) \\implies ((\\lnot X_1)  \\implies  \\lnot (X_1\\lor X_1)))";
+    "((\\lnot X_1) \\implies ((\\lnot X_1)  \\implies  \\lnot (X_1\\lor X_1))) \\implies  (((\\lnot X_1)  \\implies  (\\lnot X_1)) \\implies ((\\lnot X_1) \\implies (\\lnot (X_1\\lor X_1))))";
+    "((\\lnot X_1)  \\implies  (\\lnot X_1))";
+    "(((\\lnot X_1)  \\implies  (\\lnot X_1)) \\implies ((\\lnot X_1) \\implies (\\lnot (X_1\\lor X_1))))";
+    "((\\lnot X_1) \\implies (\\lnot (X_1\\lor X_1)))";
+    "((\\lnot X_1) \\implies (\\lnot (X_1\\lor X_1))) \\implies  ((X_1\\lor X_1)  \\implies X_1)";
+    "(X_1\\lor X_1)  \\implies  X_1";
   ]);;
-theorems_prop := {name_axiom_prop="[Bourbaki]S1"; axiom_prop=(formula_from_string "(x1 ||.x1)=>.x1");}::!theorems_prop;;
+theorems_prop := {name_axiom_prop="[Bourbaki]S1"; axiom_prop=(formula_from_string "(X_1 \\lor X_1) \\implies X_1");}::!theorems_prop;;
 
-(*|- A ou neg A*)
+(*|   A ou \\lnot A*)
 (* TODO delete when not need anymore
-let z = x1 ||. neg x1
-and tout = neg (x1=>.x1)
+let X_1 \\lor \\lnot X_1 = X_1 \\lor \\lnot X_1
+and \\lnot (X_1 \\implies X_1) = \\lnot (X_1 \\implies X_1)
 in
 *)
-proof_verification ~hyp:[] (formula_from_string "x1 || neg x1")
+proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
   ~proof:(List.map formula_from_string [
+    "(X_1 \\implies X_1)";(**)
+    "(X_1 \\implies X_1)  \\implies  (\\lnot (\\lnot (X_1 \\implies X_1)))"; (**)
+    "\\lnot (\\lnot (X_1 \\implies X_1))";(*OK*)
 
-    "(x1=>.x1)";(**)
-    "(x1=>.x1) =>. (neg tout)"; (**)
-    "neg tout";(*OK*)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
 
-    "(neg z)=>.(neg z)";(*OK*)
+    "X_1 \\implies (X_1 \\lor \\lnot X_1)";(**)
+    "(X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1 \\implies (X_1 \\lor \\lnot X_1)))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (X_1 \\implies ((X_1 \\lor \\lnot X_1)))";(*OK*)
 
-    "x1=>.z";(**)
-    "(x1=>.z)=>.((neg z) =>. (x1=>.z))";(**)
-    "(neg z)=>.(x1=>.(z))";(*OK*)
+    "((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)))"; (**)
+    "((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  ((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))))"; (**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)))"; (*OK*)
 
-    "((x1=>.z)=>.((neg z)=>.(neg x1)))"; (**)
-    "((x1=>.z)=>.((neg z)=>.(neg x1))) =>. ((neg z)=>. ((x1=>.z)=>.((neg z)=>.(neg x1))))"; (**)
-    "(neg z)=>.((x1=>.z)=>.((neg z)=>.(neg x1)))"; (*OK*)
+    "(X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))";(*OK*)
 
-    "(x1=>.z)=>.((neg z) =>. neg x1)";(**)
-    "((neg z) =>. neg x1)";(**)
-    "((neg z) =>. neg x1)=>. ((neg z)=>.((neg z) =>. neg x1))";(**)
-    "(neg z)=>.((neg z)=>.(neg x1))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))) \\implies (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)))";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)";(*OK*)
 
-    "((neg z)=>.((neg z)=>.(neg x1)))=>.(((neg z)=>.(neg z))=>.((neg z)=>.(neg x1)))";(**)
-    "((neg z)=>.(neg z))=>.((neg z)=>.(neg x1))";(**)
-    "(neg z)=>.(neg x1)";(*OK*)
+    "(\\lnot X_1) \\implies  (X_1 \\lor \\lnot X_1)";(**)
+    "((\\lnot X_1) \\implies  (X_1 \\lor \\lnot X_1)) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot X_1) \\implies  (X_1 \\lor \\lnot X_1)))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor \\lnot X_1)))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor \\lnot X_1)))) \\implies (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (\\lnot X_1)) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (X_1 \\lor \\lnot X_1)))";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (\\lnot X_1)) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (X_1 \\lor \\lnot X_1))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\lor \\lnot X_1))";(*OK*)
 
-    "(neg x1)=>. z";(**)
-    "((neg x1)=>. z)=>. ((neg z)=>.((neg x1)=>. z))";(**)
-    "(neg z)=>.((neg x1)=>.(z))";(*OK*)
-    "((neg z)=>.((neg x1)=>.(z)))=>.(((neg z)=>. (neg x1))=>. ((neg z)=>. z))";(**)
-    "((neg z)=>. (neg x1))=>. ((neg z)=>. z)";(**)
-    "(neg z)=>.(z)";(*OK*)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
 
-    "(neg z)=>.((neg tout)=>.(neg z))";(*OK*)
+    "((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))";(**)
+    "(((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))) \\implies   ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))))";(**)
 
-    "((neg tout)=>.(neg z))=>.((z)=>.(tout))";(**)
-    "(((neg tout)=>.(neg z))=>.((z)=>.(tout)))=>.  ((neg z)=>. (((neg tout)=>.(neg z))=>.((z)=>.(tout))))";(**)
-
-    "(neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout)))";(*OK*)
-    "((neg z)=>.(((neg tout)=>.(neg z))=>.((z)=>.(tout))))=>. (((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)))";(**)
-    "(((neg z)=>.((neg tout)=>.(neg z)))=>.((neg z)=>.(z=>.tout)))";(**)
-    "(neg z)=>.((z)=>.(tout))";(*OK*)
-    "((neg z)=>.((z)=>.(tout)))=>. (((neg z)=>.z) =>. ((neg z) =>. tout))";(**)
-    "(((neg z)=>.z) =>. ((neg z) =>. tout))";(**)
-    "(neg z)=>.(tout)";(*OK*)
-    "((neg z)=>.(tout))=>.((neg tout)=>.(neg(neg z)))";(*OK*)
-    "(neg tout)=>.(neg(neg z))";(*OK*)
-    "(neg(neg z))=>.(z)";(*OK*)
-    "neg(neg z)";(*OK*)
-    "z"
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))))) \\implies  (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1)))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\lor \\lnot X_1) \\implies (\\lnot (X_1 \\implies X_1)))))";(**)
+    "(((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1)))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\lor \\lnot X_1) \\implies (\\lnot (X_1 \\implies X_1)))))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))) \\implies  (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\implies X_1))))";(**)
+    "(((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\implies X_1))))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot(\\lnot (X_1 \\lor \\lnot X_1))))";(*OK*)
+    "(\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot(\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
+    "(\\lnot(\\lnot (X_1 \\lor \\lnot X_1))) \\implies ((X_1 \\lor \\lnot X_1))";(*OK*)
+    "\\lnot(\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
+    "(X_1 \\lor \\lnot X_1)"
   ]);;
-theorems_prop := {name_axiom_prop="Excluded middle"; axiom_prop=formula_from_string "(x1 ||. neg x1)";}::!theorems_prop;;
-
+theorems_prop := {name_axiom_prop="Excluded middle"; axiom_prop=formula_from_string "(X_1 \\lor \\lnot X_1)";}::!theorems_prop;;
