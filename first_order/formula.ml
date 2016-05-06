@@ -97,39 +97,6 @@ struct
 		| Forall(v,f) | Exists(v,f) -> not (SetVar.mem v (variables_term t))
 		| Atomic_formula f_atomic -> true
 
-	(* Unification par algorithme de Robinson *)
-	let unifieur_atomic_formula f g = 
-		let rec unifier_aux : (atomic_formula * atomic_formula) list * substitution -> substitution = function
-			| [],mu -> mu
-			| [Eq(t1,t2),Eq(u1,u2)],mu ->
-				(fun u->(unifier_liste_term [(t1,u1);(t2,u2)]) (mu u) : substitution) 
-			| [Relation(r1, lt1),Relation(r2, lt2)],mu ->
-				if r1=r2 && (List.length lt1 = List.length lt2) then 
-					(fun u -> unifier_liste_term (List.combine lt1 lt2) (mu u))
-				else
-					failwith "Opérations non unifiables"
-			| ((f,g) :: l),mu -> 
-				let tau = unifier_aux ([(f,g)],mu)
-				in
-				unifier_aux (l,(fun u -> tau (mu u)))
-		in
-		unifier_aux ([(f,g)],(fun x->x))
-		
-	let application_unifieur_atomic unifieur = function
-		| Eq(t1,t2) -> Eq (unifieur t1, unifieur t2)
-		| Relation(r, args) -> Relation(r,List.map unifieur args)
-
-	(** Pendant logique de unifieur_formula **)
-        (*TODO : Fonction à supprimmer*)
-
-	let rec application_unifieur unifieur = function
-		| Atomic_formula(f) -> Atomic_formula(application_unifieur_atomic unifieur f) 
-		| Neg f -> Neg (application_unifieur unifieur f)
-		| And(f,g) -> And(application_unifieur unifieur f, application_unifieur unifieur g)  
-		| Or(f,g) -> Or(application_unifieur unifieur f, application_unifieur unifieur g)
-		| Imply(f,g) -> Imply(application_unifieur unifieur f, application_unifieur unifieur g)
-		| Forall(v,f) -> Forall(v, application_unifieur (fun v' -> if v' = V v then V v else unifieur v') f) (*Pas de substitution sur une variable liée*)
-		| Exists(v,f) -> Exists(v, application_unifieur (fun v' -> if v' = V v then V v else unifieur v') f) (*Pas de substitution sur une variable liée*)
 		
 	(** Opérateurs standards *)
 	let (=>) f g = Imply(f, g)

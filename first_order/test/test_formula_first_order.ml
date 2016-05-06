@@ -115,7 +115,13 @@ let test_term_free_for_var_atomic test_ctxt =
         in
         assert_bool "term not free for var [Atomic formula]" (term_free_for_var t x (Atomic_formula f1));
         assert_bool "term not free for var [Neg]" (term_free_for_var t x nf1);
-        assert_bool "term not free for var [And]" (term_free_for_var t x (And(nf1,nf2)))
+        assert_bool "term not free for var [And]" (term_free_for_var t x (And(nf1,nf2)));
+        assert_bool "term not free for var [And]" (term_free_for_var t x (Or(nf1,nf2)));
+        assert_bool "term not free for var [And]" (term_free_for_var t x (Imply(nf1,nf2)));
+        assert_bool "term not free for var [Forall not]" (not (term_free_for_var x1 x g1));
+        assert_bool "term not free for var [Forall]" (term_free_for_var x2 x g1);
+        assert_bool "term not free for var [Exists not]" (not (term_free_for_var x1 x g2));
+        assert_bool "term not free for var [Exists]" (term_free_for_var x2 x g2)
 
 let formula_suite = "First order formula tests">:::
         [ 

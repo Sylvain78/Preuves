@@ -13,22 +13,28 @@ default:
 	@echo "  merlinize    create .merlin file"
 	@echo "  doc          create documentation"
 
+parser:
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop parser.native
+
 build:
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop parser.cmx
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop proof_prop.native
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop -I first_order theory.native
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop -I first_order -I Ensembles ensembles.native
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop proof_prop.native
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order theory.native
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles ensembles.native
 
 test:
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop -I prop/test test_formula_prop.native  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop_parser.native  && \
+	rm test_formula_prop_parser.native && \
+	mv _build/prop/test/test_formula_prop_parser.native test_formula_prop_parser && \
+	./test_formula_prop_parser
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.native  && \
 	rm test_formula_prop.native && \
 	mv _build/prop/test/test_formula_prop.native test_formula_prop && \
 	./test_formula_prop
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop -I prop/test test_proof_prop.native  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_proof_prop.native  && \
 	rm test_proof_prop.native && \
 	mv _build/prop/test/test_proof_prop.native test_proof_prop && \
 	./test_proof_prop
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I first_order -I first_order/test test_formula_first_order.native  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_formula_first_order.native  && \
 	rm test_formula_first_order.native && \
 	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order && \
 	./test_formula_first_order
@@ -41,15 +47,15 @@ test.debug:
 
 coverage:
 	rm -f bisect*.out
-	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx.fast -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop -I prop/test test_formula_prop.native
+	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx.fast -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.native
 	rm test_formula_prop.native
 	mv _build/prop/test/test_formula_prop.native test_formula_prop_coverage
 	./test_formula_prop_coverage
-	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop -I prop/test test_proof_prop.native
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_proof_prop.native
 	rm test_proof_prop.native
 	mv _build/prop/test/test_proof_prop.native test_proof_prop
 	./test_proof_prop
-	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I first_order -I first_order/test test_formula_first_order.native
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_formula_first_order.native
 	rm test_formula_first_order.native
 	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order
 	./test_formula_first_order
@@ -57,20 +63,12 @@ coverage:
 clean:
 	ocamlbuild -clean && \
 	rm -f *.native && \
-	rm -f test_formula_prop test_formula_prop_coverage test_proof_prop test_formula_first_order && \
+	rm -f test_formula_prop test_formula_prop_parser test_formula_prop_coverage test_proof_prop test_formula_first_order && \
 	rm -f bisect*.out && \
 	rm -rf report_dir
 
 install:
-	ocamlfind install prop META \
-		_build/src/lib/prop.cmi \
-		_build/src/lib/prop.cmo \
-		_build/src/lib/prop.cmx \
-		_build/src/lib/prop.a \
-		_build/src/lib/prop.o \
-		_build/src/lib/prop.cma \
-		_build/src/lib/prop.cmxa \
-		_build/src/lib/prop.cmxs
+	ocamlfind install prop META 
 
 uninstall:
 	ocamlfind remove prop
