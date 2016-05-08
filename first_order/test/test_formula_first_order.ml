@@ -123,6 +123,36 @@ let test_term_free_for_var_atomic test_ctxt =
         assert_bool "term not free for var [Exists not]" (not (term_free_for_var x1 x g2));
         assert_bool "term not free for var [Exists]" (term_free_for_var x2 x g2)
 
+let test_printer_first_order_atomic_formula_eq test_ctxt =
+        (printer_first_order_atomic_formula Format.str_formatter f1);
+        let s = Format.flush_str_formatter ()  
+        in
+        assert_equal s "X_1 = X_2"
+
+let test_printer_first_order_atomic_formula_relation_bin test_ctxt =
+        (printer_first_order_atomic_formula Format.str_formatter (Relation(r,[x1;x2])));
+        let s = Format.flush_str_formatter ()
+        in
+        assert_equal s "X_1 s X_2"
+
+let test_printer_first_order_atomic_formula_relation test_ctxt =
+        (printer_first_order_atomic_formula Format.str_formatter (Relation(r,[])));
+        let s = Format.flush_str_formatter ()
+        in
+        assert_equal s "s()"
+
+let test_printer_first_order_formula_neg test_ctxt =
+        (printer_first_order_formula Format.str_formatter (nf1));
+        let s = Format.flush_str_formatter () 
+        in
+        assert_equal s "\\lnot (X_1 = X_2)"
+
+let test_printer_first_order_formula_and test_ctxt =
+        (printer_first_order_formula Format.str_formatter (And (Atomic_formula f1, Atomic_formula f2)));
+        let s = Format.flush_str_formatter () 
+        in
+        assert_equal s "X_1 = X_2 \\land X_3 = X_4"
+
 let formula_suite = "First order formula tests">:::
         [ 
         "Test of initialization of printers_relations">::test_initialization_printers_relations;
@@ -144,6 +174,11 @@ let formula_suite = "First order formula tests">:::
         "test_free_variables_of_formula_bin">::test_free_variables_of_formula_bin;
         "test_free_variables_of_formula_quant">::test_free_variables_of_formula_quant;
         "test_term_free_for_var_atomic">::test_term_free_for_var_atomic;
+        "test_printer_first_order_atomic_formula_eq">::test_printer_first_order_atomic_formula_eq;
+        "test_printer_first_order_atomic_formula_relation_bin">::test_printer_first_order_atomic_formula_relation_bin;
+        "test_printer_first_order_atomic_formula_relation">::test_printer_first_order_atomic_formula_relation;
+        "test_printer_first_order_formula_neg">::test_printer_first_order_formula_neg;
+        "test_printer_first_order_formula_and">::test_printer_first_order_formula_and;
         ]
 
 let () = run_test_tt_main formula_suite

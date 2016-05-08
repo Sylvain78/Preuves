@@ -71,16 +71,6 @@ module Formula :
       val free_variables_of_atomic_formula : atomic_formula -> SetVar.t
       val free_variables_of_formula : formula -> SetVar.t
       val term_free_for_var : term -> 'a -> formula -> bool
-      val ( => ) : formula -> formula -> formula
-      val ( <= ) : formula -> formula -> formula
-      val ( &&& ) : formula -> formula -> formula
-      val ( ||| ) : formula -> formula -> formula
-      val neg : formula -> formula
-      val ( <=> ) : formula -> formula -> formula
-      val ( ?& ) : var * formula -> formula
-      val ( ?@ ) : var * formula -> formula
-      val ( ^= ) : term -> term -> formula
-      val ( ^!= ) : term -> term -> formula
       val printer_first_order_atomic_formula :
         Format.formatter -> atomic_formula -> unit
       val printer_first_order_formula : Format.formatter -> formula -> unit

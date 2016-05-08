@@ -108,7 +108,7 @@ type var =
 
 	(** Formateurs d'affichage **)
 	let rec print_term ff = function
-		| V(Var i) -> Format.fprintf ff "X%u" i
+                | V(Var i) -> if 0 <= i && i < 10 then Format.fprintf ff "X_%u" i else Format.fprintf ff "X_{%u}" i
 		| V(Metavar s) -> Format.fprintf ff "%s" s
 		| Constant c -> (Hashtbl.find printers_constants c) ff
 		| Operation(op, _) as term -> (Hashtbl.find printers_operations op) ff term

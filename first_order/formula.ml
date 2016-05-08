@@ -98,19 +98,8 @@ struct
 		| Atomic_formula f_atomic -> true
 
 		
-	(** Opérateurs standards *)
-	let (=>) f g = Imply(f, g)
-	let (<=) f g = g => f
-	let (&&&) f g = And(f, g)
-	let (|||) f g = Or(f, g)
-	let neg f = Neg f
-	let (<=>) f g = And(Imply(f, g), Imply(g, f))
-	let (?&) = function (v, f) -> Exists(v, f)
-	let (?@) = function (v, f) -> Forall(v, f)
-	let (^=) a b = Atomic_formula(Eq(a, b))
-	let (^!=) a b = neg (Atomic_formula(Eq(a, b)))
 	
-	(** Formateurs d'affichage **)
+	(** Printing formatters **)
 	let rec printer_first_order_atomic_formula ff = function
 		| Eq (t1, t2) -> print_term ff t1;
 				Format.fprintf ff " = ";
@@ -128,18 +117,17 @@ struct
 	
 	let printer_first_order_formula ff f =
 		let rec print_bin seq op f g =
-			Format.fprintf ff " ";
 			printer_first_order_formula_aux ff seq f;
 			Format.fprintf ff "%s" (" "^op^" ");
 			printer_first_order_formula_aux ff seq g;
 		and printer_first_order_formula_aux ff seq =
-			let	print_par f =
+			let print_par f =
 				Format.fprintf ff "(";
 				f();
 				Format.fprintf ff ")";
 			in
 			function
-			| Neg g -> Format.fprintf ff "ï¿½"; printer_first_order_formula_aux ff "neg" g;
+                        | Neg g -> Format.fprintf ff "\\lnot "; print_par (fun () -> printer_first_order_formula_aux ff "neg" g);
 			| And(f, g) -> begin
 						match f, g with
 						| Imply(h1, h2), Imply(h2', h1') ->
@@ -148,16 +136,16 @@ struct
 								else begin
 									if seq = "and" || seq ="init" || (seq ="forall") || (seq ="exists")
 									then
-										print_bin "and" "/\\" f g
+										print_bin "and" "\\land" f g
 									else
-										print_par (fun () -> print_bin "and" "/\\" f g)
+										print_par (fun () -> print_bin "and" "\\land" f g)
 								end
 						| _ ->
 								if seq = "and" || seq ="init" || (seq ="forall") || (seq ="exists")
 								then
-									print_bin "and" "/\\" f g
+									print_bin "and" "\\land" f g
 								else
-									print_par (fun () -> print_bin "and" "/\\" f g)
+									print_par (fun () -> print_bin "and" "\\land" f g)
 					end
 			| Or(f, g) ->
 					if seq = "or" || seq ="init" || (seq ="forall") || (seq ="exists")
