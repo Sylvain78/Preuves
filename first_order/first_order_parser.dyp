@@ -1,0 +1,38 @@
+%mltop {
+ module Parser = struct
+}
+
+{
+ open Formula
+}
+
+
+%start main
+%layout [' ' '\t' '\n']
+
+%parser
+main: expr eof { $1 }
+
+
+expr:
+	| "X_" ['0'-'9']+  {  (int_of_string $2) }
+	| "X_{" ['0'-'9']+ "}" {  (int_of_string $2) }
+	| "(" expr ")" { $2 }
+%%
+{
+let formula_from_string s = 3
+(*	print_string s;flush stdout;
+   let l = (main (Dyp.from_string (pp ()) s))
+   in 
+   match l with [ (f,s) ] -> f 
+              |   _   -> raise (Failure "[Prop] Parser.formula_from_string")
+*)
+end
+}
+
+%mlitop {
+module Parser : sig
+}
+
+%mli {
+end}
