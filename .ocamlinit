@@ -2,10 +2,10 @@
 #load "util.cmo";;
 
 #cd "../../_build/prop";; 
-#load "formule_prop.cmo"
+#load "formula_prop.cmo"
 #load "axiomes_prop.cmo"
 #load "preuve_prop.cmo"
-open Formule_prop
+open Formula_prop
 open Preuve_prop
 
 let verif_ou_diamant =
