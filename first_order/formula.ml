@@ -3,7 +3,6 @@ open Signature
 open Base_term
 
 
-
 module Formula (Sig:SIGNATURE) =
 struct
         include Term(Sig)
