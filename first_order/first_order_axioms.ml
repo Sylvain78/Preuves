@@ -3,11 +3,14 @@ open Util
 open Formula_prop
 open Axioms_prop
 open Proof_prop
+open First_order_parser
 
 module Axioms (Sig:SIGNATURE)=
 struct
 	include Formula.Formula(Sig)
-	
+
+        include Parser(Sig)
+
 	exception Failed_Unification of formula * formula_prop
 	
 	
@@ -69,8 +72,8 @@ struct
 	let is_independance_quantifier f =
 		match f with (* v1 is not free in f1 *)
 		| Imply((Forall(v1, Imply(f1, g1))), (Imply(f2, (Forall(v2, g2))))) -> 
-			v1 = v2 & f1 = f2 & g1 = g2  
-			& not (SetVar.mem v1 (free_variables_of_formula f1))
+			v1 = v2 && f1 = f2 && g1 = g2  
+			&& not (SetVar.mem v1 (free_variables_of_formula f1))
 		| _ -> false
 	(** Elimination axiom of the universal quantifier **)
 	let is_forall_elim formula =
@@ -108,14 +111,14 @@ struct
                           (* Vérification *)
                           let f' = simultaneous_substitution_formula [v] [t] f
 			  in
-			  f'=g & (term_free_for_var t v f)
+			  f'=g && (term_free_for_var t v f)
                         with Not_found -> false)
 		| _ -> false
 	
 	let is_equiv_exists_forall =
 		function
 		| And(Imply(Exists(v, Neg f), Neg Forall(v', g)),
-		Imply(Neg (Forall(v'', g')), Exists(v''', Neg f'))) -> v = v' & v'= v'' & v''= v''' & f = g & f = f' & g = g'
+		Imply(Neg (Forall(v'', g')), Exists(v''', Neg f'))) -> v = v' && v'= v'' && v''= v''' && f = g && f = f' && g = g'
 		| _ -> false
 	
 	let is_equality_axiom f =
@@ -123,9 +126,9 @@ struct
 		and x2 = V(Var (2))
 		and x3 = V(Var (3))
 		in
-		f = x1 ^= x1
-		or f = ((Atomic_formula (Eq(x1, x2))) => (Atomic_formula (Eq(x2, x1))))
-		or f = (((Atomic_formula (Eq(x1, x2))) &&& (Atomic_formula (Eq(x2, x3)))) => (Atomic_formula (Eq(x1, x3))))
+		f = formula_from_string "x1 = x1"
+                || f = ((Atomic_formula (Eq(x1, x2))) => (Atomic_formula (Eq(x2, x1))))
+                || f = (((Atomic_formula (Eq(x1, x2))) &&& (Atomic_formula (Eq(x2, x3)))) => (Atomic_formula (Eq(x1, x3))))
 	
 	let verif_arite_et arite f =
 		let rec verif_arite_et_aux i arite f =

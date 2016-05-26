@@ -1,9 +1,13 @@
 %mltop {
- module Parser = struct
+ open Signature
+ open Formula
+ module Parser (S:SIGNATURE) = struct
+ module F = Formula(S)
+ type formula = F.formula
 }
 
 {
- open Formula
+open Signature 
 }
 
 
@@ -11,28 +15,40 @@
 %layout [' ' '\t' '\n']
 
 %parser
-main: expr eof { $1 }
+main: formula eof { $1 }
 
 
-expr:
-	| "X_" ['0'-'9']+  {  (int_of_string $2) }
-	| "X_{" ['0'-'9']+ "}" {  (int_of_string $2) }
-	| "(" expr ")" { $2 }
+term:
+	| "X_" ['0'-'9']+  {  F.V(Var (int_of_string $2)) }
+	| "X_{" ['0'-'9']+ "}" { V(Var  (int_of_string $2)) }
+	| "(" term ")" { $2 }
+
+formula: 
+	| term "=" term { F.Atomic_formula(F.Eq($1,$3)) }
+
 %%
 {
-let formula_from_string s = 3
-(*	print_string s;flush stdout;
+let formula_from_string s = 
+	print_string s;flush stdout;
    let l = (main (Dyp.from_string (pp ()) s))
    in 
    match l with [ (f,s) ] -> f 
-              |   _   -> raise (Failure "[Prop] Parser.formula_from_string")
-*)
+              |   _   -> raise (Failure "[First_order] Parser.formula_from_string")
+
 end
 }
 
 %mlitop {
-module Parser : sig
+open Signature
+module Parser : functor (S:SIGNATURE) -> sig
+module F : 
+sig
+	type formula
+	type term
+end
 }
 
 %mli {
-end}
+val formula_from_string : string -> F.formula
+end
+}

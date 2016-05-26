@@ -29,3 +29,6 @@ let formula_from_string s =
    match l with [ (f,s) ] -> f 
               |   _   -> raise (Failure "[Prop] Parser.formula_from_string")
 }
+%mli {
+val formula_from_string : string -> Formula_prop.formula_prop 
+}
