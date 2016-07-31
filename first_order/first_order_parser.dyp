@@ -6,10 +6,6 @@
 
 }
 
-{
-open List
-}
-
 %start <G.formula> main
 %layout [' ' '\t' '\n']
 
@@ -38,7 +34,6 @@ end
 }
 
 %mlitop {
-open Array
 open Signature
 open Formula
 module Parser : functor (S:SIGNATURE) -> sig
