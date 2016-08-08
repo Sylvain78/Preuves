@@ -7,8 +7,8 @@ open First_order_parser
 
 module Axioms (Sig:SIGNATURE)=
 struct
-	include Formula.Formula(Sig)
-
+	module F =  Formula.Formula(Sig)
+        open F
         include Parser(Sig)
 
 	exception Failed_Unification of formula * formula_prop
@@ -122,13 +122,9 @@ struct
 		| _ -> false
 	
 	let is_equality_axiom f =
-		let x1 = V(Var (1))
-		and x2 = V(Var (2))
-		and x3 = V(Var (3))
-		in
-		f = formula_from_string "x1 = x1"
-                || f = ((Atomic_formula (Eq(x1, x2))) => (Atomic_formula (Eq(x2, x1))))
-                || f = (((Atomic_formula (Eq(x1, x2))) &&& (Atomic_formula (Eq(x2, x3)))) => (Atomic_formula (Eq(x1, x3))))
+		f = formula_from_string "x_1 = x_1"
+                || f = formula_from_string "(x_1 = x_2) \\implies (x_2 = x_1)" 
+                || f = formula_from_string "((x_1 = x_2) \\land (x_2 = x_3)) \\implies (x_1 = x_3)"
 	
 	let verif_arite_et arite f =
 		let rec verif_arite_et_aux i arite f =
@@ -137,7 +133,7 @@ struct
 				f = Atomic_formula(Eq(V(Var arite), V(Var (2 * arite))))
 			else
 				match f with
-				| And ((Atomic_formula(Eq(V(Var i), V(Var j)))), g) -> j = arite + 1 & verif_arite_et_aux (i + 1) arite g
+				| And ((Atomic_formula(Eq(V(Var i), V(Var j)))), g) -> j = arite + 1 && verif_arite_et_aux (i + 1) arite g
 				| _ -> false
 		in
 		verif_arite_et_aux 1 arite f
@@ -148,16 +144,16 @@ struct
 					| Atomic_formula (Eq(Operation(s,lt), Operation(s', lt'))) ->
 							let arite = List.length lt 
 							in
-							s = s' & (List.length lt = List.length lt')
-							& (let lvk = ref []
+							s = s' && (List.length lt = List.length lt')
+							&& (let lvk = ref []
 								in
 								for i = arite downto 1 do lvk := (V(Var i))::!lvk done;
 								lt = !lvk)
-							& (let lvk' = ref []
+							&& (let lvk' = ref []
 								in
 								for i = 2 * arite downto arite + 1 do lvk' := (V(Var i))::!lvk' done;
 								lt' = !lvk')
-							& verif_arite_et arite f
+							&& verif_arite_et arite f
 					| _ -> false
 				end
 		| _ -> false
@@ -170,34 +166,34 @@ struct
 							let arite,arite',arite1,arite1' =
 								List.length lt, List.length lt', List.length lt1, List.length lt1'
 							in
-							r = r' & r'= r1 & r1 = r1'
-							& arite = arite' & arite'= arite1 & arite1 = arite1'
-							& (let lvk = ref []
+							r = r' && r'= r1 && r1 = r1'
+							&& arite = arite' && arite'= arite1 && arite1 = arite1'
+							&& (let lvk = ref []
 								in
 								for i = arite downto 1 do lvk := (V (Var i))::!lvk done;
 								lt = !lvk)
-							& (let lvk' = ref []
+							&& (let lvk' = ref []
 								in
 								for i = 2 * arite downto arite + 1 do lvk' := (V(Var i))::!lvk' done;
 								lt' = !lvk')
-							& verif_arite_et arite f
+							&& verif_arite_et arite f
 					| _ -> false
 				end
 		| _ -> false
 	
 	let is_axiome_premier_ordre f =
 		is_instance_axiom_prop f
-		or
+		||
 		is_independance_quantifier f
-		or
+		||
 		is_forall_elim f
-		or
+		||
 		is_equiv_exists_forall f
-		or
+		||
 		is_equality_axiom f
-		or
+		||
 		is_equality_op_axiom f
-		or
+		||
 		is_equiv_rel_axiom f
 	
 end

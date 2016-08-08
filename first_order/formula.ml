@@ -20,7 +20,11 @@ struct
 		| Imply  of formula * formula
 		| Exists of var * formula 
 		| Forall of var * formula 
-	
+
+        let equiv f g = And( Imply (f,g),
+                             Imply (g,f)
+                           )
+
 	exception Failed_unification_atomic_formula of atomic_formula * atomic_formula
 	
 	(** Replace the list of x by the list of t in an atomic formula **) 

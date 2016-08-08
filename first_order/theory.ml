@@ -6,7 +6,7 @@ module Theory(Sig:SIGNATURE) =
 struct
 	
 	include First_order_axioms.Axioms(Sig) 
-		
+        include F	
         module S = Schema(Sig)	
         include S
         (**Création schéma*)
@@ -55,7 +55,7 @@ struct
 
         (** Les schémas de preuve seront vérifiés au moment de la vérification de cohérence, comme pour les théorèmes *)	
 	let is_axiome_theorie th = function
-        | TPAxiome (formula,axiome)  -> (List.mem axiome th.axiomes) & (formula = axiome.conclusion)
+        | TPAxiome (formula,axiome)  -> (List.mem axiome th.axiomes) && (formula = axiome.conclusion)
         | _ -> false
 	
 	let is_generalisation f p =
@@ -67,7 +67,7 @@ struct
 		List.exists (function  tp -> 
                         match term_preuve_vers_formula tp 
                         with
-                        | Imply(g1, g2) -> g2 = f & List.mem g1 (List.map term_preuve_vers_formula p) | _ -> false) p
+                        | Imply(g1, g2) -> g2 = f && List.mem g1 (List.map term_preuve_vers_formula p) | _ -> false) p
 	
 	let verification_preuve ~theorie ~hypotheses:hyp ~theoreme ~proof:(preuve:preuve) =
 		(* f est bien à la fin de la preuve *)
@@ -98,11 +98,11 @@ struct
                                     || is_generalisation f_i p
                                     || (coupure f_i p)
                                     || is_axiome_premier_ordre f_i) 
-                                  & (verif t p)
+                                  && (verif t p)
                                 | TPAxiome _ as th_ax :: p-> is_axiome_theorie theorie th_ax 
-						        & (verif t p)
-                                | TPInstanceSchema (f,(s,formula_schematique))  :: p ->  (f = apply_schema s formula_schematique) & (verif t p)
-                                | TPTheoreme  (f , (theoreme, parametres, premisses)) :: preuve -> (f = theoreme.conclusion) & 
+						        && (verif t p)
+                                | TPInstanceSchema (f,(s,formula_schematique))  :: p ->  (f = apply_schema s formula_schematique) && (verif t p)
+                                | TPTheoreme  (f , (theoreme, parametres, premisses)) :: preuve -> (f = theoreme.conclusion) && 
                                                                                               (verif t preuve) && 
                                                                                               (List.for_all (fun p -> let premisse = simultaneous_substitution_formula theoreme.parametres parametres p
                                                                                                                       in
@@ -130,7 +130,7 @@ struct
 			let v =
 				match vl with [Var v] -> v | _ -> failwith "Définition avec zéro ou plusieurs variables libres"
 			in
-			(?@)(Var v, (V(Var v) ^= Constant symb) <=> f)
+			Forall(Var v, equiv (Atomic_formula (Eq(V(Var v), Constant symb))) f)
 		in
 		Hashtbl.add th.constantes symb def; 
 		Hashtbl.add printers_constants symb printer_symb_latex
@@ -149,9 +149,9 @@ struct
 				| _ -> let l' = List.filter (fun v-> v <> var) vl in List.map (fun v -> V v) l'
 			in
 			if (List.length l <> arite) then failwith ("Arité incorrecte pour définition de l'opération "^(Sig.to_string symb));
-			let def_operation = (?@)(var, (V(var) ^= Operation(symb, l)) <=> def_op)
+			let def_operation = Forall(var, equiv (Atomic_formula(Eq(V(var), Operation(symb, l)))) def_op)
 			in
-			List.fold_right ( let fct = function  (V t) -> (fun f -> ?@(t,f)) | _ -> (fun f -> f) in fct) l def_operation
+			List.fold_right ( let fct = function  (V t) -> (fun f -> Forall(t,f)) | _ -> (fun f -> f) in fct) l def_operation
 		in
 		Hashtbl.add th.operations symb (def def_op);
 		Hashtbl.add printers_operations symb printer_op_latex
@@ -164,9 +164,9 @@ struct
 			(* Contrôle *)
 			if (List.length vl <> arite) then failwith ("Arité incorrecte pour définition de la relation "^(Sig.to_string symb));
 			
-			List.fold_right (fun v f -> (?@)(v, f)) 
+			List.fold_right (fun v f -> Forall(v, f)) 
                                         vl 
-                                        (Atomic_formula(Relation(symb, List.map (fun v -> V v) vl)) <=> def_rel)
+                                        (equiv (Atomic_formula(Relation(symb, List.map (fun v -> V v) vl))) def_rel)
 		in
 		Hashtbl.add th.relations symb (vl,def);
 		Hashtbl.add printers_relations symb printer_rel_latex

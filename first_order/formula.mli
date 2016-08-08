@@ -63,6 +63,7 @@ module Formula :
         | Imply of formula * formula
         | Exists of var * formula
         | Forall of var * formula
+      val equiv : formula -> formula -> formula
       exception Failed_unification_atomic_formula of atomic_formula *
                   atomic_formula
       val simultaneous_substitution_atomic_formula :

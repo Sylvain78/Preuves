@@ -18,7 +18,7 @@ struct
     let x = Var (new_var())
     and y = Var (new_var())
     in
-    (?@(y, neg ((V y) &= (V x))))
+    (Forall(y, Neg ((V y) &= (V x))))
   and printer_empty_ascii ff = Format.fprintf ff "Ø"
   and printer_empty_latex ff = Format.fprintf ff "\\empty"
 
@@ -36,25 +36,38 @@ struct
 
   let axiome_extensionnalite =
     let formula_axiome_extensionnalite =
-      ?@(a, ?@(b, (?@(x, (((V x) &= (V a)) <=> ((V x) &= (V b)))) => (V a) ^= (V b))))
+      Forall(a, Forall(b, (Imply (Forall(x, equiv ((V x) &= (V a)) ((V x) &= (V b))) , 
+      Atomic_formula (Eq (V a , V b))
+      ))))
     in
     {nom_theoreme="Axiome d'extensionnalité"; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_extensionnalite}
 
   let axiome_paire =
     let formula_axiome_paire =
-      ?@(a, ?@(b, ?&(c, ((V a) &= (V c)) &&& ((V b) &= (V c)))))
+      Forall(a, Forall(b, Exists(c, 
+      (And ((V a) &= (V c) , (V b) &= (V c)))
+      )))
     in
     {nom_theoreme="Axiome de la paire" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_paire}
 
   let axiome_union =
     let formula_axiome_union =
-      ?@ (a, ?& (b, ?@ (x, ( ?& (y, ((V x) &= (V y) &&& ((V y) &= (V a)))) => ((V x) &= (V b)) ))))
+      Forall (a, Exists (b, Forall (x, ( 
+              Imply (Exists (y, And((V x) &= (V y) , (V y) &= (V a) )),
+               ((V x) &= (V b)))
+              ))))
     in
     {nom_theoreme="Axiome de l'union" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_union}
 
   let axiome_parties =
     let formula_axiome_parties =
-      ?@(a, ?&(b, ?@(x, ( ?@(y, (((V y) &= (V x)) => ((V y) &= (V a)))) => ((V x) &= (V b)) ))))
+      Forall(a, Exists(b, Forall(x, (
+              Imply(
+              Forall(y, ( Imply ((V y) &= (V x) , (V y) &= (V a))))
+              , 
+              ((V x) &= (V b))
+              )
+              ))))
     in
     {nom_theoreme="Axiome de l'ensemble des parties" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_parties}
 
@@ -66,8 +79,8 @@ struct
      variable_schematique = f;
      groupe_variables_neutres = c;
      variables_libres_utilisees_predicat = [x];
-     formula =  (?@(a, ?@(c, ?&(b, ?@(x, (V x) &= (V b) <=>
-                                         ((V x) &= (V a) &&& fx))))))
+     formula =  (Forall(a, Forall(c, Exists(b, Forall(x, equiv ((V x) &= (V b))
+                                         (And ((V x) &= (V a), fx)))))))
     }
 
   let axiome_remplacement =
@@ -79,15 +92,20 @@ struct
      formula = 
        let fxy,fxz=Atomic_formula(Relation(f,[V x;V y;V c])),Atomic_formula(Relation(f,[V x;V z;V c]))
        in
-       ?@(a,?@(c,((?@(x,?@(y,?@(z,
-                                ((fxy &&& fxz) => ((V y) ^= (V z)))
-                                => 
-                                ?&(b,?@(y,(?&(x,((V x) &= (V a)) => (fxy)) => ((V y) &= (V b))))))))))))
+       Forall(a,Forall(c,((Forall(x,Forall(y,Forall(z,
+                                Imply(Imply(And(fxy, fxz), Atomic_formula(Eq(V y, V z)))
+                                ,
+                                Exists(b,Forall(y,(
+                                        Imply(
+                                              Exists(x, Imply((V x) &= (V a) , fxy))
+                                              ,
+                                              ((V y) &= (V b)))))))
+                                )))))))
     }
 
   let axiome_fondation=
     let formula_axiome_fondation =
-      ?@(a, (neg (V a ^= empty) )  => ?&(b, (V b &= V a &&& ((Operation(of_string "inter", [V b;V a])) ^= empty ))))
+      Forall(a, Imply((Neg (Atomic_formula(Eq(V a, empty))) )  , Exists(b, (And(V b &= V a, (Atomic_formula(Eq(Operation(of_string "inter", [V b;V a]),  empty ))))))))
     in
     {nom_theoreme="Axiome de fondation"; parametres=[]; premisses=[]; preuve= []; conclusion=formula_axiome_fondation} 
 
@@ -99,7 +117,7 @@ struct
       let a = Var (new_var())
       and x = Var (new_var())
       in
-      ?&(a, Constant (of_string "Ø") &= (V a) &&& ?@(x, (V x) &= (V a) => ((successeur (V x)) &= (V a))))
+      Exists(a, And(Constant (of_string "Ø") &= (V a) , Forall(x, Imply((V x) &= (V a), ((successeur (V x)) &= (V a))))))
     in
     {nom_theoreme="Axiome de l'infini" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_infini}
 
@@ -126,7 +144,7 @@ struct
   and t = Var (new_var()) and vt = V t
   in
   let def_union = 
-    ?@ (z, vz &= vy <=> ?&(t, vt &= vx &&& (vz &= vt))) 
+    Forall (z, equiv (vz &= vy) (Exists(t, And(vt &= vx, (vz &= vt)))))
 
   and printer_union_latex ff = function
     | Operation(op, [x]) when op = of_string "U"-> Format.fprintf ff "\\cup("; print_term ff x; Format.fprintf ff ")"
@@ -143,8 +161,8 @@ struct
   and t = Var (new_var()) and vt = V t
   ;;
   let def_paire =
-    ?@(z,
-       vz &= vt <=> vz ^= vx ||| (vz ^=vy) ) 
+    Forall(z,
+       equiv (vz &= vt)  (Or(Atomic_formula(Eq(vz, vx)), Atomic_formula(Eq(vz, vy)) ))) 
 
   and printer_paire_latex ff = function
     | Operation(op,[x;y]) when op = of_string "P" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff ",";print_term ff y; Format.fprintf ff "}";
@@ -155,8 +173,8 @@ struct
   (*Hashtbl.find z_fini_dehornoy.operations_definies "P";;*)
 
   let def_singleton =
-    ?@(z,
-       vz &= vt <=> vz ^= vx) 
+    Forall(z,
+       equiv (vz &= vt)  (Atomic_formula(Eq(vz, vx)))) 
 
   and printer_singleton_latex ff = function
     | Operation(op,[x]) when op = of_string "S" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff "}";
@@ -185,7 +203,7 @@ struct
   and t = Metavar("t")
   in
   let def_inclusion =
-    ?@(t, ((V t) &= (V x)) => ((V t) &= (V y)))
+    Forall(t, Imply((V t) &= (V x), (V t) &= (V y)))
 
   and printer_incl_latex ff = function
     | Relation(rel,[x; y]) when rel = of_string "\\subset" -> Format.fprintf

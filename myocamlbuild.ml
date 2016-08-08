@@ -8,7 +8,7 @@ dispatch begin function
         let dyp = env "%.dyp" in
 (*        Cmd(S[A"dypgen"; A"--no-mli"; Px dyp])
  *)
-          Cmd(S[A"dypgen"; A"--ocamlc"; A"-I `ocamlfind query dyp` -I prop -I first_order"; Px dyp])
+          Cmd(S[A"dypgen"; A"--no-pp" ;  A"--ocamlc"; A"-I `ocamlfind query dyp` -I prop -I first_order"; Px dyp])
       end;
   | _ ->  ()
 end

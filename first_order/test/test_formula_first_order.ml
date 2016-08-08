@@ -153,6 +153,15 @@ let test_printer_first_order_formula_and test_ctxt =
         in
         assert_equal s "X_1 = X_2 \\land X_3 = X_4"
 
+let test_printer_first_order_formula_and_imply test_ctxt =
+        (printer_first_order_formula Format.str_formatter (And(Imply(Atomic_formula f1,Atomic_formula f2), Imply(Atomic_formula f2,Atomic_formula f1))));
+        let s = Format.flush_str_formatter () 
+        in
+        assert_equal s "X_1 = X_2 <=> X_3 = X_4"
+
+let test_equiv test_ctxt =
+	assert_equal (And(Imply(nf1,nf2), Imply(nf2,nf1))) (equiv nf1 nf2) 
+
 let formula_suite = "First order formula tests">:::
         [ 
         "Test of initialization of printers_relations">::test_initialization_printers_relations;
@@ -179,6 +188,9 @@ let formula_suite = "First order formula tests">:::
         "test_printer_first_order_atomic_formula_relation">::test_printer_first_order_atomic_formula_relation;
         "test_printer_first_order_formula_neg">::test_printer_first_order_formula_neg;
         "test_printer_first_order_formula_and">::test_printer_first_order_formula_and;
+        "test_printer_first_order_formula_and_imply">::test_printer_first_order_formula_and_imply;
+
+        "test_equiv">::test_equiv;
         ]
 
 let () = run_test_tt_main formula_suite
