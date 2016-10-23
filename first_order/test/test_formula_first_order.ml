@@ -181,13 +181,19 @@ let test_printer_first_order_formula_and_or test_ctxt =
         (printer_first_order_formula Format.str_formatter (And(Atomic_formula f1,Or(Atomic_formula f1,Atomic_formula f2))));
         let s = Format.flush_str_formatter () 
         in
-        print_string s;assert_equal s "X_1 = X_2 \\land (X_1 = X_2 \\lor X_3 = X_4)"
+        assert_equal s "X_1 = X_2 \\land (X_1 = X_2 \\lor X_3 = X_4)"
 
 let test_printer_first_order_formula_and_and test_ctxt =
         (printer_first_order_formula Format.str_formatter (And(And(Atomic_formula f1, Atomic_formula f2), nf1)));
         let s = Format.flush_str_formatter ()
         in 
         assert_equal s "X_1 = X_2 \\land X_3 = X_4 \\land \\lnot (X_1 = X_2)"
+
+let test_printer_first_order_formula_imply_imply test_ctxt =
+        (printer_first_order_formula Format.str_formatter (Imply(Imply(Atomic_formula f1, Atomic_formula f2), Atomic_formula f1)));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal s "(X_1 = X_2 => X_3 = X_4) => X_1 = X_2"
 
 let test_equiv test_ctxt =
 	assert_equal (And(Imply(nf1,nf2), Imply(nf2,nf1))) (equiv nf1 nf2) 
@@ -224,6 +230,7 @@ let formula_suite = "First order formula tests">:::
         "test_printer_first_order_formula_or_and_imply">::test_printer_first_order_formula_or_and_imply;
         "test_printer_first_order_formula_or_and">::test_printer_first_order_formula_or_and;
         "test_printer_first_order_formula_and_or">::test_printer_first_order_formula_and_or;
+        "test_printer_first_order_formula_imply_imply">::test_printer_first_order_formula_imply_imply;
         "test_equiv">::test_equiv;
         ]
 
