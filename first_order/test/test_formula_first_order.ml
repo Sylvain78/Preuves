@@ -195,6 +195,14 @@ let test_printer_first_order_formula_imply_imply test_ctxt =
         in 
         assert_equal s "(X_1 = X_2 => X_3 = X_4) => X_1 = X_2"
 
+let test_printer_first_order_formula_forall test_ctxt =
+        (printer_first_order_formula Format.str_formatter g1);
+        let s = Format.flush_str_formatter ()
+        in 
+        print_string s;
+        assert_equal s "\\forall X_1, X_1 = X_2"
+
+
 let test_equiv test_ctxt =
 	assert_equal (And(Imply(nf1,nf2), Imply(nf2,nf1))) (equiv nf1 nf2) 
 
@@ -231,6 +239,7 @@ let formula_suite = "First order formula tests">:::
         "test_printer_first_order_formula_or_and">::test_printer_first_order_formula_or_and;
         "test_printer_first_order_formula_and_or">::test_printer_first_order_formula_and_or;
         "test_printer_first_order_formula_imply_imply">::test_printer_first_order_formula_imply_imply;
+        "test_printer_first_order_formula_forall">::test_printer_first_order_formula_forall;
         "test_equiv">::test_equiv;
         ]
 

@@ -153,9 +153,9 @@ struct
 			| Or(f, g) ->
 					if seq = "or" || seq ="init" || (seq ="forall") || (seq ="exists")
 					then
-						print_bin "or" "\\/" f g
+						print_bin "or" "\\lor" f g
 					else
-						print_par (fun () -> print_bin "or" "\\/" f g)
+						print_par (fun () -> print_bin "or" "\\lor" f g)
 			| Imply(f, g) -> if (seq ="init") || (seq ="forall") || (seq ="exists")
 					then
 						print_bin "impl" "=>" f g
@@ -165,7 +165,7 @@ struct
 					if (seq ="init")
 					then
 						begin
-							Format.fprintf ff "forall X%d" i;
+							Format.fprintf ff "\\forall X_%d, " i;
 							printer_first_order_formula_aux ff "forall" f;
 						end
 					else
@@ -177,14 +177,14 @@ struct
 						end
 					else
 						begin
-							Format.fprintf ff "forall X%d" i;
+							Format.fprintf ff "\\forall X_%d, " i;
 							print_par (fun () -> printer_first_order_formula_aux ff "forall" f);
 						end
 			| Forall(Metavar i, f) ->
 					if (seq ="init")
 					then
 						begin
-							Format.fprintf ff "forall %s" i;
+							Format.fprintf ff "\\forall %s, " i;
 							printer_first_order_formula_aux ff "forall" f;
 						end
 					else
@@ -196,7 +196,7 @@ struct
 						end
 					else
 						begin
-							Format.fprintf ff "forall %s" i;
+							Format.fprintf ff "\\forall %s, " i;
 							print_par (fun () -> printer_first_order_formula_aux ff "forall" f);
 						end
 			| Exists(Var i, f) ->
