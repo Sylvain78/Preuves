@@ -20,6 +20,8 @@ term:
 
 formula: 
 	| term "=" term { let module G = Formula(S) in G.Atomic_formula(G.Eq($1,$3)) }
+	| "\\forall X_" ['0'-'9']+ formula { let module G = Formula(S) in G.Forall(G.Var(int_of_string $2), $3)}
+	| "\\exists X_" ['0'-'9']+ formula { let module G = Formula(S) in G.Exists(G.Var(int_of_string $2), $3)}
 
 %%
 {
