@@ -124,7 +124,7 @@ struct
 			Format.fprintf ff "%s" (" "^op^" ");
 			printer_first_order_formula_aux ff seq g;
 		and printer_first_order_formula_aux ff seq =
-			let print_par f =
+                        let print_par f =
 				Format.fprintf ff "(";
 				f();
 				Format.fprintf ff ")";
@@ -165,33 +165,32 @@ struct
 					if (seq ="init")
 					then
 						begin
-							Format.fprintf ff "\\forall X_%d, " i;
+                                                        Format.fprintf ff "\\forall X_%d, " i;
 							printer_first_order_formula_aux ff "forall" f;
 						end
 					else
 					if (seq = "forall")
 					then
 						begin
-							Format.fprintf ff ",X%d" i;
+                                                        Format.fprintf ff "X_%d, " i;
 							printer_first_order_formula_aux ff "forall" f;
 						end
 					else
 						begin
-							Format.fprintf ff "\\forall X_%d, " i;
-							print_par (fun () -> printer_first_order_formula_aux ff "forall" f);
+							print_par (fun () -> Format.fprintf ff "\\forall X_%d, " i;printer_first_order_formula_aux ff "forall" f);
 						end
 			| Forall(Metavar i, f) ->
 					if (seq ="init")
 					then
 						begin
-							Format.fprintf ff "\\forall %s, " i;
+                                                        Format.fprintf ff "\\forall %s, " i;
 							printer_first_order_formula_aux ff "forall" f;
 						end
 					else
 					if (seq = "forall")
 					then
 						begin
-							Format.fprintf ff ",%s" i;
+                                                        Format.fprintf ff ",%s" i;
 							printer_first_order_formula_aux ff "forall" f;
 						end
 					else
