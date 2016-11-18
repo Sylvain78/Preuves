@@ -40,6 +40,10 @@ test:
 	rm test_formula_first_order.native && \
 	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order && \
 	./test_formula_first_order
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I prop -I Ensembles -I Ensembles/test test_ensembles.native  && \
+	rm test_ensembles.native && \
+	mv _build/Ensembles/test/test_ensembles.native test_ensembles && \
+	./test_ensembles
 
 test.debug:
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -I util -I prop -I prop/test test_formula_prop.d.byte  && \
@@ -61,6 +65,10 @@ coverage:
 	rm test_formula_first_order.native
 	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order
 	./test_formula_first_order
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I Ensembles/test test_ensembles.native
+	rm test_ensembles.native
+	mv _build/Ensembles/test/test_ensembles.native test_ensembles
+	./test_ensembles
 
 clean:
 	ocamlbuild -clean && \
