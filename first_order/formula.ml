@@ -195,46 +195,43 @@ struct
 						end
 					else
 						begin
-							Format.fprintf ff "\\forall %s, " i;
-							print_par (fun () -> printer_first_order_formula_aux ff "forall" f);
+							print_par (fun () -> Format.fprintf ff "\\forall %s, " i;printer_first_order_formula_aux ff "forall" f);
 						end
 			| Exists(Var i, f) ->
 					if (seq ="init")
 					then
 						begin
-							Format.fprintf ff "exists X%d" i;
+							Format.fprintf ff "\\exists X_%d, " i;
 							printer_first_order_formula_aux ff "exists" f;
 						end
 					else
 					if (seq = "exists")
 					then
 						begin
-							Format.fprintf ff ",X%d " i;
-							print_par (fun () -> printer_first_order_formula_aux ff "exists" f);
+							Format.fprintf ff "X_%d, " i;
+							printer_first_order_formula_aux ff "exists" f;
 						end
 					else
 						begin
-							Format.fprintf ff " exists X%d " i;
-							print_par (fun () -> printer_first_order_formula_aux ff "exists" f);
+							print_par (fun () -> Format.fprintf ff "\\exists X_%d, " i;printer_first_order_formula_aux ff "exists" f);
 						end
 			| Exists(Metavar i, f) ->
 					if (seq ="init")
 					then
 						begin
-							Format.fprintf ff "exists %s" i;
+							Format.fprintf ff "\\exists %s, " i;
 							printer_first_order_formula_aux ff "exists" f;
 						end
 					else
 					if (seq = "exists")
 					then
 						begin
-							Format.fprintf ff ",%s " i;
-							print_par (fun () -> printer_first_order_formula_aux ff "exists" f);
+							Format.fprintf ff "%s, " i;
+							printer_first_order_formula_aux ff "exists" f;
 						end
 					else
 						begin
-							Format.fprintf ff " exists %s " i;
-							print_par (fun () -> printer_first_order_formula_aux ff "exists" f);
+							print_par (fun () -> Format.fprintf ff "\\exists %s, " i;printer_first_order_formula_aux ff "exists" f);
 						end
 		    | Atomic_formula f -> printer_first_order_atomic_formula ff f
 		

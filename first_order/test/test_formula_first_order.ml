@@ -205,13 +205,67 @@ let test_printer_first_order_formula_forall_forall test_ctxt =
         (printer_first_order_formula Format.str_formatter (Forall(v2, g1)));
         let s = Format.flush_str_formatter ()
         in 
-        assert_equal s "\\forall X_2, X_1, X_1 = X_2"
+        assert_equal ~printer:(fun s -> s) s "\\forall X_2, X_1, X_1 = X_2"
 
 let test_printer_first_order_formula_and_forall test_ctxt =
         (printer_first_order_formula Format.str_formatter  (And(Atomic_formula(f1), g1)));
         let s = Format.flush_str_formatter ()
         in 
         assert_equal ~printer:(fun s -> s) s "X_1 = X_2 \\land (\\forall X_1, X_1 = X_2)" 
+
+let test_printer_first_order_formula_forall_meta test_ctxt =
+        (printer_first_order_formula Format.str_formatter (Forall((Metavar "s"), Atomic_formula(f1))));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) s "\\forall s, X_1 = X_2"
+
+let test_printer_first_order_formula_forall_forall_meta test_ctxt =
+        (printer_first_order_formula Format.str_formatter (Forall(Metavar "s", g1)));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) s "\\forall s, X_1, X_1 = X_2"
+
+let test_printer_first_order_formula_and_forall_meta test_ctxt =
+        (printer_first_order_formula Format.str_formatter  (And(Atomic_formula(f1), (Forall(Metavar "s", Atomic_formula(f1))))));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) "X_1 = X_2 \\land (\\forall s, X_1 = X_2)" s
+
+let test_printer_first_order_formula_exists test_ctxt =
+        (printer_first_order_formula Format.str_formatter g2);
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) s "\\exists X_1, X_1 = X_2"
+
+let test_printer_first_order_formula_exists_exists test_ctxt =
+        (printer_first_order_formula Format.str_formatter (Exists(v2, g2)));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) s "\\exists X_2, X_1, X_1 = X_2"
+
+let test_printer_first_order_formula_and_exists test_ctxt =
+        (printer_first_order_formula Format.str_formatter  (And(Atomic_formula(f1), g2)));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) "X_1 = X_2 \\land (\\exists X_1, X_1 = X_2)" s
+
+let test_printer_first_order_formula_exists_meta test_ctxt =
+        (printer_first_order_formula Format.str_formatter (Exists(Metavar "s", Atomic_formula(f1))));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal s "\\exists s, X_1 = X_2"
+
+let test_printer_first_order_formula_exists_exists_meta test_ctxt =
+        (printer_first_order_formula Format.str_formatter (Exists(Metavar "s", g2)));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) s "\\exists s, X_1, X_1 = X_2"
+
+let test_printer_first_order_formula_and_exists_meta test_ctxt =
+        (printer_first_order_formula Format.str_formatter  (And(Atomic_formula(f1), (Exists(Metavar "s", Atomic_formula(f1))))));
+        let s = Format.flush_str_formatter ()
+        in 
+        assert_equal ~printer:(fun s -> s) s "X_1 = X_2 \\land (\\exists s, X_1 = X_2)"
 
 let test_equiv test_ctxt =
 	assert_equal (And(Imply(nf1,nf2), Imply(nf2,nf1))) (equiv nf1 nf2) 
@@ -249,9 +303,22 @@ let formula_suite = "First order formula tests">:::
         "test_printer_first_order_formula_or_and">::test_printer_first_order_formula_or_and;
         "test_printer_first_order_formula_and_or">::test_printer_first_order_formula_and_or;
         "test_printer_first_order_formula_imply_imply">::test_printer_first_order_formula_imply_imply;
+        
         "test_printer_first_order_formula_forall">::test_printer_first_order_formula_forall;
         "test_printer_first_order_formula_forall_forall">::test_printer_first_order_formula_forall_forall;
-        "test_printer_first_order_formula_and_forall ">::test_printer_first_order_formula_and_forall ;
+        "test_printer_first_order_formula_and_forall">::test_printer_first_order_formula_and_forall;
+        
+        "test_printer_first_order_formula_forall_meta">::test_printer_first_order_formula_forall_meta;
+        "test_printer_first_order_formula_forall_forall_meta">::test_printer_first_order_formula_forall_forall_meta;
+        "test_printer_first_order_formula_and_forall_meta">::test_printer_first_order_formula_and_forall_meta;
+        
+        "test_printer_first_order_formula_exists">::test_printer_first_order_formula_exists;
+        "test_printer_first_order_formula_exists_exists">::test_printer_first_order_formula_exists_exists;
+        "test_printer_first_order_formula_and_exists">::test_printer_first_order_formula_and_exists;
+        
+        "test_printer_first_order_formula_exists_meta">::test_printer_first_order_formula_exists_meta;
+        "test_printer_first_order_formula_exists_exists_meta">::test_printer_first_order_formula_exists_exists_meta;
+        "test_printer_first_order_formula_and_exists">::test_printer_first_order_formula_and_exists;
         "test_equiv">::test_equiv;
 
         ]
