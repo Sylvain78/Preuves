@@ -190,7 +190,7 @@ struct
 					if (seq = "forall")
 					then
 						begin
-                                                        Format.fprintf ff ",%s" i;
+                                                        Format.fprintf ff "%s, " i;
 							printer_first_order_formula_aux ff "forall" f;
 						end
 					else
