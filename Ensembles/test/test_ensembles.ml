@@ -13,14 +13,17 @@ let vx,vy,vx',vy'=V x,V y, V x',V y'
 let couple = Ensembles.ZF.of_string "C"
 let singleton = Ensembles.ZF.of_string "S"
 let parties = Ensembles.ZF.of_string "P"
-
+(*
 let prop_couple =
-  (?@(x, ?@(y, ?@(x', ?@(y',
+  formula_from_string "\\forall(x, \\forall(y, \\forall(x', \\forall(y', (x,y)=(x',y') <=> (x=x' \\land y=y')))))"
+*)
+(*        
+        (?@(x, ?@(y, ?@(x', ?@(y',
                          (Operation(couple,[vx;vy]) ^= Operation(couple,[vx';vy'])) <=>
                          ((vx)^=(vx') && (vy)^=(vy'))  
                         ))))) 
-
-let suffisant =
+*)
+(*let suffisant =
   (?@(x, ?@(y, ?@(x', ?@(y', 
                          ((vx)^=(vx') && (vy)^=(vy')) => 
                          (Operation(couple,[vx;vy]) ^= Operation(couple,[vx';vy']))
@@ -123,4 +126,4 @@ let proposition1 =
   verification_preuve ~theorie:zf ~hypotheses:[]
     ~theoreme:(TPFormule(Formule_atomique(Relation(of_string("\\subset") ,[vx;vx])))) 
     ~proof:[TPFormule(Formule_atomique(Relation(of_string("\\subset") ,[vx;vx]))); ]
-
+*)

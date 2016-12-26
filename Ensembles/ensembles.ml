@@ -6,8 +6,6 @@ open Theory
 module ZF =
 struct
   include Theory(Signature.Ens);;
-  (* TODO Lexer.liste_relbin := ["\\in"] *)
-  (** Notation for  "is element of" *)
   open Signature.Ens
 
   let of_string = Signature.Ens.of_string
