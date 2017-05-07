@@ -6,11 +6,11 @@ module Theory(Sig:SIGNATURE) =
 struct
 	
 	include First_order_axioms.Axioms(Sig) 
-        include F	
+        
         module S = Schema(Sig)	
         include S
-        (**Création schéma*)
-	(*Exemple pour séparation*)
+        (**Creating schema*)
+	(*Example for separation*)
 	(* schema "separation" "f" ["x"] "c" ["a","b"] (?@)(a,(?@)("c",(?&)(b,(?@)(x,x&=b <=>(x&=a && f(x,c)))) ))*)
 	
 	type formula_parametre_schema = {

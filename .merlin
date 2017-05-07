@@ -1,5 +1,5 @@
 S .
+S util/**
 S prop/**
 S first_order/**
-S util
-B _build/**
+B _build

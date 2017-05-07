@@ -40,6 +40,10 @@ test:
 	rm test_formula_first_order.native && \
 	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order && \
 	./test_formula_first_order
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_schemas_first_order.native  && \
+	rm test_schemas_first_order.native && \
+	mv _build/first_order/test/test_schemas_first_order.native test_schemas_first_order && \
+	./test_schemas_first_order
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I prop -I Ensembles -I Ensembles/test test_ensembles.native  && \
 	rm test_ensembles.native && \
 	mv _build/Ensembles/test/test_ensembles.native test_ensembles && \
@@ -65,6 +69,10 @@ coverage:
 	rm test_formula_first_order.native
 	mv _build/first_order/test/test_formula_first_order.native test_formula_first_order
 	./test_formula_first_order
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_schemas_first_order.native
+	rm test_schemas_first_order.native
+	mv _build/first_order/test/test_schemas_first_order.native test_schemas_first_order
+	./test_schemas_first_order
 	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I Ensembles/test test_ensembles.native
 	rm test_ensembles.native
 	mv _build/Ensembles/test/test_ensembles.native test_ensembles
@@ -87,7 +95,8 @@ merlinize:
 	echo 'S .' > .merlin
 	echo 'S util/**' >> .merlin
 	echo 'S prop/**' >> .merlin
-	echo 'B _build' >> .merlin
+	echo 'S first_order/**' >> .merlin
+	echo 'B _build/**' >> .merlin
 
 doc:
 	cp prop/prop.mlpack prop.odocl && \

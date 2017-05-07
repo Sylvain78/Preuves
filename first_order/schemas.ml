@@ -4,7 +4,7 @@ open Formula
 module Schema  (Sig:SIGNATURE) =
   struct
     module Schema_Formula = Formula(Sig)
-    open Schema_Formula
+    include Schema_Formula
 
     type schema = {
       nom : string;
