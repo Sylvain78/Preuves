@@ -59,7 +59,7 @@ let schema1 =
         }
 and schema2 = 
         {
-        nom="schema 1";
+        nom="schema 2";
         variables_reservees=[];
         groupe_variables_neutres=v0;
         variable_schematique=variable_schematique;
