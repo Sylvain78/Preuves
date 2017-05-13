@@ -72,9 +72,61 @@ let test_apply_schemas test_ctxt =
         assert_equal (Atomic_formula (Relation(variable_non_schematique,[]))) (apply_schema ~schema:schema2 ~predicat:(Atomic_formula f1))
 
 
+(** Tests sur les schémas de théorie des ensembles **)
+  let a = Var (new_var())
+  let b = Var (new_var())
+  let c = Var (new_var())
+  let x = Var (new_var())
+  let y = Var (new_var())
+  let z = Var (new_var())
+  let of_string = Signature.Ens.of_string
+  let f = Signature.Ens.create_meta_symbol(of_string "f") 
+  let is_in = of_string "\\in"
+  let (&=) a b = Atomic_formula(Relation(is_in,[a; b]))
+
+
+  let axiome_separation =
+    let fx = Atomic_formula(Relation(f,[V x;V c]))
+    in
+    {nom="Axiome de séparation";
+     variables_reservees = [a;b];
+     variable_schematique = f;
+     groupe_variables_neutres = c;
+     variables_libres_utilisees_predicat = [x];
+     formula =  (Forall(a, Forall(c, Exists(b, Forall(x, equiv ((V x) &= (V b))
+                                         (And ((V x) &= (V a), fx)))))))
+    }
+
+  let axiome_remplacement =
+    {nom = "Axiome de remplacement";
+     variables_reservees = [a;b];
+     variable_schematique = f;
+     variables_libres_utilisees_predicat = [x;y];
+     groupe_variables_neutres = c;
+     formula = 
+       let fxy,fxz=Atomic_formula(Relation(f,[V x;V y;V c])),Atomic_formula(Relation(f,[V x;V z;V c]))
+       in
+       Forall(a,Forall(c,((Forall(x,Forall(y,Forall(z,
+                                Imply(Imply(And(fxy, fxz), Atomic_formula(Eq(V y, V z)))
+                                ,
+                                Exists(b,Forall(y,(
+                                        Imply(
+                                              Exists(x, Imply((V x) &= (V a) , fxy))
+                                              ,
+                                              ((V y) &= (V b)))))))
+                                )))))))
+    }
+
+let test_reserved_variables test_ctxt =
+        try 
+            ignore (apply_schema ~schema:axiome_separation ~predicat:(Atomic_formula (Eq((V a, V b)))));
+            assert_failure "Rserved variable non found" 
+        with
+        | Variable_reservee _ ->()
 
 let test_suite = "Schemas test suite">:::[
-        "Schema">::test_apply_schemas;      
+        "Apply schema">::test_apply_schemas;      
+        "Reserved variables">::test_reserved_variables;
         ]
 
 let () = run_test_tt_main test_suite
