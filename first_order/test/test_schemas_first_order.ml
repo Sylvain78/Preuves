@@ -45,9 +45,10 @@ type schema = {
         formula : formula;
 }
 *)
+let variable_schematique = SignatureMinimal.of_string "p"
+and variable_non_schematique = SignatureMinimal.of_string "q"
+
 let schema1 = 
-        let variable_schematique = SignatureMinimal.of_string "p"
-        in
         {
         nom="schema 1";
         variables_reservees=[];
@@ -56,9 +57,20 @@ let schema1 =
         variables_libres_utilisees_predicat=[];
         formula=Atomic_formula(Relation(variable_schematique,[]));
         }
+and schema2 = 
+        {
+        nom="schema 1";
+        variables_reservees=[];
+        groupe_variables_neutres=v0;
+        variable_schematique=variable_schematique;
+        variables_libres_utilisees_predicat=[];
+        formula=Atomic_formula(Relation(variable_non_schematique,[]));
+        }
 
 let test_apply_schemas test_ctxt = 
-    assert_equal (Atomic_formula f1) (apply_schema ~schema:schema1 ~predicat:(Atomic_formula f1))
+        assert_equal (Atomic_formula f1) (apply_schema ~schema:schema1 ~predicat:(Atomic_formula f1));
+        assert_equal (Atomic_formula (Relation(variable_non_schematique,[]))) (apply_schema ~schema:schema2 ~predicat:(Atomic_formula f1))
+
 
 
 let test_suite = "Schemas test suite">:::[
