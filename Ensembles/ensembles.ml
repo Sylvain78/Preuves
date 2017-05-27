@@ -38,7 +38,7 @@ struct
       Atomic_formula (Eq (V a , V b))
       ))))
     in
-    {nom_theoreme="Axiome d'extensionnalité"; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_extensionnalite}
+    {nom_theoreme="Axiome d'extensionnalitÃ©"; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_extensionnalite}
 
   let axiome_paire =
     let formula_axiome_paire =
@@ -72,7 +72,7 @@ struct
   let axiome_separation =
     let fx = Atomic_formula(Relation(f,[V x;V c]))
     in
-    {nom="Axiome de séparation";
+    {nom="Axiome de sÃ©paration";
      variables_reservees = [a;b];
      variable_schematique = f;
      groupe_variables_neutres = c;

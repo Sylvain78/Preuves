@@ -47,7 +47,7 @@ type schema = {
 *)
 let variable_schematique = SignatureMinimal.of_string "p"
 and variable_non_schematique = SignatureMinimal.of_string "q"
-
+let f_schema1 = Atomic_formula(Relation(variable_schematique,[]))
 let schema1 = 
         {
         nom="schema 1";
@@ -55,7 +55,7 @@ let schema1 =
         groupe_variables_neutres=v0;
         variable_schematique=variable_schematique;
         variables_libres_utilisees_predicat=[];
-        formula=Atomic_formula(Relation(variable_schematique,[]));
+        formula= f_schema1;
         }
 and schema2 = 
         {
@@ -66,11 +66,22 @@ and schema2 =
         variables_libres_utilisees_predicat=[];
         formula=Atomic_formula(Relation(variable_non_schematique,[]));
         }
-
+and schema_neg =
+        {
+        nom="schema neg";
+        variables_reservees=[];
+        groupe_variables_neutres=v0;
+        variable_schematique=variable_schematique;
+        variables_libres_utilisees_predicat=[];
+        formula = Neg f_schema1;
+        }
+;;
 let test_apply_schemas test_ctxt = 
+        assert_equal (nf1) (apply_schema ~schema:schema1 ~predicat:(nf1));
         assert_equal (Atomic_formula f1) (apply_schema ~schema:schema1 ~predicat:(Atomic_formula f1));
-        assert_equal (Atomic_formula (Relation(variable_non_schematique,[]))) (apply_schema ~schema:schema2 ~predicat:(Atomic_formula f1))
-
+        assert_equal (Atomic_formula (Relation(variable_non_schematique,[]))) (apply_schema ~schema:schema2 ~predicat:(Atomic_formula f1));
+        assert_equal ~printer:(fun s ->  (printer_first_order_formula Format.str_formatter s; let s = Format.flush_str_formatter () in s))
+                (Neg (Atomic_formula f1)) (apply_schema ~schema:schema_neg ~predicat:(Atomic_formula f1))
 
 (** Tests sur les schémas de théorie des ensembles **)
   let a = Var (new_var())
