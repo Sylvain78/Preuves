@@ -47,7 +47,7 @@ type schema = {
 *)
 let variable_schematique = SignatureMinimal.of_string "p"
 and variable_non_schematique = SignatureMinimal.of_string "q"
-let f_schema1 = Atomic_formula(Relation(variable_schematique,[]))
+let f_schema = Atomic_formula(Relation(variable_schematique,[]))
 let schema1 = 
         {
         nom="schema 1";
@@ -55,7 +55,7 @@ let schema1 =
         groupe_variables_neutres=v0;
         variable_schematique=variable_schematique;
         variables_libres_utilisees_predicat=[];
-        formula= f_schema1;
+        formula= f_schema;
         }
 and schema2 = 
         {
@@ -73,15 +73,47 @@ and schema_neg =
         groupe_variables_neutres=v0;
         variable_schematique=variable_schematique;
         variables_libres_utilisees_predicat=[];
-        formula = Neg f_schema1;
+        formula = Neg f_schema;
+        }
+and schema_or =
+        {
+        nom="schema or";
+        variables_reservees=[];
+        groupe_variables_neutres=v0;
+        variable_schematique=variable_schematique;
+        variables_libres_utilisees_predicat=[];
+        formula = Or (Atomic_formula f1, f_schema);
+        }
+and schema_and=
+        {
+        nom="schema and";
+        variables_reservees=[];
+        groupe_variables_neutres=v0;
+        variable_schematique=variable_schematique;
+        variables_libres_utilisees_predicat=[];
+        formula = And (f_schema, f_schema);
+        }
+and schema_imply =
+        {
+        nom="schema imply";
+        variables_reservees=[];
+        groupe_variables_neutres=v0;
+        variable_schematique=variable_schematique;
+        variables_libres_utilisees_predicat=[];
+        formula = Imply (f_schema,  Atomic_formula f1);
         }
 ;;
+
+let printer =(fun s ->  (printer_first_order_formula Format.str_formatter s; let s = Format.flush_str_formatter () in s))
+
 let test_apply_schemas test_ctxt = 
         assert_equal (nf1) (apply_schema ~schema:schema1 ~predicat:(nf1));
         assert_equal (Atomic_formula f1) (apply_schema ~schema:schema1 ~predicat:(Atomic_formula f1));
         assert_equal (Atomic_formula (Relation(variable_non_schematique,[]))) (apply_schema ~schema:schema2 ~predicat:(Atomic_formula f1));
-        assert_equal ~printer:(fun s ->  (printer_first_order_formula Format.str_formatter s; let s = Format.flush_str_formatter () in s))
-                (Neg (Atomic_formula f1)) (apply_schema ~schema:schema_neg ~predicat:(Atomic_formula f1))
+        assert_equal ~printer:printer (Neg (Atomic_formula f1)) (apply_schema ~schema:schema_neg ~predicat:(Atomic_formula f1));
+        assert_equal ~printer:printer (Or (Atomic_formula f1, Atomic_formula f2) ) (apply_schema ~schema:schema_or ~predicat:(Atomic_formula f2));
+        assert_equal ~printer:printer (And (Atomic_formula f2, Atomic_formula f2) ) (apply_schema ~schema:schema_and ~predicat:(Atomic_formula f2));
+        assert_equal ~printer:printer (Imply (Atomic_formula f2, Atomic_formula f1) ) (apply_schema ~schema:schema_imply ~predicat:(Atomic_formula f2))
 
 (** Tests sur les schémas de théorie des ensembles **)
   let a = Var (new_var())
