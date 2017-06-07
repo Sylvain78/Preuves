@@ -116,12 +116,12 @@ let test_apply_schemas test_ctxt =
         assert_equal ~printer:printer (Imply (Atomic_formula f2, Atomic_formula f1) ) (apply_schema ~schema:schema_imply ~predicat:(Atomic_formula f2))
 
 (** Tests sur les schémas de théorie des ensembles **)
-  let a = Var (new_var())
-  let b = Var (new_var())
-  let c = Var (new_var())
-  let x = Var (new_var())
-  let y = Var (new_var())
-  let z = Var (new_var())
+  let a = Metavar "a"
+  let b = Metavar "b"
+  let c = Metavar "c"
+  let x = Metavar "x"
+  let y = Metavar "y"
+  let z = Metavar "z"
   let of_string = Signature.Ens.of_string
   let f = Signature.Ens.create_meta_symbol(of_string "f") 
   let is_in = of_string "\\in"
@@ -159,17 +159,29 @@ let test_apply_schemas test_ctxt =
                                               ((V y) &= (V b)))))))
                                 )))))))
     }
+  
+let test_dehornoy test_ctxt =
+        let sepf1 = Forall(a, Exists(b, Forall(x, (equiv ((V x) &= (V b)) (And((V x) &= (V a), (V x) &= (V x)) )))))
+        and sepf2 = Forall(a, Forall(c, Exists(b, Forall(x, (equiv ((V x) &= (V b)) (And((V x) &= (V a), Neg ((V x) &= (V c))) ))))))
+        and sepf3 = Forall(a, Exists(b, Forall(x, (equiv ((V x) &= (V b)) 
+        (And((V x) &= (V a), Exists(y, Imply ((V y) &= (V x), (V x) &= (V y)))))))))
+        in
+        assert_equal ~printer:printer sepf1 (apply_schema ~schema:axiome_separation ~predicat:((V x) &= (V x)));
+        assert_equal ~printer:printer sepf2 (apply_schema ~schema:axiome_separation ~predicat:(Neg ((V x) &= (V c))));
+        assert_equal ~printer:printer sepf3 (apply_schema ~schema:axiome_separation ~predicat:
+                (Exists(y, (Imply((V y) &= (V x), (V x) &= (V y)))))) 
 
 let test_reserved_variables test_ctxt =
         try 
             ignore (apply_schema ~schema:axiome_separation ~predicat:(Atomic_formula (Eq((V a, V b)))));
-            assert_failure "Rserved variable non found" 
+            assert_failure "Reserved variable non found" 
         with
         | Variable_reservee _ ->()
 
 let test_suite = "Schemas test suite">:::[
         "Apply schema">::test_apply_schemas;      
         "Reserved variables">::test_reserved_variables;
+        "Dehornoy separation axiom">::test_dehornoy; 
         ]
 
 let () = run_test_tt_main test_suite

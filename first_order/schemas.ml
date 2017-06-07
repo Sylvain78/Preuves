@@ -50,7 +50,7 @@ module Schema  (Sig:SIGNATURE) =
                            in
                            List.fold_right ( fun v f -> Exists(v,f)) variables_neutres s'      
                          else 
-                           Exists(v,apply_schema_formula s predicat)       
+                           Exists(v, apply_schema_formula s predicat)       
         | Forall(v,s) -> if (v = schema.groupe_variables_neutres) 
                          then 
                            let s' = apply_schema_formula s predicat
@@ -60,20 +60,11 @@ module Schema  (Sig:SIGNATURE) =
                            in
                            List.fold_right ( fun v f -> Forall(v,f)) variables_neutres s'      
                          else 
-                           Forall(v,apply_schema_formula s predicat)        
+                           Forall(v, apply_schema_formula s predicat)        
       in
       apply_schema_formula schema.formula predicat
    
-    type quantif = 
-    | Univ 
-    | Exist
    
-    let rec consomme_variables_neutres q ~liste_var_util:l p =
-      match q,p with
-         ( Univ, Forall(v,p') 
-         | Exist, Exists(v,p')) when (not (List.mem v l)) ->
-           consomme_variables_neutres q ~liste_var_util:l p'
-        | _ -> p 
      
     exception Instance of (formula * formula)  
     exception Missing_var_groupe_var_neutres of formula
