@@ -1,6 +1,6 @@
 open OUnit2
 open Formula_prop
-open Parser
+open Prop_parser
 
 let test_parenthesis test_ctxt = 
 assert_equal (PVar 1) (formula_from_string "(X_1)")

@@ -30,9 +30,9 @@ struct
                 }
         
         and  term_preuve = | TPAxiome of formula * theoreme
-                            | TPInstanceSchema of formula * (schema * formula)
-                            | TPFormula of formula
-                            | TPTheoreme of formula * (theoreme * (term list)(*parametres*) * (formula list)(* premisses*))
+                           | TPInstanceSchema of formula * (schema * formula)
+                           | TPFormula of formula
+                           | TPTheoreme of formula * (theoreme * (term list)(*parametres*) * (formula list)(* premisses*))
 
         and  preuve = term_preuve list 
 

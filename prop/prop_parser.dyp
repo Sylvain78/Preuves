@@ -1,0 +1,97 @@
+{
+ open Formula_prop
+ let local_data = [];;
+ let parser = ref None;;
+}
+
+%start expr1
+%start notation1
+%layout [' ' '\t']
+
+%lexer
+
+let lowercase = ['a'-'z']
+let uppercase = ['A'-'Z']
+let digit = ['0'-'9']
+let ident = (lowercase|uppercase)(lowercase|uppercase|digit)*
+let any_string = '"' (lowercase | uppercase | digit | [' ' '=' '>'])* '"'
+
+%parser
+/*
+Load the parser at beginning of parsing*/
+expr1 : 
+	| ...@{(),match !parser with | None -> [] | Some pdev -> [Parser pdev] } expr eof { $2 }
+
+notation1 :
+	| ...@{(),match !parser with | None -> [] | Some pdev -> [Parser pdev] } notation eof { $2 }
+
+expr:
+	| "X_" ['0'-'9']+  { PVar (int_of_string $2) }
+	| "X_{" ['0'-'9']+ "}" { PVar (int_of_string $2) }
+	| "(" expr ")" { $2 }
+	| "\\lnot" expr { PNeg($2) }
+	| expr "\\implies" expr { PImpl($1,$3) }
+	| expr "\\land" expr { PAnd($1,$3) }
+	| expr "\\lor" expr { POr($1,$3) }
+
+notation:
+	| "Notation"  ['a'-'z']+ '\n'
+	"Param" param_list '\n'
+	"Syntax" syntax '\n' /*Extract params list*/
+	"Semantics" semantique
+	...@{
+		let rec notation_elements_to_regexp = function 
+		| [] -> []
+		| Param _ ::l -> (Dyp.Non_ter("expr", Dyp.No_priority)) :: notation_elements_to_regexp l
+		| String s ::l -> (Dyp.Regexp(Dyp.RE_String s)) :: notation_elements_to_regexp l
+		in
+		let rule       = ("expr", notation_elements_to_regexp $8, "default_priority",[]) 
+		and action _ l = Obj_expr (Abuse_notation({notation_prop= $2; notation_prop_params= [(*TODO*)] })), [ ] 
+		
+		
+		in
+		Notation {
+		   notation_prop_name = $2;
+		   notation_prop_params = $5;
+		   notation_prop_notation = $8;
+		   notation_prop_semantique = $11;
+		}, 
+		[ Dyp.Add_rules [(rule,action)] ; Dyp.Keep_grammar ;(* Dyp.Next_grammar stdout*) ]
+    	} 
+    
+    {parser := Some dyp.parser_pilot.pp_dev; $12}
+
+
+param_list: 
+	| { [] }
+	| ['a'-'z']+ { [Param $1] }
+	| param_list ['a'-'z']+  { (* (Dyp.Non_ter($1, Dyp.No_priority))::$2*) $1 @ [Param $2] }
+
+syntax:
+	| { [] } 
+	| ident	syntax	{ (Param $1) :: $2 }
+	| any_string  syntax { (String $1) :: $2 }
+
+
+semantique:
+	| syntax { $1 }
+
+%%
+
+{
+let formula_from_string s = 
+   let l = (expr1 (Dyp.from_string (pp ()) s))
+   in 
+   match l with [ (f,s) ] -> f 
+              |   _   -> raise (Failure "[Prop] Parser.formula_from_string")
+
+let notation_from_string s =	      
+   let l = (notation1 (Dyp.from_string (pp ()) s))
+   in 
+   match l with [ (n,_) ] -> n 
+              |   _   -> raise (Failure "[Prop] Parser.notation_from_string")
+} 
+%mli {
+val formula_from_string : string -> Formula_prop.formula_prop 
+val notation_from_string : string -> Formula_prop.notation_prop
+}

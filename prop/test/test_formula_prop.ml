@@ -2,10 +2,17 @@ open OUnit2
 open Formula_prop
 open Axioms_prop
 open Proof_prop
-open Parser
+open Prop_parser
+
+let () = print_string "before\n";;
+let n1 = notation_from_string "Notation imply \n Param  a b\nSyntax a \"=>\" \nSemantics ";;
+let n2 = notation_from_string "Notation imply \n Param  a b\nSyntax \"=>\" \nSemantics ";;
+let n3 = notation_from_string "Notation imply \n Param  a b\nSyntax a  \nSemantics ";;
+let () = print_string "after\n";;
+
 
 (* |- F \\implies F *)
-let verif_tauto = proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1") 
+let verif_tauto = proof_verification ~hyp:[] ( print_string "verif_tauto\n";let f = formula_from_string "X_1 =>  X_1" in print_string "verif_tauto (after parse)"; f) 
 ~proof:(List.map formula_from_string [
     "(X_1 \\implies ((X_1 \\implies X_1) \\implies X_1))  \\implies 
     (( X_1 \\implies (X_1 \\implies X_1)) \\implies (X_1 \\implies X_1))";

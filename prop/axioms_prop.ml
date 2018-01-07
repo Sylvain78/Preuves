@@ -1,6 +1,5 @@
 open Util
 open Formula_prop
-open Parser
 
 type axiom_prop =
   {
@@ -8,20 +7,20 @@ type axiom_prop =
     axiom_prop : formula_prop;
   }
 
-let a1 = Parser.formula_from_string "X_1 \\implies (X_2 \\implies X_1)";;
-let a2 = Parser.formula_from_string "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";;
+let a1 = Prop_parser.formula_from_string "X_1 \\implies (X_2 \\implies X_1)";;
+let a2 = Prop_parser.formula_from_string "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";;
 
-let a3 = Parser.formula_from_string "X_1 \\implies \\lnot (\\lnot X_1)";;
-let a4 = Parser.formula_from_string "\\lnot (\\lnot X_1) \\implies X_1";;
-let a5 = Parser.formula_from_string "(X_1 \\implies X_2) \\implies (\\lnot X_2 \\implies \\lnot X_1)";;
+let a3 = Prop_parser.formula_from_string "X_1 \\implies \\lnot (\\lnot X_1)";;
+let a4 = Prop_parser.formula_from_string "\\lnot (\\lnot X_1) \\implies X_1";;
+let a5 = Prop_parser.formula_from_string "(X_1 \\implies X_2) \\implies (\\lnot X_2 \\implies \\lnot X_1)";;
 
-let a6 = Parser.formula_from_string "X_1 \\implies (X_2 \\implies (X_1 \\land X_2))";;
-let a7 = Parser.formula_from_string "(X_1 \\land X_2) \\implies X_1";;
-let a8 = Parser.formula_from_string "(X_1 \\land X_2) \\implies X_2";;
+let a6 = Prop_parser.formula_from_string "X_1 \\implies (X_2 \\implies (X_1 \\land X_2))";;
+let a7 = Prop_parser.formula_from_string "(X_1 \\land X_2) \\implies X_1";;
+let a8 = Prop_parser.formula_from_string "(X_1 \\land X_2) \\implies X_2";;
 
-let a9 = Parser.formula_from_string "X_1 \\implies (X_1 \\lor X_2)";;
-let a10 = Parser.formula_from_string "X_2 \\implies (X_1 \\lor X_2)";;
-let a11 = Parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_2) \\implies X_2)";;
+let a9 = Prop_parser.formula_from_string "X_1 \\implies (X_1 \\lor X_2)";;
+let a10 = Prop_parser.formula_from_string "X_2 \\implies (X_1 \\lor X_2)";;
+let a11 = Prop_parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_2) \\implies X_2)";;
 
 let axioms_prop = [
   {

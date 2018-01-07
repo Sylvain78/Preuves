@@ -1,6 +1,6 @@
 open Axioms_prop
 open Formula_prop
-open Parser 
+open Prop_parser 
 (*
 let (read_formule : string -> (formula_prop * string) list) = function s ->
         let lexbuf = Dyp.from_string (Prop_parser.pp ()) s
