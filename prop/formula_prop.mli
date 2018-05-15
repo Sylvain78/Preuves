@@ -5,14 +5,13 @@ type formula_prop =
   | PAnd of formula_prop * formula_prop
   | POr of formula_prop * formula_prop
   | PImpl of formula_prop * formula_prop
-  | Abuse_notation of notation_abuse_prop
- and notation_abuse_prop =
+  | Apply_notation of apply_notation_prop
+ and apply_notation_prop =
          {
-           notation_prop : string;
-           notation_prop_params : formula_prop list; (*SKE TODO create database of notations*)
+           apply_notation_prop : notation_prop;
+           apply_notation_prop_params : formula_prop list; (*SKE TODO create database of notations*)
          }
  and notation_prop =
-         Notation of 
          {
            notation_prop_name : string;
            notation_prop_params : notation_prop_element list;

@@ -5,14 +5,13 @@ type formula_prop =
   | PAnd of formula_prop * formula_prop
   | POr of formula_prop * formula_prop
   | PImpl of formula_prop * formula_prop
-  | Abuse_notation of notation_abuse_prop
- and notation_abuse_prop =
+  | Apply_notation of apply_notation_prop
+ and apply_notation_prop =
          {
-           notation_prop : string;
-           notation_prop_params : formula_prop list; (*SKE TODO create database of notations*)
+           apply_notation_prop : notation_prop;
+           apply_notation_prop_params : formula_prop list; (*SKE TODO create database of notations*)
          }
  and notation_prop =
-         Notation of 
          {
            notation_prop_name : string;
            notation_prop_params : notation_prop_element list;
@@ -20,7 +19,8 @@ type formula_prop =
            notation_prop_semantique : notation_prop_element list;
          }
 ;;
-(*SKE Example
+
+(*SKE Example of notation
 "
 Notation equiv
 Params a b
@@ -29,6 +29,7 @@ a \equiv b
 End
 "
 *)
+
 (**
    Print formatters
 *)
@@ -44,7 +45,7 @@ let printer_formula_prop ff f =
       Format.fprintf ff ")";
     in
     function
-    | PVar i -> Format.fprintf ff "P%d" i
+    | PVar i -> Format.fprintf ff "X_{%d}" i
     | PNeg g -> Format.fprintf ff "!"; printer_formula_prop_aux ff "neg" g;
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")
@@ -77,7 +78,7 @@ let to_string_formula_prop f =
       "(" ^ f ^ ")"
     in
     function
-    | PVar i ->  "P" ^ (string_of_int i)
+    | PVar i ->  "X_{" ^ (string_of_int i) ^ "}"
     | PNeg g ->  "!" ^ (to_string_aux  "neg" g);
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")

@@ -1,588 +1,587 @@
 open OUnit2
 open Formula_prop
-open Axioms_prop
-open Proof_prop
 open Prop_parser
+open Proof_prop
+open Axioms_prop
 
-let () = print_string "before\n";;
-let n1 = notation_from_string "Notation imply \n Param  a b\nSyntax a \"=>\" \nSemantics ";;
-let n2 = notation_from_string "Notation imply \n Param  a b\nSyntax \"=>\" \nSemantics ";;
-let n3 = notation_from_string "Notation imply \n Param  a b\nSyntax a  \nSemantics ";;
-let () = print_string "after\n";;
+let () = ignore (
+notation_from_string "Notation imply \n Param  a b\nSyntax a  \"=>\" b\nSemantics  a \"\\implies\" b \nEnd"
+)
+;;
 
 
-(* |- F \\implies F *)
-let verif_tauto = proof_verification ~hyp:[] ( print_string "verif_tauto\n";let f = formula_from_string "X_1 =>  X_1" in print_string "verif_tauto (after parse)"; f) 
+(* |- F => F *)
+let verif_tauto = proof_verification ~hyp:[] (formula_from_string "X_1 =>  X_1") 
 ~proof:(List.map formula_from_string [
-    "(X_1 \\implies ((X_1 \\implies X_1) \\implies X_1))  \\implies 
-    (( X_1 \\implies (X_1 \\implies X_1)) \\implies (X_1 \\implies X_1))";
-    "X_1 \\implies((X_1 \\implies X_1) \\implies X_1)";
-    "(X_1 \\implies (X_1 \\implies X_1)) \\implies (X_1 \\implies X_1)";
-    "X_1 \\implies(X_1 \\implies X_1)";
-    "X_1 \\implies X_1"
+    "(X_1 => ((X_1 => X_1) => X_1))  => 
+    (( X_1 => (X_1 => X_1)) => (X_1 => X_1))";
+    "X_1 =>((X_1 => X_1) => X_1)";
+    "(X_1 => (X_1 => X_1)) => (X_1 => X_1)";
+    "X_1 =>(X_1 => X_1)";
+    "X_1 => X_1"
 ]);;
 
-(* |- (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)*)
-let verif_cut = proof_verification ~hyp:[] (formula_from_string "(X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))")
+(* |- (F => G) => (G => H) => (F => H)*)
+let verif_cut = proof_verification ~hyp:[] (formula_from_string "(X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_3))")
 ~proof: (List.map formula_from_string [
-    "(X_1 \\implies(X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
-    "((X_1 \\implies(X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies(X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-    "((X_2 \\implies X_3) \\implies ((X_1 \\implies(X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-    "((X_2 \\implies X_3) \\implies ((X_1 \\implies(X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies(X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-    "(((X_2 \\implies X_3) \\implies (X_1 \\implies(X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-    "((X_2 \\implies X_3) \\implies  (X_1 \\implies(X_2 \\implies X_3)))";
-    "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))";
-    "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
-    "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
-    "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))) \\implies ((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";    
-    "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+    "(X_1 =>(X_2 => X_3)) => ((X_1 => X_2) => (X_1 => X_3))";
+    "((X_1 =>(X_2 => X_3)) => ((X_1 => X_2) => (X_1 => X_3))) => ((X_2 => X_3) => ((X_1 =>(X_2 => X_3)) => ((X_1 => X_2) => (X_1 => X_3))))";
+    "((X_2 => X_3) => ((X_1 =>(X_2 => X_3)) => ((X_1 => X_2) => (X_1 => X_3))))";
+    "((X_2 => X_3) => ((X_1 =>(X_2 => X_3)) => ((X_1 => X_2) => (X_1 => X_3)))) => (((X_2 => X_3) => (X_1 =>(X_2 => X_3))) => ((X_2 => X_3) => ((X_1 => X_2) => (X_1 => X_3))))";
+    "(((X_2 => X_3) => (X_1 =>(X_2 => X_3))) => ((X_2 => X_3) => ((X_1 => X_2) => (X_1 => X_3))))";
+    "((X_2 => X_3) =>  (X_1 =>(X_2 => X_3)))";
+    "((X_2 => X_3) => ((X_1 => X_2) => (X_1 => X_3)))";
+    "((X_2 => X_3) => ((X_1 => X_2) => (X_1 => X_3))) => (((X_2 => X_3) => (X_1 => X_2)) => ((X_2 => X_3) => (X_1 => X_3)))";
+    "(((X_2 => X_3) => (X_1 => X_2)) => ((X_2 => X_3) => (X_1 => X_3)))";
+    "(((X_2 => X_3) => (X_1 => X_2)) => ((X_2 => X_3) => (X_1 => X_3))) => ((X_1 => X_2) => (((X_2 => X_3) => (X_1 => X_2)) => ((X_2 => X_3) => (X_1 => X_3))))";    
+    "((X_1 => X_2) => (((X_2 => X_3) => (X_1 => X_2)) => ((X_2 => X_3) => (X_1 => X_3))))";
     
     (*k*)
-    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)))";
+    "((X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_2)))";
     
     (*s*)
-    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))  \\implies 
-    (((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+    "((X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_3))))  => 
+    (((X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_2))) => ((X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_3))))";
     
-    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
-    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
+    "((X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_2))) => ((X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_3)))";
+    "((X_1 => X_2) => ((X_2 => X_3) => (X_1 => X_3)))"
 ]);;
 
-(*non A \\implies non B |- B \\implies A*)
+(*non A => non B |- B => A*)
 let verif_contraposee = 
         (*TODO delete when not needed anymore
-        let h = ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))    
-        and (X_1 \\lor X_2) =((\\lnot (\\lnot X_1)) \\implies  X_1)
-        and i = ((\\lnot (\\lnot X_2)) \\implies  X_1)    
-        and a2=    (X_2 \\implies \\lnot (\\lnot X_2))
+        let h = ((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1)))    
+        and (X_1 \\lor X_2) =((\\lnot (\\lnot X_1)) =>  X_1)
+        and i = ((\\lnot (\\lnot X_2)) =>  X_1)    
+        and a2=    (X_2 => \\lnot (\\lnot X_2))
         in
         *)
-proof_verification ~hyp:[] (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
+proof_verification ~hyp:[] (formula_from_string "(((\\lnot X_1) => (\\lnot X_2)) => (X_2 => X_1))")
 ~proof:(List.map formula_from_string [
-    "((\\lnot (\\lnot X_1)) \\implies  X_1)";
-    "((\\lnot (\\lnot X_1)) \\implies  X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies  X_1))";
-    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies  X_1)";
-    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_1)) \\implies  X_1) \\implies((\\lnot (\\lnot X_2)) \\implies  X_1))";
-    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_1)) \\implies  X_1) \\implies((\\lnot (\\lnot X_2)) \\implies  X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies  X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies((\\lnot (\\lnot X_2)) \\implies  X_1)))";
-    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies  X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies((\\lnot (\\lnot X_2)) \\implies  X_1)))";
-    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies((\\lnot (\\lnot X_2)) \\implies  X_1)";
-    "(X_2 \\implies \\lnot (\\lnot X_2))";
-    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2)))";
-    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))";
-    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1))";
-    "((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1))) \\implies  (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1))))";
-    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1))))";
-    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1))))";
-    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1)))";
-    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1))";
-    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies  X_1) \\implies (X_2 \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies((\\lnot (\\lnot X_2)) \\implies  X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)))";
-    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies((\\lnot (\\lnot X_2)) \\implies  X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1))";
-    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)";
-    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))))";
-    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
-    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
-    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
+    "((\\lnot (\\lnot X_1)) =>  X_1)";
+    "((\\lnot (\\lnot X_1)) =>  X_1) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => ((\\lnot (\\lnot X_1)) =>  X_1))";
+    "((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => ((\\lnot (\\lnot X_1)) =>  X_1)";
+    "((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (((\\lnot (\\lnot X_1)) =>  X_1) =>((\\lnot (\\lnot X_2)) =>  X_1))";
+    "(((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (((\\lnot (\\lnot X_1)) =>  X_1) =>((\\lnot (\\lnot X_2)) =>  X_1))) => ((((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => ((\\lnot (\\lnot X_1)) =>  X_1)) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) =>((\\lnot (\\lnot X_2)) =>  X_1)))";
+    "((((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => ((\\lnot (\\lnot X_1)) =>  X_1)) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) =>((\\lnot (\\lnot X_2)) =>  X_1)))";
+    "((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) =>((\\lnot (\\lnot X_2)) =>  X_1)";
+    "(X_2 => \\lnot (\\lnot X_2))";
+    "(X_2 => \\lnot (\\lnot X_2)) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => \\lnot (\\lnot X_2)))";
+    "((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => \\lnot (\\lnot X_2))";
+    "(X_2 => \\lnot (\\lnot X_2)) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1))";
+    "((X_2 => \\lnot (\\lnot X_2)) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1))) =>  (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => ((X_2 => \\lnot (\\lnot X_2)) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1))))";
+    "(((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => ((X_2 => \\lnot (\\lnot X_2)) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1))))";
+    "(((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => ((X_2 => \\lnot (\\lnot X_2)) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1)))) => ((((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => \\lnot (\\lnot X_2))) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1))))";
+    "(((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => \\lnot (\\lnot X_2))) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1)))";
+    "((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1))";
+    "(((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (((\\lnot (\\lnot X_2)) =>  X_1) => (X_2 => X_1))) => ((((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) =>((\\lnot (\\lnot X_2)) =>  X_1)) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => X_1)))";
+    "(((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) =>((\\lnot (\\lnot X_2)) =>  X_1)) => (((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => X_1))";
+    "((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => X_1)";
+    "(((\\lnot X_1) => (\\lnot X_2)) =>  ((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))))";
+    "(((\\lnot X_1) => (\\lnot X_2)) =>  ((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1)))) => ((((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => X_1)) => (((\\lnot X_1) => (\\lnot X_2)) => (X_2 => X_1)))";
+    "((((\\lnot (\\lnot X_2)) => (\\lnot (\\lnot X_1))) => (X_2 => X_1)) => (((\\lnot X_1) => (\\lnot X_2)) => (X_2 => X_1)))";
+    "(((\\lnot X_1) => (\\lnot X_2)) => (X_2 => X_1))";
 ]);;
 
 (*|- A ou \\lnot A*)
 let verif_tiers_exclus =
 (*let z = X_1 \\lor \\lnot X_1
-and tout = \\lnot (X_1 \\implies X_1)
+and tout = \\lnot (X_1 => X_1)
 in
 *)
 proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
 ~proof:(List.map formula_from_string [
     
-    "(X_1 \\implies X_1)";(**)
-    "(X_1 \\implies X_1) \\implies (\\lnot (\\lnot (X_1 \\implies X_1)))"; (**)
-    "\\lnot (\\lnot (X_1 \\implies X_1))";(*OK*)
+    "(X_1 => X_1)";(**)
+    "(X_1 => X_1) => (\\lnot (\\lnot (X_1 => X_1)))"; (**)
+    "\\lnot (\\lnot (X_1 => X_1))";(*OK*)
      
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
     
-    "X_1 \\implies (X_1 \\lor \\lnot X_1)";(**)
-    "(X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (X_1 \\implies (X_1 \\lor \\lnot X_1)))";(**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (X_1 \\implies((X_1 \\lor \\lnot X_1)))";(*OK*)
+    "X_1 => (X_1 \\lor \\lnot X_1)";(**)
+    "(X_1 => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (X_1 => (X_1 \\lor \\lnot X_1)))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => (X_1 =>((X_1 \\lor \\lnot X_1)))";(*OK*)
     
-    "((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)))"; (**)
-    "((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  ((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))))"; (**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)))"; (*OK*)
+    "((X_1 => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1)))"; (**)
+    "((X_1 => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1))) => ((\\lnot (X_1 \\lor \\lnot X_1)) =>  ((X_1 => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1))))"; (**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => ((X_1 => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1)))"; (*OK*)
     
-    "(X_1 \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies \\lnot X_1)";(**)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies \\lnot X_1)";(**)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies \\lnot X_1) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies \\lnot X_1))";(**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))";(*OK*)
+    "(X_1 => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => \\lnot X_1)";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => \\lnot X_1)";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => \\lnot X_1) =>  ((\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => \\lnot X_1))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1))";(*OK*)
     
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))) \\implies (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)))";(**)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1))";(**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot X_1)";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1))) => (((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot (X_1 \\lor \\lnot X_1))) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1)))";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot (X_1 \\lor \\lnot X_1))) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot X_1)";(*OK*)
     
-    "(\\lnot X_1) \\implies  (X_1 \\lor \\lnot X_1)";(**)
-    "((\\lnot X_1) \\implies  (X_1 \\lor \\lnot X_1)) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot X_1) \\implies  (X_1 \\lor \\lnot X_1)))";(**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor \\lnot X_1)))";(*OK*)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor \\lnot X_1)))) \\implies (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (\\lnot X_1)) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (X_1 \\lor \\lnot X_1)))";(**)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (\\lnot X_1)) \\implies  ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (X_1 \\lor \\lnot X_1))";(**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\lor \\lnot X_1))";(*OK*)
+    "(\\lnot X_1) =>  (X_1 \\lor \\lnot X_1)";(**)
+    "((\\lnot X_1) =>  (X_1 \\lor \\lnot X_1)) =>  ((\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot X_1) =>  (X_1 \\lor \\lnot X_1)))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot X_1) => ((X_1 \\lor \\lnot X_1)))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot X_1) => ((X_1 \\lor \\lnot X_1)))) => (((\\lnot (X_1 \\lor \\lnot X_1)) =>  (\\lnot X_1)) =>  ((\\lnot (X_1 \\lor \\lnot X_1)) =>  (X_1 \\lor \\lnot X_1)))";(**)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) =>  (\\lnot X_1)) =>  ((\\lnot (X_1 \\lor \\lnot X_1)) =>  (X_1 \\lor \\lnot X_1))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => ((X_1 \\lor \\lnot X_1))";(*OK*)
     
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
     
-    "((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))";(**)
-    "(((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))) \\implies 
-    ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies  (((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))))";(**)
+    "((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1))) => (((X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1))))";(**)
+    "(((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1))) => (((X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1))))) => 
+    ((\\lnot (X_1 \\lor \\lnot X_1)) =>  (((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1))) => (((X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1))))))";(**)
     
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))))";(*OK*)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1))) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))))) \\implies 
-    (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1)))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\lor \\lnot X_1) \\implies (\\lnot (X_1 \\implies X_1)))))";(**)
-    "(((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot (X_1 \\lor \\lnot X_1)))) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((X_1 \\lor \\lnot X_1) \\implies (\\lnot (X_1 \\implies X_1)))))";(**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))";(*OK*)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (((X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1))))) \\implies 
-    (((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\implies X_1))))";(**)
-    "(((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\lor \\lnot X_1)) \\implies (\\lnot (X_1 \\implies X_1))))";(**)
-    "(\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))";(*OK*)
-    "((\\lnot (X_1 \\lor \\lnot X_1)) \\implies ((\\lnot (X_1 \\implies X_1)))) \\implies ((\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot(\\lnot (X_1 \\lor \\lnot X_1))))";(*OK*)
-    "(\\lnot (\\lnot (X_1 \\implies X_1))) \\implies (\\lnot(\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
-    "(\\lnot(\\lnot (X_1 \\lor \\lnot X_1))) \\implies ((X_1 \\lor \\lnot X_1))";(*OK*)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => (((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1))) => (((X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1)))))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => (((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1))) => (((X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1)))))) => 
+    (((\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1)))) => ((\\lnot (X_1 \\lor \\lnot X_1)) => ((X_1 \\lor \\lnot X_1) => (\\lnot (X_1 => X_1)))))";(**)
+    "(((\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot (X_1 \\lor \\lnot X_1)))) => ((\\lnot (X_1 \\lor \\lnot X_1)) => ((X_1 \\lor \\lnot X_1) => (\\lnot (X_1 => X_1)))))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => (((X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1))))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => (((X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1))))) => 
+    (((\\lnot (X_1 \\lor \\lnot X_1)) => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot (X_1 => X_1))))";(**)
+    "(((\\lnot (X_1 \\lor \\lnot X_1)) => (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 \\lor \\lnot X_1)) => (\\lnot (X_1 => X_1))))";(**)
+    "(\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1)))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1)) => ((\\lnot (X_1 => X_1)))) => ((\\lnot (\\lnot (X_1 => X_1))) => (\\lnot(\\lnot (X_1 \\lor \\lnot X_1))))";(*OK*)
+    "(\\lnot (\\lnot (X_1 => X_1))) => (\\lnot(\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
+    "(\\lnot(\\lnot (X_1 \\lor \\lnot X_1))) => ((X_1 \\lor \\lnot X_1))";(*OK*)
     "\\lnot(\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
     "(X_1 \\lor \\lnot X_1)"
 ]);;
 
-(* |- (A \\implies C) \\implies (A \\implies (B \\implies C))*)
+(* |- (A => C) => (A => (B => C))*)
 let verif_rajout_hypothese =
         (*TODO to delete when not needed anymore
          let 
         X_1,b,X_3=X_1,X_2,X_3
         in
-        let (X_1 \\implies X_3) = (X_1 \\implies X_3)
-        and (X_2 \\implies X_3) = (b \\implies X_3)
+        let (X_1 => X_3) = (X_1 => X_3)
+        and (X_2 => X_3) = (b => X_3)
         in*)
-proof_verification ~hyp:[] (formula_from_string "(X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))")
+proof_verification ~hyp:[] (formula_from_string "(X_1 => X_3) => (X_1 => (X_2 => X_3))")
 ~proof:(List.map formula_from_string [
  (*((S (K (S (K K)))) I)*)    
-    "(X_1 \\implies X_3) \\implies (X_1 \\implies X_3)";(*i*)
-    "X_3 \\implies (X_2 \\implies X_3)"; (*k*)
-    "(X_3 \\implies (X_2 \\implies X_3)) \\implies (X_1 \\implies (X_3 \\implies (X_2 \\implies X_3)))"; 
-    "(X_1 \\implies (X_3 \\implies (X_2 \\implies X_3)))"; (*k k*)
-    "(X_1 \\implies (X_3 \\implies (X_2 \\implies X_3))) \\implies 
-    ((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3)))"; 
-    "((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3)))"; (*s (k k)*)
-    "((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))))";
-    "((X_1 \\implies X_3) \\implies ((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))))"; (*k (s (k k))*)
-    "((X_1 \\implies X_3) \\implies ((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3)))) \\implies 
-    (((X_1 \\implies X_3) \\implies (X_1 \\implies X_3)) \\implies ((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))))";
-    "(((X_1 \\implies X_3) \\implies (X_1 \\implies X_3)) \\implies ((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))))";(*s (k (s (k k)))*)
-    "((X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3)))"; (*(s (k (s (k k)))) i*)
+    "(X_1 => X_3) => (X_1 => X_3)";(*i*)
+    "X_3 => (X_2 => X_3)"; (*k*)
+    "(X_3 => (X_2 => X_3)) => (X_1 => (X_3 => (X_2 => X_3)))"; 
+    "(X_1 => (X_3 => (X_2 => X_3)))"; (*k k*)
+    "(X_1 => (X_3 => (X_2 => X_3))) => 
+    ((X_1 => X_3) => (X_1 => (X_2 => X_3)))"; 
+    "((X_1 => X_3) => (X_1 => (X_2 => X_3)))"; (*s (k k)*)
+    "((X_1 => X_3) => (X_1 => (X_2 => X_3))) => ((X_1 => X_3) => ((X_1 => X_3) => (X_1 => (X_2 => X_3))))";
+    "((X_1 => X_3) => ((X_1 => X_3) => (X_1 => (X_2 => X_3))))"; (*k (s (k k))*)
+    "((X_1 => X_3) => ((X_1 => X_3) => (X_1 => (X_2 => X_3)))) => 
+    (((X_1 => X_3) => (X_1 => X_3)) => ((X_1 => X_3) => (X_1 => (X_2 => X_3))))";
+    "(((X_1 => X_3) => (X_1 => X_3)) => ((X_1 => X_3) => (X_1 => (X_2 => X_3))))";(*s (k (s (k k)))*)
+    "((X_1 => X_3) => (X_1 => (X_2 => X_3)))"; (*(s (k (s (k k)))) i*)
 ]);;
 
-(* |- F ou F \\implies F *)
+(* |- F ou F => F *)
 let verif_ou_idempotent =
-proof_verification ~hyp:[] (formula_from_string "(X_1 \\lor X_1) \\implies X_1")
+proof_verification ~hyp:[] (formula_from_string "(X_1 \\lor X_1) => X_1")
 ~proof:(List.map formula_from_string [
-    "((X_1 \\lorX_1) \\implies X_1) \\implies ((\\lnot X_1) \\implies \\lnot (X_1\\lorX_1))";
-    "((\\lnot X_1) \\implies  ((X_1 \\lor X_1) \\implies X_1))";
-    "((\\lnot X_1) \\implies  ((X_1 \\lor X_1) \\implies X_1)) \\implies ((((X_1 \\lorX_1) \\implies X_1) \\implies ((\\lnot X_1) \\implies \\lnot (X_1\\lorX_1))) \\implies ((\\lnot X_1) \\implies ((\\lnot X_1) \\implies \\lnot (X_1\\lorX_1))))";
-    "((((X_1 \\lorX_1) \\implies X_1) \\implies ((\\lnot X_1) \\implies \\lnot (X_1\\lorX_1))) \\implies ((\\lnot X_1) \\implies ((\\lnot X_1) \\implies \\lnot (X_1\\lorX_1))))";
-    "((\\lnot X_1) \\implies ((\\lnot X_1) \\implies \\lnot (X_1\\lorX_1)))";
-    "((\\lnot X_1) \\implies ((\\lnot X_1) \\implies \\lnot (X_1\\lorX_1))) \\implies  (((\\lnot X_1) \\implies (\\lnot X_1)) \\implies ((\\lnot X_1) \\implies (\\lnot (X_1\\lorX_1))))";
-    "((\\lnot X_1) \\implies (\\lnot X_1))";
-    "(((\\lnot X_1) \\implies (\\lnot X_1)) \\implies ((\\lnot X_1) \\implies (\\lnot (X_1\\lorX_1))))";
-    "((\\lnot X_1) \\implies (\\lnot (X_1\\lorX_1)))";
-    "((\\lnot X_1) \\implies (\\lnot (X_1\\lorX_1))) \\implies  ((X_1\\lorX_1)  \\implies X_1)";
-    "(X_1\\lorX_1) \\implies X_1";
+    "((X_1 \\lorX_1) => X_1) => ((\\lnot X_1) => \\lnot (X_1\\lorX_1))";
+    "((\\lnot X_1) =>  ((X_1 \\lor X_1) => X_1))";
+    "((\\lnot X_1) =>  ((X_1 \\lor X_1) => X_1)) => ((((X_1 \\lorX_1) => X_1) => ((\\lnot X_1) => \\lnot (X_1\\lorX_1))) => ((\\lnot X_1) => ((\\lnot X_1) => \\lnot (X_1\\lorX_1))))";
+    "((((X_1 \\lorX_1) => X_1) => ((\\lnot X_1) => \\lnot (X_1\\lorX_1))) => ((\\lnot X_1) => ((\\lnot X_1) => \\lnot (X_1\\lorX_1))))";
+    "((\\lnot X_1) => ((\\lnot X_1) => \\lnot (X_1\\lorX_1)))";
+    "((\\lnot X_1) => ((\\lnot X_1) => \\lnot (X_1\\lorX_1))) =>  (((\\lnot X_1) => (\\lnot X_1)) => ((\\lnot X_1) => (\\lnot (X_1\\lorX_1))))";
+    "((\\lnot X_1) => (\\lnot X_1))";
+    "(((\\lnot X_1) => (\\lnot X_1)) => ((\\lnot X_1) => (\\lnot (X_1\\lorX_1))))";
+    "((\\lnot X_1) => (\\lnot (X_1\\lorX_1)))";
+    "((\\lnot X_1) => (\\lnot (X_1\\lorX_1))) =>  ((X_1\\lorX_1)  => X_1)";
+    "(X_1\\lorX_1) => X_1";
 ]);;
 (*TODO 
-(* |- (A ou B) \\implies (A \\implies C) \\implies (B \\implies C) \\implies C*)
+(* |- (A ou B) => (A => C) => (B => C) => C*)
 let verif_ou_diamant =
 let 
 X_1,b,X_3=X_1,X_2,X_3
 in
-let tout = \\lnot (X_1 \\implies X_1)
+let tout = \\lnot (X_1 => X_1)
 and (X_1 \\lor X_2) = (X_1 \\lorb)
-and (X_1 \\implies X_3) = (X_1 \\implies X_3)
-and (X_2 \\implies X_3) = (b \\implies X_3)
+and (X_1 => X_3) = (X_1 => X_3)
+and (X_2 => X_3) = (b => X_3)
 in
-(proof_verification ~hyp:[] ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3)))
+(proof_verification ~hyp:[] ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => X_3)))
 ~proof:[
-X_1 \\implies X_1;
-(X_1 \\implies X_1) \\implies (\\lnot tout);
+X_1 => X_1;
+(X_1 => X_1) => (\\lnot tout);
 (*\\lnot tout*)
 (\\lnot tout);
-(\\lnot tout) \\implies ((X_2 \\implies X_3) \\implies  \\lnot tout);
-((X_2 \\implies X_3) \\implies  \\lnot tout);
-((X_2 \\implies X_3) \\implies  \\lnot tout) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies  \\lnot tout));
-((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies  \\lnot tout));
-((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies  \\lnot tout)) \\implies 
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies  \\lnot tout)));
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies  \\lnot tout)));
+(\\lnot tout) => ((X_2 => X_3) =>  \\lnot tout);
+((X_2 => X_3) =>  \\lnot tout);
+((X_2 => X_3) =>  \\lnot tout) => ((X_1 => X_3) => ((X_2 => X_3) =>  \\lnot tout));
+((X_1 => X_3) => ((X_2 => X_3) =>  \\lnot tout));
+((X_1 => X_3) => ((X_2 => X_3) =>  \\lnot tout)) => 
+((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) =>  \\lnot tout)));
+((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) =>  \\lnot tout)));
 
 (*(X_1 \\lor X_2);*)
-(*(X_1 \\lor X_2) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2));*)
-(X_1 \\lor X_2) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2));
+(*(X_1 \\lor X_2) => ((\\lnot X_3) => (X_1 \\lor X_2));*)
+(X_1 \\lor X_2) => ((\\lnot X_3) => (X_1 \\lor X_2));
 
-(*((\\lnot X_3) \\implies (X_1 \\lor X_2));*)
-((X_1 \\lor X_2) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2))) \\implies  ((X_1 \\lor X_2) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2))));
+(*((\\lnot X_3) => (X_1 \\lor X_2));*)
+((X_1 \\lor X_2) => ((\\lnot X_3) => (X_1 \\lor X_2))) =>  ((X_1 \\lor X_2) => ((X_2 => X_3) => ((\\lnot X_3) => (X_1 \\lor X_2))));
 
-((X_1 \\lor X_2) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2))));
-((X_1 \\lor X_2) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2)))) \\implies 
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2)))));
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\lor X_2)))));
-(*(X_1 \\implies X_3);*)
-(X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\implies X_3));
-(*((\\lnot X_3) \\implies (X_1 \\implies X_3));*)
+((X_1 \\lor X_2) => ((X_2 => X_3) => ((\\lnot X_3) => (X_1 \\lor X_2))));
+((X_1 \\lor X_2) => ((X_2 => X_3) => ((\\lnot X_3) => (X_1 \\lor X_2)))) => 
+((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (X_1 \\lor X_2)))));
+((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (X_1 \\lor X_2)))));
+(*(X_1 => X_3);*)
+(X_1 => X_3) => ((\\lnot X_3) => (X_1 => X_3));
+(*((\\lnot X_3) => (X_1 => X_3));*)
 
-((\\lnot X_3) \\implies (\\lnot X_3));
-((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_3)));
-((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_3)));
-(((X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)));
-(((X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))) \\implies ((\\lnot X_3) \\implies (((X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))));
-((\\lnot X_3) \\implies (((X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))));
-((\\lnot X_3) \\implies (((X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies 
-(((\\lnot X_3) \\implies (X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))));
-(((\\lnot X_3) \\implies (X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))));
-(((\\lnot X_3) \\implies (X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies 
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (X_1 \\implies X_3)) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-(((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_1 \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-(X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)));
-((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)));
+((\\lnot X_3) => (\\lnot X_3));
+((\\lnot X_3) => (\\lnot X_3)) => ((X_1 => X_3) => ((\\lnot X_3) => (\\lnot X_3)));
+((X_1 => X_3) => ((\\lnot X_3) => (\\lnot X_3)));
+(((X_1 => X_3)) => ((\\lnot X_3) => (\\lnot X_1)));
+(((X_1 => X_3)) => ((\\lnot X_3) => (\\lnot X_1))) => ((\\lnot X_3) => (((X_1 => X_3)) => ((\\lnot X_3) => (\\lnot X_1))));
+((\\lnot X_3) => (((X_1 => X_3)) => ((\\lnot X_3) => (\\lnot X_1))));
+((\\lnot X_3) => (((X_1 => X_3)) => ((\\lnot X_3) => (\\lnot X_1)))) => 
+(((\\lnot X_3) => (X_1 => X_3)) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))));
+(((\\lnot X_3) => (X_1 => X_3)) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))));
+(((\\lnot X_3) => (X_1 => X_3)) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)))) => 
+((X_1 => X_3) => (((\\lnot X_3) => (X_1 => X_3)) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)))));
+((X_1 => X_3) => (((\\lnot X_3) => (X_1 => X_3)) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)))));
+((X_1 => X_3) => (((\\lnot X_3) => (X_1 => X_3)) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))))) => 
+(((X_1 => X_3) => ((\\lnot X_3) => (X_1 => X_3))) => ((X_1 => X_3) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)))));
+(((X_1 => X_3) => ((\\lnot X_3) => (X_1 => X_3))) => ((X_1 => X_3) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)))));
+(X_1 => X_3) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)));
+((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)));
 
-(((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies 
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies ((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-(((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies ((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))));
-(X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)));
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (\\lnot X_3)) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies 
-(((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_3))) \\implies ((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1))));
-((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_3))) \\implies ((X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1)));
-(*((\\lnot X_3) \\implies (\\lnot X_1));*)
-(X_1 \\implies X_3) \\implies ((\\lnot X_3) \\implies (\\lnot X_1));
-((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b)));
-(*((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b))) \\implies  ((\\lnot X_3) \\implies  ((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b))));*)
-((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b))) \\implies  ((\\lnot X_3) \\implies  ((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b))));
-(*((\\lnot X_3) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b))));*)
-((\\lnot X_3) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b))));
-(*((\\lnot X_3) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b)))) \\implies (((\\lnot X_3) \\implies (\\lnot X_1)) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))));*)
-((\\lnot X_3) \\implies ((\\lnot X_1) \\implies ((X_1 \\lor b) \\implies (b)))) \\implies (((\\lnot X_3) \\implies (\\lnot X_1)) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))));
-(*(((\\lnot X_3) \\implies (\\lnot X_1)) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))));*)
-((((\\lnot X_3) \\implies (\\lnot X_1)) \\implies ((\\lnot X_3) \\implies (((X_1 \\lor X_2)) \\implies (b)))));
-((((\\lnot X_3) \\implies (\\lnot X_1)) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies 
-((((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))));
-((((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))));
-((((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies 
-((X_1 \\implies X_3) \\implies ((((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))));
-((X_1 \\implies X_3) \\implies ((((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))));
-((X_1 \\implies X_3) \\implies ((((\\lnot X_3) \\implies (\\lnot X_1))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))) \\implies 
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies ((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))));
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies (\\lnot X_1)))) \\implies ((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))));
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))));
+(((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)))) => 
+((X_1 => X_3) => (((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)))));
+((X_1 => X_3) => (((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)))));
+((X_1 => X_3) => (((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1))))) => 
+(((X_1 => X_3) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)))) => ((X_1 => X_3) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)))));
+(((X_1 => X_3) => ((\\lnot X_3) => ((\\lnot X_3) => (\\lnot X_1)))) => ((X_1 => X_3) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)))));
+(X_1 => X_3) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)));
+((X_1 => X_3) => (((\\lnot X_3) => (\\lnot X_3)) => ((\\lnot X_3) => (\\lnot X_1)))) => 
+(((X_1 => X_3) => ((\\lnot X_3) => (\\lnot X_3))) => ((X_1 => X_3) => ((\\lnot X_3) => (\\lnot X_1))));
+((X_1 => X_3) => ((\\lnot X_3) => (\\lnot X_3))) => ((X_1 => X_3) => ((\\lnot X_3) => (\\lnot X_1)));
+(*((\\lnot X_3) => (\\lnot X_1));*)
+(X_1 => X_3) => ((\\lnot X_3) => (\\lnot X_1));
+((\\lnot X_1) => ((X_1 \\lor b) => (b)));
+(*((\\lnot X_1) => ((X_1 \\lor b) => (b))) =>  ((\\lnot X_3) =>  ((\\lnot X_1) => ((X_1 \\lor b) => (b))));*)
+((\\lnot X_1) => ((X_1 \\lor b) => (b))) =>  ((\\lnot X_3) =>  ((\\lnot X_1) => ((X_1 \\lor b) => (b))));
+(*((\\lnot X_3) => ((\\lnot X_1) => ((X_1 \\lor b) => (b))));*)
+((\\lnot X_3) => ((\\lnot X_1) => ((X_1 \\lor b) => (b))));
+(*((\\lnot X_3) => ((\\lnot X_1) => ((X_1 \\lor b) => (b)))) => (((\\lnot X_3) => (\\lnot X_1)) => ((\\lnot X_3) => ((X_1 \\lor b) => (b))));*)
+((\\lnot X_3) => ((\\lnot X_1) => ((X_1 \\lor b) => (b)))) => (((\\lnot X_3) => (\\lnot X_1)) => ((\\lnot X_3) => ((X_1 \\lor b) => (b))));
+(*(((\\lnot X_3) => (\\lnot X_1)) => ((\\lnot X_3) => ((X_1 \\lor b) => (b))));*)
+((((\\lnot X_3) => (\\lnot X_1)) => ((\\lnot X_3) => (((X_1 \\lor X_2)) => (b)))));
+((((\\lnot X_3) => (\\lnot X_1)) => ((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => 
+((((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))));
+((((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))));
+((((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => 
+((X_1 => X_3) => ((((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))));
+((X_1 => X_3) => ((((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))));
+((X_1 => X_3) => ((((\\lnot X_3) => (\\lnot X_1))) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))) => 
+(((X_1 => X_3) => (((\\lnot X_3) => (\\lnot X_1)))) => ((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))));
+(((X_1 => X_3) => (((\\lnot X_3) => (\\lnot X_1)))) => ((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))));
+((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))));
 (*
-X_1 : (X_1 \\implies X_3)
-b : (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))
-X_3 : (X_2 \\implies X_3)
+X_1 : (X_1 => X_3)
+b : (((\\lnot X_3) => ((X_1 \\lor b) => (b))))
+X_3 : (X_2 => X_3)
 *)
 
 
 
-(((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies b))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))));
-((((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies b))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))) \\implies 
-((X_1 \\implies X_3) \\implies ((((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))));
-((X_1 \\implies X_3) \\implies ((((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))))); (*k k*)
-((X_1 \\implies X_3) \\implies ((((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))))) \\implies 
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))));
+(((\\lnot X_3) => ((X_1 \\lor b) => b))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))));
+((((\\lnot X_3) => ((X_1 \\lor b) => b))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))) => 
+((X_1 => X_3) => ((((\\lnot X_3) => ((X_1 \\lor b) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))));
+((X_1 => X_3) => ((((\\lnot X_3) => ((X_1 \\lor b) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))))); (*k k*)
+((X_1 => X_3) => ((((\\lnot X_3) => ((X_1 \\lor b) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))))) => 
+(((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))));
 
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))))); (*s (k k)*)
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))))) \\implies (((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies (((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))))));
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies (((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))))));(*k (s (k k))*)
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies (((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))))) \\implies 
-((((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))) \\implies (((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))))));
-((((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))) \\implies (((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))))); (*(s (k (s (k k))))*)
-((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))));(*i*)
-(((X_1 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor b) \\implies (b)))))));(*((s (k (s (k k)))) i)*)
-
-
-
-
-(*((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b)));*)
-
-(X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))));
-(*((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b));*)
-((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b));
-(((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b))) \\implies 
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b))));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b))));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b)))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b))));
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b))));
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b)))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b)))));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b)))));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b)))));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b)))));
-(*(((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies b));*)
-
-(X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies (b))));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies (b)))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))));
-
-((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies (b))))) \\implies ((((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies (b)))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))));
-
-((((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_1 \\lor X_2))) \\implies ((\\lnot X_3) \\implies (b)))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))));
-
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b)))));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b)))));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b)))));
-
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))) \\implies 
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b)))))) \\implies 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))));
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_1 \\lor X_2)))))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))))));
-(*((\\lnot X_3) \\implies (b));*)
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b))));
-(*((\\lnot X_3) \\implies (b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b)));
-((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b)));
-((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b))));
-
-(X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (b)));*)
-(*(X_2 \\implies X_3);*)
-(X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies  (X_2 \\implies X_3));
-((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies  (X_2 \\implies X_3))) \\implies 
-((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies  (X_2 \\implies X_3))));
-(*((\\lnot X_3) \\implies ((X_2 \\implies X_3)));*)
-(X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies  (X_2 \\implies X_3)));
-
-(*((\\lnot X_3) \\implies ((X_2 \\implies X_3))) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3));*)
-(((\\lnot X_3) \\implies ((X_2 \\implies X_3))) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)));
-(((\\lnot X_3) \\implies ((X_2 \\implies X_3))) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((X_2 \\implies X_3))) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))));
-(X_2 \\implies X_3) \\implies  (((\\lnot X_3) \\implies ((X_2 \\implies X_3))) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)));
-((X_2 \\implies X_3) \\implies  (((\\lnot X_3) \\implies ((X_2 \\implies X_3))) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))));
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))));
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)))));
-
-
-(X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))));
-
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)))));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_2 \\implies X_3))))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)))));
-(*(((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3));*)
-(*(((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3));
-(((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)));*)
-(X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)));
-
-(((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3))) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies b) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-
-
- (X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))));
-
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies 
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))))) \\implies 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies b)))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))));
-
-(*((\\lnot X_3) \\implies (X_3));*)
-(*((\\lnot X_3) \\implies (X_3));
-((\\lnot X_3) \\implies (X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_3)));*)
-(X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (X_3))));
-(*((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3)));*)
-((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3)));
-((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))));
-((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))));
-(*(((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)));*)
-(((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)));
-(((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))));
-((X_2 \\implies X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))));
-(*(((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))) \\implies  ((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))));*)
-((((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))) \\implies  ((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))));
-((((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))) \\implies  ((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))))) \\implies ((X_2 \\implies X_3) \\implies ((((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))) \\implies  ((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))))));
-((X_2 \\implies X_3) \\implies ((((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))) \\implies  ((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))))));
-(*((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))));*)
-((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout))));
-((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))));
-((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))));
-(*((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))) \\implies  (((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout)));*)
-(((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))) \\implies  (((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout))));
-(((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))) \\implies  (((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout)))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))) \\implies  (((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout)))));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies (((\\lnot tout) \\implies (\\lnot X_3)) \\implies ((X_3) \\implies (tout)))) \\implies  (((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout)))));
-(*(((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout)));*)
-(((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout)));
-(((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout))));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies ((\\lnot tout) \\implies (\\lnot X_3))) \\implies ((\\lnot X_3) \\implies (X_3 \\implies tout))));
-(*((\\lnot X_3) \\implies ((X_3) \\implies (tout)));*)
-((\\lnot X_3) \\implies ((X_3) \\implies (tout)));
-((\\lnot X_3) \\implies ((X_3) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_3) \\implies (tout))));
-((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies ((X_3) \\implies (tout))));
-(*((\\lnot X_3) \\implies (X_3 \\implies tout)) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout));*)
-((\\lnot X_3) \\implies (X_3 \\implies tout)) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout));
-(((\\lnot X_3) \\implies (X_3 \\implies tout)) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies (X_3 \\implies tout)) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout))));
-(X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies (X_3 \\implies tout)) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout)));
-(*((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout);*)
-(((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout));
-(((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout)) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout)));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout)));
-((X_2 \\implies X_3) \\implies (((\\lnot X_3) \\implies X_3) \\implies  ((\\lnot X_3) \\implies tout))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout)));
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout)));
-(((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout))));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout))));
-
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout)))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout))));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout))));
-
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout)))) \\implies 
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout)))));
-
-
-(X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout))));
-
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout))))) \\implies 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout)))));
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies X_3)))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot X_3) \\implies tout)))));
-(*((\\lnot X_3) \\implies (tout));*)
-(*((\\lnot X_3) \\implies (tout));
-((\\lnot X_3) \\implies (tout)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)));*)
+(((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))))); (*s (k k)*)
+(((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))))) => (((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => (((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))))));
+(((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => (((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))))));(*k (s (k k))*)
+(((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => (((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))))) => 
+((((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))) => (((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))))));
+((((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))) => (((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))))); (*(s (k (s (k k))))*)
+((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))));(*i*)
+(((X_1 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor b) => (b)))))));(*((s (k (s (k k)))) i)*)
 
 
 
-(X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))));
-(*(((\\lnot X_3) \\implies (tout)) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot X_3))));*)
-((\\lnot (X_3)) \\implies (tout)) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))));
-(((\\lnot (X_3)) \\implies (tout)) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))) \\implies ((X_2 \\implies X_3) \\implies (((\\lnot (X_3)) \\implies (tout)) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))));
-((X_2 \\implies X_3) \\implies (((\\lnot (X_3)) \\implies (tout)) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))));
-((X_2 \\implies X_3) \\implies (((\\lnot (X_3)) \\implies (tout)) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-(((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))));
-(((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))));
-(((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))));
 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))) \\implies 
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))));
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))));
+(*((\\lnot X_3) => ((X_1 \\lor X_2) => (b)));*)
 
+(X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b))));
+(*((\\lnot X_3) => ((X_1 \\lor X_2) => (b))) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b));*)
+((\\lnot X_3) => ((X_1 \\lor X_2) => (b))) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b));
+(((\\lnot X_3) => ((X_1 \\lor X_2) => (b))) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b))) => 
+((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2) => (b))) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b))));
+((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2) => (b))) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b))));
+((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2) => (b))) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b)))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b))));
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b))));
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b)))) => 
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b)))));
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b)))));
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b)))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b))))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b)))));
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2) => (b))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b)))));
+(*(((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => b));*)
 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))));
+(X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => (b))));
+((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => (b)))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))) => ((X_2 => X_3) => ((\\lnot X_3) => (b))));
 
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))))) \\implies ((((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))))) \\implies ((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))))));
-((((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))))) \\implies ((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))))));
+((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => (b))))) => ((((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => (b)))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))) => ((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))));
 
-(X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))))) \\implies 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))));
+((((X_2 => X_3) => (((\\lnot X_3) => ((X_1 \\lor X_2))) => ((\\lnot X_3) => (b)))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))) => ((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))));
 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot (X_3)) \\implies (tout))))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))));
-(*((\\lnot tout) \\implies (\\lnot(\\lnot X_3)));*)
-(*((\\lnot tout) \\implies (\\lnot(\\lnot X_3)));
-((\\lnot tout) \\implies (\\lnot(\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))));*)
-(X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))));
-((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))) \\implies 
-(((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))));
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))) => ((X_2 => X_3) => ((\\lnot X_3) => (b)))));
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2))))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b)))));
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2))))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b)))));
 
-(((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))) \\implies 
-(((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))) \\implies 
-(((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2))))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))) => 
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2))))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2))))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2))))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b)))))) => 
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))));
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_1 \\lor X_2)))))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b))))));
+(*((\\lnot X_3) => (b));*)
+((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b))));
+(*((\\lnot X_3) => (b)) => ((X_2 => X_3) => ((\\lnot X_3) => (b)));
+((X_2 => X_3) => ((\\lnot X_3) => (b)));
+((X_2 => X_3) => ((\\lnot X_3) => (b))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b))));
 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))) \\implies 
-(((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
+(X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (b)));*)
+(*(X_2 => X_3);*)
+(X_2 => X_3) => ((\\lnot X_3) =>  (X_2 => X_3));
+((X_2 => X_3) => ((\\lnot X_3) =>  (X_2 => X_3))) => 
+((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) =>  (X_2 => X_3))));
+(*((\\lnot X_3) => ((X_2 => X_3)));*)
+(X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) =>  (X_2 => X_3)));
 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
-
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))) \\implies 
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))));
-
-(X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
-
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))))) \\implies 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))));
-
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot tout) \\implies (\\lnot(\\lnot (X_3))))))) \\implies 
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))));
-
-(X_1 \\lor X_2) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))));
-
-((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))) \\implies ((((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))) \\implies ((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))));             
-((((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot tout)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))) \\implies ((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))));
-(X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))));
+(*((\\lnot X_3) => ((X_2 => X_3))) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3));*)
+(((\\lnot X_3) => ((X_2 => X_3))) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)));
+(((\\lnot X_3) => ((X_2 => X_3))) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))) => ((X_2 => X_3) => (((\\lnot X_3) => ((X_2 => X_3))) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))));
+(X_2 => X_3) =>  (((\\lnot X_3) => ((X_2 => X_3))) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)));
+((X_2 => X_3) =>  (((\\lnot X_3) => ((X_2 => X_3))) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3)))) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))));
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3)))) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))));
+(((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3)))) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)))) => 
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3)))) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)))));
 
 
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))))))) \\implies 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout)))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot tout)))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))))));
+(X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3)))) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))));
+
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3)))) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)))));
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_2 => X_3))))) => ((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)))));
+(*(((\\lnot X_3) => b) => ((\\lnot X_3) => X_3));*)
+(*(((\\lnot X_3) => b) => ((\\lnot X_3) => X_3));
+(((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)));*)
+(X_1 => X_3) => (((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))));
+((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)));
+
+(((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))) => 
+((X_1 => X_3) => (((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+
+((X_1 => X_3) => (((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+
+((X_1 => X_3) => (((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3))) => (((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)))) => ((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+(((X_1 => X_3) => ((X_2 => X_3) => (((\\lnot X_3) => b) => ((\\lnot X_3) => X_3)))) => ((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+
+
+ (X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)));
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => b)) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))));
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))));
+
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))) => 
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))))) => 
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b)))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => b)))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))));
+
+(*((\\lnot X_3) => (X_3));*)
+(*((\\lnot X_3) => (X_3));
+((\\lnot X_3) => (X_3)) => ((X_2 => X_3) => ((\\lnot X_3) => (X_3)));*)
+(X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => (X_3))));
+(*((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3)));*)
+((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3)));
+((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((X_2 => X_3) => ((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))));
+((X_2 => X_3) => ((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))));
+(*(((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)));*)
+(((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)));
+(((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))) => ((X_2 => X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))));
+((X_2 => X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))));
+(*(((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))) =>  ((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))));*)
+((((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))) =>  ((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))));
+((((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))) =>  ((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))))) => ((X_2 => X_3) => ((((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))) =>  ((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))))));
+((X_2 => X_3) => ((((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))) =>  ((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))))));
+(*((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))));*)
+((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout))));
+((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))) => ((X_2 => X_3) => ((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))));
+((X_2 => X_3) => ((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))));
+(*((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))) =>  (((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout)));*)
+(((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))) =>  (((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout))));
+(((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))) =>  (((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout)))) => ((X_2 => X_3) => (((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))) =>  (((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout)))));
+((X_2 => X_3) => (((\\lnot X_3) => (((\\lnot tout) => (\\lnot X_3)) => ((X_3) => (tout)))) =>  (((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout)))));
+(*(((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout)));*)
+(((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout)));
+(((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout))) => ((X_2 => X_3) => (((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout))));
+((X_2 => X_3) => (((\\lnot X_3) => ((\\lnot tout) => (\\lnot X_3))) => ((\\lnot X_3) => (X_3 => tout))));
+(*((\\lnot X_3) => ((X_3) => (tout)));*)
+((\\lnot X_3) => ((X_3) => (tout)));
+((\\lnot X_3) => ((X_3) => (tout))) => ((X_2 => X_3) => ((\\lnot X_3) => ((X_3) => (tout))));
+((X_2 => X_3) => ((\\lnot X_3) => ((X_3) => (tout))));
+(*((\\lnot X_3) => (X_3 => tout)) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout));*)
+((\\lnot X_3) => (X_3 => tout)) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout));
+(((\\lnot X_3) => (X_3 => tout)) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout))) => ((X_2 => X_3) => (((\\lnot X_3) => (X_3 => tout)) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout))));
+(X_2 => X_3) => (((\\lnot X_3) => (X_3 => tout)) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout)));
+(*((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout);*)
+(((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout));
+(((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout)) => ((X_2 => X_3) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout)));
+((X_2 => X_3) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout)));
+((X_2 => X_3) => (((\\lnot X_3) => X_3) =>  ((\\lnot X_3) => tout))) => 
+(((X_2 => X_3) => ((\\lnot X_3) => X_3)) => ((X_2 => X_3) => ((\\lnot X_3) => tout)));
+(((X_2 => X_3) => ((\\lnot X_3) => X_3)) => ((X_2 => X_3) => ((\\lnot X_3) => tout)));
+(((X_2 => X_3) => ((\\lnot X_3) => X_3)) => ((X_2 => X_3) => ((\\lnot X_3) => tout))) => 
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => X_3)) => ((X_2 => X_3) => ((\\lnot X_3) => tout))));
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => X_3)) => ((X_2 => X_3) => ((\\lnot X_3) => tout))));
+
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot X_3) => X_3)) => ((X_2 => X_3) => ((\\lnot X_3) => tout)))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout))));
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout))));
+
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout)))) => 
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout)))));
+
+
+(X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout))));
+
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout))))) => 
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout)))));
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => X_3)))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot X_3) => tout)))));
+(*((\\lnot X_3) => (tout));*)
+(*((\\lnot X_3) => (tout));
+((\\lnot X_3) => (tout)) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)));*)
+
+
+
+(X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout))));
+(*(((\\lnot X_3) => (tout)) => ((\\lnot tout) => (\\lnot(\\lnot X_3))));*)
+((\\lnot (X_3)) => (tout)) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))));
+(((\\lnot (X_3)) => (tout)) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))) => ((X_2 => X_3) => (((\\lnot (X_3)) => (tout)) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))));
+((X_2 => X_3) => (((\\lnot (X_3)) => (tout)) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))));
+((X_2 => X_3) => (((\\lnot (X_3)) => (tout)) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => 
+(((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))));
+(((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))));
+(((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => 
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))));
+
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))));
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))) => 
+((X_1 \\lor X_2) => ((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))));
+((X_1 \\lor X_2) => ((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))));
+
+
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))));
+
+((X_1 \\lor X_2) => ((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))))) => ((((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))))) => ((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))))));
+((((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot (X_3)) => (tout))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))))) => ((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))))));
+
+(X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout)))) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))))) => 
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout))))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))));
+
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot (X_3)) => (tout))))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))));
+(*((\\lnot tout) => (\\lnot(\\lnot X_3)));*)
+(*((\\lnot tout) => (\\lnot(\\lnot X_3)));
+((\\lnot tout) => (\\lnot(\\lnot X_3))) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))));*)
+(X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))));
+((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))) => 
+(((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))));
+
+(((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))) => 
+(((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))) => 
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))) => 
+(((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
+
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))) => 
+(((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
+
+((X_1 => X_3) => (((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => ((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
+
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => 
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
+(((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => 
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))) => 
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => 
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))));
+
+(X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => 
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
+
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3)))))) => 
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))))) => 
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))));
+
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => ((\\lnot tout) => (\\lnot(\\lnot (X_3))))))) => 
+((X_1 \\lor X_2) => ((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))));
+
+(X_1 \\lor X_2) => 
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))));
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))));
+
+((X_1 \\lor X_2) => ((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))) => ((((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))) => ((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))));             
+((((X_1 => X_3) => (((X_2 => X_3) => (\\lnot tout)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))) => ((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))));
+(X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))));
+
+
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout))) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))))))) => 
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout)))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot tout)))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))))));
 (*(\\lnot(\\lnot X_3));*)
 (*(\\lnot(\\lnot X_3));
-(\\lnot(\\lnot X_3)) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3))));*)
-(X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot (X_3)))));
-(*((\\lnot(\\lnot X_3)) \\implies (X_3));*)
-((\\lnot(\\lnot X_3)) \\implies (X_3));
-((\\lnot(\\lnot X_3)) \\implies (X_3)) \\implies ((X_2 \\implies X_3) \\implies ((\\lnot(\\lnot X_3)) \\implies (X_3)));
-((X_2 \\implies X_3) \\implies ((\\lnot(\\lnot X_3)) \\implies (X_3)));
+(\\lnot(\\lnot X_3)) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3))));*)
+(X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot (X_3)))));
+(*((\\lnot(\\lnot X_3)) => (X_3));*)
+((\\lnot(\\lnot X_3)) => (X_3));
+((\\lnot(\\lnot X_3)) => (X_3)) => ((X_2 => X_3) => ((\\lnot(\\lnot X_3)) => (X_3)));
+((X_2 => X_3) => ((\\lnot(\\lnot X_3)) => (X_3)));
 
-((X_2 \\implies X_3) \\implies ((\\lnot(\\lnot X_3)) \\implies (X_3))) \\implies 
-(((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies X_3));
+((X_2 => X_3) => ((\\lnot(\\lnot X_3)) => (X_3))) => 
+(((X_2 => X_3) => (\\lnot(\\lnot X_3))) => ((X_2 => X_3) => X_3));
 
-(((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies X_3));
+(((X_2 => X_3) => (\\lnot(\\lnot X_3))) => ((X_2 => X_3) => X_3));
 
-(((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies X_3)) \\implies 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies X_3)));
+(((X_2 => X_3) => (\\lnot(\\lnot X_3))) => ((X_2 => X_3) => X_3)) => 
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot(\\lnot X_3))) => ((X_2 => X_3) => X_3)));
 
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies X_3)));
-((X_1 \\implies X_3) \\implies (((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))) \\implies ((X_2 \\implies X_3) \\implies X_3))) \\implies 
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3)));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3)));
-(((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3))) \\implies 
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3))));
-((X_1 \\lor X_2) \\implies (((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3)))) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3)))) \\implies 
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3))));
-(((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies (\\lnot(\\lnot X_3))))) \\implies ((X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3))));
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot(\\lnot X_3))) => ((X_2 => X_3) => X_3)));
+((X_1 => X_3) => (((X_2 => X_3) => (\\lnot(\\lnot X_3))) => ((X_2 => X_3) => X_3))) => 
+(((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3)))) => ((X_1 => X_3) => ((X_2 => X_3) => X_3)));
+(((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3)))) => ((X_1 => X_3) => ((X_2 => X_3) => X_3)));
+(((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3)))) => ((X_1 => X_3) => ((X_2 => X_3) => X_3))) => 
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3)))) => ((X_1 => X_3) => ((X_2 => X_3) => X_3))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3)))) => ((X_1 => X_3) => ((X_2 => X_3) => X_3))));
+((X_1 \\lor X_2) => (((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3)))) => ((X_1 => X_3) => ((X_2 => X_3) => X_3)))) => 
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3))))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => X_3))));
+(((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => (\\lnot(\\lnot X_3))))) => ((X_1 \\lor X_2) => ((X_1 => X_3) => ((X_2 => X_3) => X_3))));
 (*(X_3)*)
 (*X_3;
-X_3 \\implies ((X_2 \\implies X_3) \\implies X_3);*)
-(*(X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3);
-((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3)) \\implies  ((X_1 \\lor X_2) \\implies  ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3)));*)
+X_3 => ((X_2 => X_3) => X_3);*)
+(*(X_1 => X_3) => ((X_2 => X_3) => X_3);
+((X_1 => X_3) => ((X_2 => X_3) => X_3)) =>  ((X_1 \\lor X_2) =>  ((X_1 => X_3) => ((X_2 => X_3) => X_3)));*)
 
-((X_1 \\lor X_2) \\implies  ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3)));
+((X_1 \\lor X_2) =>  ((X_1 => X_3) => ((X_2 => X_3) => X_3)));
 ]);;
 *)
 
@@ -622,11 +621,11 @@ let s = to_string_formula_prop  (formula_from_string "(X_1 \\lor X_2) \\land X_3
 in assert_equal s "(P1 \\/ P2) /\\ P3"
 
 let test_to_string_formula_impl test_ctxt = 
-let s = to_string_formula_prop  (formula_from_string "X_1 \\implies X_2")
+let s = to_string_formula_prop  (formula_from_string "X_1 => X_2")
 in assert_equal s "P1 => P2"
 
 let test_to_string_formula_and_impl test_ctxt = 
-let s = to_string_formula_prop  (formula_from_string "X_3 \\land (X_1 \\implies X_2)")
+let s = to_string_formula_prop  (formula_from_string "X_3 \\land (X_1 => X_2)")
 in assert_equal s "P3 /\\ (P1 => P2)"
 
 (* Tests for printer_formula *)
@@ -654,11 +653,11 @@ let test_printer_formula_por_pand test_ctxt = printer_formula_prop Format.str_fo
 let s = Format.flush_str_formatter()
 in assert_equal s "(P1 \\/ P2) /\\ P3"
 
-let test_printer_formula_impl test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_1 \\implies X_2");
+let test_printer_formula_impl test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_1 => X_2");
 let s = Format.flush_str_formatter()
 in assert_equal s "P1 => P2"
 
-let test_printer_formula_and_impl test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_3 \\land (X_1 \\implies X_2)");
+let test_printer_formula_and_impl test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_3 \\land (X_1 => X_2)");
 let s = Format.flush_str_formatter()
 in assert_equal s "P3 /\\ (P1 => P2)"
 

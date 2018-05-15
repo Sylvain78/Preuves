@@ -58,13 +58,35 @@ Printexc.register_printer (function Invalid_demonstration(f,t) ->
          (List.fold_left  (fun acc f-> acc ^ (to_string_formula_prop f) ^ "\n") ""  t) ^ "]]\n") 
                                   | _ -> None)
 ;;
+
+(*SKE TODO : where to put this function ?*)
+let rec apply_notations = function 
+ | PVar v as t -> t
+ | PNeg f -> PNeg (apply_notations f)
+ | PAnd(f1,f2) -> PAnd(apply_notations f1, apply_notations f2) 
+ | POr(f1,f2) -> POr(apply_notations f1, apply_notations f2) 
+ | PImpl(f1,f2) -> PImpl(apply_notations f1, apply_notations f2) 
+ | Apply_notation {apply_notation_prop = n ; apply_notation_prop_params = list_params } ->
+     let  replace  m = function 
+     | Param a  -> begin
+     									try  (to_string_formula_prop  (List.assoc (Param a) m))
+     									with Not_found -> failwith "apply_notations"
+     							   end
+	| String s  -> s 
+    in
+    let map_param_val = List.combine n.notation_prop_params list_params
+    in 
+    let notation_with_params_replaced = List.map (replace map_param_val ) n.notation_prop_semantique
+    in
+	formula_from_string (List.fold_left  (^) "" notation_with_params_replaced)
+	
 let rec verif t = function
   | [] -> true
   | f_i:: p ->
     if 
-      (List.mem f_i t (*Formue already present *)
+      (List.mem f_i t (*Formula already present *)
        (*instance of an axiom or a theorem*)
-       || (List.exists (fun a -> instance f_i a.axiom_prop) 
+       || (List.exists (fun a -> instance (apply_notations f_i) a.axiom_prop) 
              (axioms_prop @ !theorems_prop)) 
        || (cut f_i p)) (*cut*)
     then verif t p
@@ -84,8 +106,9 @@ let proof_verification ~hyp:hypotheses f ~proof: proof =
   if not(is_end_proof f proof)
   then failwith "Formula is not at the end of the proof"
   else
-    verif hypotheses (List.rev proof)
+    verif hypotheses (List.rev (proof))
 ;;
+
 
 (* |   F \\implies  *)
 proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1") 
@@ -93,7 +116,7 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1")
     "(X_1  \\implies ((X_1  \\implies  X_1) \\implies X_1))  \\implies 
     (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
     "X_1 \\implies ((X_1 \\implies X_1) \\implies X_1)";
-    "(X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1)";
+    "(X_1 \\implies (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1)";
     "X_1 \\implies (X_1 \\implies X_1)";
     "X_1 \\implies X_1"
   ]);;

@@ -1,13 +1,20 @@
+#load "dyp.cma";;
+open Dyp;;
 #cd "_build/util";;
 #load "util.cmo";;
 
 #cd "../../_build/prop";; 
 #load "formula_prop.cmo"
-#load "axiomes_prop.cmo"
-#load "preuve_prop.cmo"
+#load "prop_parser.cmo"
+#load "axioms_prop.cmo"
+#load "proof_prop.cmo"
 open Formula_prop
-open Preuve_prop
+open Prop_parser
+open Proof_prop
 
+(*
+let notation = notation_from_string "Notation imply\nParam a b\na \"=>\" b\na \\implies b";;
+*)
 let verif_ou_diamant =
         let x1,x2,x3 = PVar 1, PVar 2, PVar 3
         in
