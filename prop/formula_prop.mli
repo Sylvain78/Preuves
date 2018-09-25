@@ -5,7 +5,7 @@ type formula_prop =
   | PAnd of formula_prop * formula_prop
   | POr of formula_prop * formula_prop
   | PImpl of formula_prop * formula_prop
-  | Apply_notation of apply_notation_prop
+  | PApply_notation of apply_notation_prop
  and apply_notation_prop =
          {
            apply_notation_prop : notation_prop;
