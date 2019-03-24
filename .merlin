@@ -1,4 +1,4 @@
-S .
+S ./**
 S util/**
 S prop/**
 S first_order/**

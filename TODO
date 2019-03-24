@@ -1,6 +1,2 @@
---Translate in English
 --Add a Readme
---Allow notations in expression or not ?
-In first case : not conform to strict first theory but parsing more efficient
-In second case : conform to strictly first order theory, but explosion in parsing
 

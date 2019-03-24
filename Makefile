@@ -7,7 +7,8 @@ default:
 	@echo "  build        compile prop, first_order, and Ensembles"
 	@echo "  test         compile and run tests"
 	@echo "  test_prop.debug   compile and run in debug mode test_formula_prop, a test suite"
-	@echo "  test_schema.debug   compile and run in debug mode test_schemas_first_order, a test suite"
+	@echo "  test_first_order_formula.debug   compile and run in debug mode test_first_order_formula, a test suite"
+	@echo "  test_first_order_schemas.debug   compile and run in debug mode test_first_order_schemas, a test suite"
 	@echo "  coverage     compile and run tests with instrumented bisect_ppx coverage"
 	@echo "  cov_report   create a coverage report from the latest coverage run"
 	@echo "  clean        remove build directory"
@@ -53,10 +54,20 @@ test: build
 		./test_ensembles
 
 test_prop.debug:
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.d.byte  && \
-		rm test_formula_prop.d.byte && \
-		mv _build/prop/test/test_formula_prop.d.byte test_formula_prop && \
+		rm -f test_formula_prop.byte && \
+	ocamlbuild -use-ocamlfind -tag 'debug' -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.byte  && \
+		mv _build/prop/test/test_formula_prop.byte test_formula_prop && \
 		ocamldebug -I _build/prop -I _build/prop/test -I _build/util  ./test_formula_prop
+
+test_first_order_formula.debug:
+	rm -f test_formula_first_order && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test -tag 'debug' test_formula_first_order.byte  && \
+		ocamldebug -cd _build/first_order/test  -I _build/first_order -I _build/first_order/test -I _build/util test_formula_first_order.byte
+
+test_first_order_schemas.debug:
+	rm -f test_schemas_first_order && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test -tag 'debug' test_schemas_first_order.byte  && \
+		ocamldebug -cd _build/first_order/test  -I _build/first_order -I _build/first_order/test -I _build/util test_schemas_first_order.byte
 
 test_schema.debug:
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_schemas_first_order.d.byte  && \

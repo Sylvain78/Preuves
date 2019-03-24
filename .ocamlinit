@@ -1,3 +1,4 @@
+#require "dyp";;
 #load "dyp.cma";;
 open Dyp;;
 #cd "_build/util";;

@@ -58,11 +58,6 @@ struct
 
   (** Replace the list of x's by the list of terms t's  in a formula  **)
   let rec simultaneous_substitution_formula lx lt =
-    print_string "[simultaneous_subst] ";
-    List.iter (fun v -> print_term Format.str_formatter (V v)) lx;
-    let s = Format.flush_str_formatter() in print_string (s^" }{  "); flush stdout;
-    List.iter (print_term Format.str_formatter) lt;
-    let s = Format.flush_str_formatter() in print_string (s^" }{  "); flush stdout;
     function
     | Atomic_formula f_atomic -> Atomic_formula (
         simultaneous_substitution_atomic_formula lx lt f_atomic ) 
@@ -85,53 +80,50 @@ struct
     (* alpha-renaming of v to enforce that v does not capture a free variable of the substituted terms *)
     | Forall(v,f1) ->
 
-      let new_v = Var(new_var()) 
-      in 
-      let f1' = 
-        (*v captured in the lx*)
-        if List.mem v lx then  
-          simultaneous_substitution_formula [v] [(V new_v)] f1
+      (*v captured in the lx*)
+      if List.mem v lx then  
+        let (lx',lt') = List.split(List.remove_assoc v (List.combine lx lt))
+        in
+        Forall(v, simultaneous_substitution_formula lx' lt' f1)
 
-        else (*if lt from (free_vars of f1 intersect lx ) contains v as a free variable then v will be captured, so renaming*)
-          let free_vars_of_f1_intersect_lx = SetVar.inter (free_variables_of_formula f1) (SetVar.of_list lx)
-          and lx_to_lt = List.combine lx lt
+      else (*if lt from (free_vars of f1 intersect lx ) contains v as a free variable then v will be captured, so renaming*)
+        let free_vars_of_f1_intersect_lx = SetVar.inter (free_variables_of_formula f1) (SetVar.of_list lx)
+        and lx_to_lt = List.combine lx lt
+        in
+        let lt_concerned =  List.map (fun v -> List.assoc v lx_to_lt) (SetVar.elements free_vars_of_f1_intersect_lx)
+        in
+        if 
+          List.exists (fun sv -> SetVar.mem v sv)  (List.map variables_term lt_concerned)
+        then
+          let  new_v = Var(new_var())
           in
-          let lt_concerned =  List.map (fun v -> List.assoc v lx_to_lt) (SetVar.elements free_vars_of_f1_intersect_lx)
-          in
-          if 
-            List.exists (fun sv -> SetVar.mem v sv)  (List.map variables_term lt_concerned)
-          then
-            simultaneous_substitution_formula [v] [(V new_v)] f1
-          else (*it is safe to do forall(v, simultaneous_substitution_formula lx lt f1*)
-            Forall(v, simultaneous_substitution_formula lx lt f1)
+          Forall(new_v, simultaneous_substitution_formula lx lt (simultaneous_substitution_formula [v] [(V new_v)] f1))
+        else (*it is safe to do forall(v, simultaneous_substitution_formula lx lt f1*)
+          Forall(v, simultaneous_substitution_formula lx lt f1)
 
-      in
-      Forall (new_v,simultaneous_substitution_formula lx lt f1')
     (* alpha-renaming of v to enforce that v does not capture a free variable of the substituted terms *)
     | Exists(v,f1) ->
 
-      let new_v = Var(new_var()) 
-      in 
-      let f1' = 
-        (*v captured in the lx*)
-        if List.mem v lx then  
-          simultaneous_substitution_formula [v] [(V new_v)] f1
+      (*v captured in the lx*)
+      if List.mem v lx then  
+        let (lx',lt') = List.split(List.remove_assoc v (List.combine lx lt))
+        in
+        Exists(v, simultaneous_substitution_formula lx' lt' f1)
 
-        else (*if lt from (free_vars of f1 intersect lx ) contains v as a free variable then v will be captured, so renaming*)
-          let free_vars_of_f1_intersect_lx = SetVar.inter (free_variables_of_formula f1) (SetVar.of_list lx)
-          and lx_to_lt = List.combine lx lt
+      else (*if lt from (free_vars of f1 intersect lx ) contains v as a free variable then v will be captured, so renaming*)
+        let free_vars_of_f1_intersect_lx = SetVar.inter (free_variables_of_formula f1) (SetVar.of_list lx)
+        and lx_to_lt = List.combine lx lt
+        in
+        let lt_concerned =  List.map (fun v -> List.assoc v lx_to_lt) (SetVar.elements free_vars_of_f1_intersect_lx)
+        in
+        if 
+          List.exists (fun sv -> SetVar.mem v sv)  (List.map variables_term lt_concerned)
+        then
+          let  new_v = Var(new_var())
           in
-          let lt_concerned =  List.map (fun v -> List.assoc v lx_to_lt) (SetVar.elements free_vars_of_f1_intersect_lx)
-          in
-          if 
-            List.exists (fun sv -> SetVar.mem v sv)  (List.map variables_term lt_concerned)
-          then
-            simultaneous_substitution_formula [v] [(V new_v)] f1
-          else (*it is safe to do exists(v, simultaneous_substitution_formula lx lt f1*)
-            Exists(v, simultaneous_substitution_formula lx lt f1)
-
-      in
-      Exists (new_v,simultaneous_substitution_formula lx lt f1')
+          Exists(new_v, simultaneous_substitution_formula lx lt (simultaneous_substitution_formula [v] [(V new_v)] f1))
+        else (*it is safe to do forall(v, simultaneous_substitution_formula lx lt f1*)
+          Exists(v, simultaneous_substitution_formula lx lt f1)
 
 
   (** The occurences of variables in t are not captured during a substition at the variable x in f **)
@@ -178,7 +170,7 @@ struct
           match f, g with
           | Imply(h1, h2), Imply(h2', h1') ->
             if (h1 = h1' && h2 = h2')
-               (**TODO   TESTER ALPHA EQUIV????? **)
+            (**TODO   TESTER ALPHA EQUIV????? **)
             then print_bin "equiv" "<=>" h1 h2
             else begin
               if seq = "and" || seq ="init" || (seq ="forall") || (seq ="exists")
