@@ -3,6 +3,12 @@
  let local_data = []
  let parser = ref None;;
  let string_without_quote s = ( String.sub s 1 (String.length s - 2))
+
+(*keep all interpretations*)
+ let dyp_merge_Obj_expr l = match l with
+   | (_,gd,ld)::_ -> List.map (fun (o,_,_) -> o) l, gd, ld
+      | [] -> assert false
+
 }
 
 %start expr1
@@ -21,14 +27,15 @@ let any_string = '"' (['\000'-'\033'] | ['\035'-'\255'])* '"'
 /*
 Load the parser at beginning of parsing*/
 expr1 : 
-    | ...@{(),match !parser with | None -> [] | Some pdev -> [Parser pdev] } expr eof { $2 }
+    | ...@{(),match !parser with | None -> [] | Some pdev -> [Dyp.Parser pdev] } expr eof { $2 }
 
 notation1 :
-    | ...@{(),match !parser with | None -> [] | Some pdev -> [Parser pdev] } notation { $2 }
+    | ...@{(),match !parser with | None -> [] | Some pdev -> [Dyp.Parser pdev] } notation eof { $2 }
 
 expr:
     | "X_" ['0'-'9']+  { PVar (int_of_string $2) }
     | "X_{" ['0'-'9']+ "}" { PVar (int_of_string $2) }
+    | "\\mathbb{" ['a'-'z''A'-'Z'] "}" { PMetaVar ($2) }
     | "(" expr ")" { $2 }
     | "\\lnot" expr { PNeg($2) }
     | expr "\\implies" expr { PImpl($1,$3) }
@@ -37,19 +44,23 @@ expr:
 
 /*SKE Example of notation
 "
-Notation equiv
-Params a b
-a \equiv b 
+Notation
+equiv
+Param
+a b
+Syntax
+a "\equiv" b 
+Semantics
 (a \imply b)/\\(b \imply a)
 End
 "
 */
 
 notation:
-    | "Notation"  ['a'-'z']+ '\n'
-    "Param" param_list '\n'
-    "Syntax" syntax '\n' /*Extract params list*/
-    "Semantics" semantique
+    | "Notation" '\n' ['a'-'z']+ '\n'
+    "Param" '\n' param_list '\n'
+    "Syntax" '\n' syntax '\n' /*Extract params list*/
+    "Semantics" '\n' semantique '\n'
     "End" ...@{
         let rec notation_elements_to_regexp = function 
         | [] -> []
@@ -58,32 +69,34 @@ notation:
         in
         let notation = 
             {
-               notation_prop_name = $2;
-               notation_prop_params = $5;
-               notation_prop_notation = $8;
-               notation_prop_semantique = $11; 
+               notation_prop_name = $3;
+               notation_prop_params = $7;
+               notation_prop_notation = $11;
+               notation_prop_semantique = $15; 
             }    
         in
-        let rule       = ("expr", notation_elements_to_regexp $8, "default_priority",[]) 
-        and action _ l = Obj_expr (PApply_notation({apply_notation_prop= notation; apply_notation_prop_params= List.map (function Obj_expr e -> e | _ -> assert false) (List.filter (function Obj_expr _ -> true | _ -> false) l) })), [ ] 
+        let rule       = ("expr", notation_elements_to_regexp $11, "default_priority",[]) 
+        and action _ l = Obj_expr (PApply_notation({apply_notation_prop = notation; 
+						    apply_notation_prop_params = List.map (function Obj_expr e -> e | _ -> assert false) 
+						    				          (List.filter (function Obj_expr _ -> true | _ -> false) l)
+						   })),
+			 [] 
         in
         notation, 
         [ Dyp.Add_rules [(rule,action)] ; Dyp.Keep_grammar]
         } 
     
-    {parser := Some dyp.parser_pilot.pp_dev; $13}
-
+    {parser := Some dyp.Dyp.parser_pilot.Dyp.pp_dev; $18}
 
 param_list: 
     | param* { $1 }
-param :
-    ident { Param $1 }
+param:
+    | ident { Param $1 }
 syntax:
     | term_syntax+   { $1 }
 term_syntax:
     | ident { Param $1 }
-        | any_string { String (string_without_quote $1) }
-
+    | any_string { String (string_without_quote $1) }
 semantique:
     |  syntax  { $1 }
 

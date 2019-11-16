@@ -9,18 +9,18 @@ struct
   open Signature.Ens
 
   let of_string = Signature.Ens.of_string
-  let (&=) a b = Atomic_formula(Relation(is_in,[a; b]))
+  let (&=) a b = FAtomic_formula(Relation(is_in,[a; b]))
 
   (** Ensemble empty *)
   let def_empty =
     let x = Var (new_var())
     and y = Var (new_var())
     in
-    (Forall(y, Neg ((V y) &= (V x))))
+    (FForall(y, FNeg ((TV y) &= (TV x))))
   and printer_empty_ascii ff = Format.fprintf ff "Ø"
   and printer_empty_latex ff = Format.fprintf ff "\\empty"
 
-  let empty = Constant (of_string "\\empty")
+  let empty = TConstant (of_string "\\empty")
 
 
   (** Axiomes standards *)
@@ -34,51 +34,51 @@ struct
 
   let axiome_extensionnalite =
     let formula_axiome_extensionnalite =
-      Forall(a, Forall(b, (Imply (Forall(x, equiv ((V x) &= (V a)) ((V x) &= (V b))) , 
-      Atomic_formula (Eq (V a , V b))
+      FForall(a, FForall(b, (FImply (FForall(x, equiv ((TV x) &= (TV a)) ((TV x) &= (TV b))) , 
+      FAtomic_formula (Eq (TV a , TV b))
       ))))
     in
     {nom_theoreme="Axiome d'extensionnalitÃ©"; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_extensionnalite}
 
   let axiome_paire =
     let formula_axiome_paire =
-      Forall(a, Forall(b, Exists(c, 
-      (And ((V a) &= (V c) , (V b) &= (V c)))
+      FForall(a, FForall(b, FExists(c, 
+      (FAnd ((TV a) &= (TV c) , (TV b) &= (TV c)))
       )))
     in
     {nom_theoreme="Axiome de la paire" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_paire}
 
   let axiome_union =
     let formula_axiome_union =
-      Forall (a, Exists (b, Forall (x, ( 
-              Imply (Exists (y, And((V x) &= (V y) , (V y) &= (V a) )),
-               ((V x) &= (V b)))
+      FForall (a, FExists (b, FForall (x, ( 
+              FImply (FExists (y, FAnd((TV x) &= (TV y) , (TV y) &= (TV a) )),
+               ((TV x) &= (TV b)))
               ))))
     in
     {nom_theoreme="Axiome de l'union" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_union}
 
   let axiome_parties =
     let formula_axiome_parties =
-      Forall(a, Exists(b, Forall(x, (
-              Imply(
-              Forall(y, ( Imply ((V y) &= (V x) , (V y) &= (V a))))
+      FForall(a, FExists(b, FForall(x, (
+              FImply(
+              FForall(y, ( FImply ((TV y) &= (TV x) , (TV y) &= (TV a))))
               , 
-              ((V x) &= (V b))
+              ((TV x) &= (TV b))
               )
               ))))
     in
     {nom_theoreme="Axiome de l'ensemble des parties" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_parties}
 
   let axiome_separation =
-    let fx = Atomic_formula(Relation(f,[V x;V c]))
+    let fx = FAtomic_formula(Relation(f,[TV x;TV c]))
     in
-    {nom="Axiome de sÃ©paration";
+    {nom="Axiome de séparation";
      variables_reservees = [a;b];
      variable_schematique = f;
      groupe_variables_neutres = c;
      variables_libres_utilisees_predicat = [x];
-     formula =  (Forall(a, Forall(c, Exists(b, Forall(x, equiv ((V x) &= (V b))
-                                         (And ((V x) &= (V a), fx)))))))
+     formula =  (FForall(a, FForall(c, FExists(b, FForall(x, equiv ((TV x) &= (TV b))
+                                         (FAnd ((TV x) &= (TV a), fx)))))))
     }
 
   let axiome_remplacement =
@@ -88,26 +88,26 @@ struct
      variables_libres_utilisees_predicat = [x;y];
      groupe_variables_neutres = c;
      formula = 
-       let fxy,fxz=Atomic_formula(Relation(f,[V x;V y;V c])),Atomic_formula(Relation(f,[V x;V z;V c]))
+       let fxy,fxz=FAtomic_formula(Relation(f,[TV x;TV y;TV c])),FAtomic_formula(Relation(f,[TV x;TV z;TV c]))
        in
-       Forall(a,Forall(c,((Forall(x,Forall(y,Forall(z,
-                                Imply(Imply(And(fxy, fxz), Atomic_formula(Eq(V y, V z)))
+       FForall(a,FForall(c,((FForall(x,FForall(y,FForall(z,
+                                FImply(FImply(FAnd(fxy, fxz), FAtomic_formula(Eq(TV y, TV z)))
                                 ,
-                                Exists(b,Forall(y,(
-                                        Imply(
-                                              Exists(x, Imply((V x) &= (V a) , fxy))
+                                FExists(b,FForall(y,(
+                                        FImply(
+                                              FExists(x, FImply((TV x) &= (TV a) , fxy))
                                               ,
-                                              ((V y) &= (V b)))))))
+                                              ((TV y) &= (TV b)))))))
                                 )))))))
     }
 
   let axiome_fondation=
     let formula_axiome_fondation =
-      Forall(a, Imply((Neg (Atomic_formula(Eq(V a, empty))) )  , Exists(b, (And(V b &= V a, (Atomic_formula(Eq(Operation(of_string "inter", [V b;V a]),  empty ))))))))
+      FForall(a, FImply((FNeg (FAtomic_formula(Eq(TV a, empty))) )  , FExists(b, (FAnd(TV b &= TV a, (FAtomic_formula(Eq(TOperation(of_string "inter", [TV b;TV a]),  empty ))))))))
     in
     {nom_theoreme="Axiome de fondation"; parametres=[]; premisses=[]; preuve= []; conclusion=formula_axiome_fondation} 
 
-  let successeur x = Operation(of_string "union",[x; Operation(of_string "singleton",[x])]);;
+  let successeur x = TOperation(of_string "union",[x; TOperation(of_string "singleton",[x])]);;
 
 
   let axiome_infini =
@@ -115,11 +115,11 @@ struct
       let a = Var (new_var())
       and x = Var (new_var())
       in
-      Exists(a, And(Constant (of_string "Ø") &= (V a) , Forall(x, Imply((V x) &= (V a), ((successeur (V x)) &= (V a))))))
+      FExists(a, FAnd(TConstant (of_string "Ø") &= (TV a) , FForall(x, FImply((TV x) &= (TV a), ((successeur (TV x)) &= (TV a))))))
     in
     {nom_theoreme="Axiome de l'infini" ; parametres=[] ; premisses=[] ; preuve=[] ; conclusion=formula_axiome_infini}
 
-  let (z_fini_dehornoy: theorie) =
+  let (z_fini_dehornoy: theory) =
     {
       axiomes = [axiome_extensionnalite; axiome_paire; axiome_union; axiome_parties];
       schemas = [axiome_separation];
@@ -136,16 +136,16 @@ struct
   intro_symbol_constante z_fini_dehornoy def_empty (of_string "Ø") printer_empty_ascii printer_empty_latex;;
 
   (**)
-  let rec x = Var (new_var()) and vx = V x
-  and y = Var (new_var()) and vy = V y
-  and z = Var (new_var()) and vz = V z
-  and t = Var (new_var()) and vt = V t
+  let rec x = Var (new_var()) and vx = TV x
+  and y = Var (new_var()) and vy = TV y
+  and z = Var (new_var()) and vz = TV z
+  and t = Var (new_var()) and vt = TV t
   in
   let def_union = 
-    Forall (z, equiv (vz &= vy) (Exists(t, And(vt &= vx, (vz &= vt)))))
+    FForall (z, equiv (vz &= vy) (FExists(t, FAnd(vt &= vx, (vz &= vt)))))
 
   and printer_union_latex ff = function
-    | Operation(op, [x]) when op = of_string "U"-> Format.fprintf ff "\\cup("; print_term ff x; Format.fprintf ff ")"
+    | TOperation(op, [x]) when op = of_string "U"-> Format.fprintf ff "\\cup("; print_term ff x; Format.fprintf ff ")"
     | _ -> failwith "printer_union_latex appelé sur autre chose que l'opérateur unaire U"
 
   in
@@ -153,17 +153,17 @@ struct
   (*Hashtbl.find z_fini_dehornoy.operations_definies "U";;*)
 
 
-  let rec x = Var (new_var()) and vx = V x
-  and y = Var (new_var()) and vy = V y
-  and z = Var (new_var()) and vz = V z
-  and t = Var (new_var()) and vt = V t
+  let rec x = Var (new_var()) and vx = TV x
+  and y = Var (new_var()) and vy = TV y
+  and z = Var (new_var()) and vz = TV z
+  and t = Var (new_var()) and vt = TV t
   ;;
   let def_paire =
-    Forall(z,
-       equiv (vz &= vt)  (Or(Atomic_formula(Eq(vz, vx)), Atomic_formula(Eq(vz, vy)) ))) 
+    FForall(z,
+       equiv (vz &= vt)  (FOr(FAtomic_formula(Eq(vz, vx)), FAtomic_formula(Eq(vz, vy)) ))) 
 
   and printer_paire_latex ff = function
-    | Operation(op,[x;y]) when op = of_string "P" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff ",";print_term ff y; Format.fprintf ff "}";
+    | TOperation(op,[x;y]) when op = of_string "P" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff ",";print_term ff y; Format.fprintf ff "}";
     | _ -> failwith "printer_paire_latex appelé sur autre chose que l'opérateur binaire P"
 
   in
@@ -171,11 +171,11 @@ struct
   (*Hashtbl.find z_fini_dehornoy.operations_definies "P";;*)
 
   let def_singleton =
-    Forall(z,
-       equiv (vz &= vt)  (Atomic_formula(Eq(vz, vx)))) 
+    FForall(z,
+       equiv (vz &= vt)  (FAtomic_formula(Eq(vz, vx)))) 
 
   and printer_singleton_latex ff = function
-    | Operation(op,[x]) when op = of_string "S" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff "}";
+    | TOperation(op,[x]) when op = of_string "S" -> Format.fprintf ff "{"; print_term ff x; Format.fprintf ff "}";
     | _ -> failwith "printer_singleton_latex appelé sur autre chose que l'opérateur unaire S"
 
   in
@@ -185,10 +185,10 @@ struct
   let def_couple =
     let p,s = of_string "P",of_string "S"
     in
-    (vz &=  Operation(p,[Operation(p,[vx;vy]);Operation(s,[vx])])) 
+    (vz &=  TOperation(p,[TOperation(p,[vx;vy]);TOperation(s,[vx])])) 
 
   and printer_couple_latex ff = function
-    | Operation(op,[x;y]) when op = of_string "C" -> Format.fprintf ff "("; print_term ff x; Format.fprintf ff ",";print_term ff y; Format.fprintf ff ")";
+    | TOperation(op,[x;y]) when op = of_string "C" -> Format.fprintf ff "("; print_term ff x; Format.fprintf ff ",";print_term ff y; Format.fprintf ff ")";
     | _ -> failwith "printer_couple_latex appelé sur autre chose que l'opérateur binaire C"
 
   in
@@ -201,7 +201,7 @@ struct
   and t = Metavar("t")
   in
   let def_inclusion =
-    Forall(t, Imply((V t) &= (V x), (V t) &= (V y)))
+    FForall(t, FImply((TV t) &= (TV x), (TV t) &= (TV y)))
 
   and printer_incl_latex ff = function
     | Relation(rel,[x; y]) when rel = of_string "\\subset" -> Format.fprintf
@@ -213,7 +213,7 @@ struct
   (*Hashtbl.find z_fini_dehornoy.relations_definies "\subset";;*)
 
 
-  let (z_dehornoy : theorie) =
+  let (z_dehornoy : theory) =
     let axiomes_z =
       z_fini_dehornoy.axiomes @ [axiome_infini]
     in
@@ -221,7 +221,7 @@ struct
       z_fini_dehornoy with axiomes = axiomes_z;
     }
 
-  let (zf_point_dehornoy : theorie) =
+  let (zf_point_dehornoy : theory) =
     let schemas_zf_point =
       z_dehornoy.schemas @ [axiome_remplacement]
     in
@@ -229,7 +229,7 @@ struct
       z_dehornoy with schemas = schemas_zf_point;
     }
 
-  let (zf_dehornoy : theorie) =
+  let (zf_dehornoy : theory) =
     let axiomes_zf_dehornoy =
       zf_point_dehornoy.axiomes@ [axiome_fondation]
     in

@@ -1,6 +1,7 @@
 type notation_prop_element = Param of string | String of string
 type formula_prop =
   | PVar of int
+  | PMetaVar of string
   | PNeg of formula_prop
   | PAnd of formula_prop * formula_prop
   | POr of formula_prop * formula_prop
@@ -25,7 +26,7 @@ and notation_prop =
   Notation equiv
   Params a b
   a \equiv b 
-  (a \imply b)/\\(b \imply a)
+  (a \imply b)\\land(b \imply a)
   End
   "
 *)
@@ -42,34 +43,41 @@ let to_string_formula_prop f =
     in
     function
     | PVar i ->  if (0<=i && i<10) then "X_" ^ (string_of_int i) else "X_{"  ^ (string_of_int i) ^ "}"
-    | PNeg g ->  "!" ^ (to_string_aux  "neg" g);
+    | PMetaVar s -> "\\mathbb{" ^ s ^ "}"
+    | PNeg g ->  "\\lnot " ^ (to_string_aux  "neg" g);
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")
       then
-        to_string_bin "and" "/\\" f g
+        to_string_bin "and" "\\land" f g
       else
-        to_string_par (to_string_bin "and" "/\\" f g)
+        to_string_par (to_string_bin "and" "\\land" f g)
     | POr(f, g) ->
       if (seq = "or" || seq ="init")
       then
-        to_string_bin "or" "\\/" f g
+        to_string_bin "or" "\\lor" f g
       else
-        to_string_par (to_string_bin "or" "\\/" f g)
+        to_string_par (to_string_bin "or" "\\lor" f g)
     | PImpl(f, g) -> if (seq ="init")
       then
-        to_string_bin "impl" "=>" f g
+        to_string_bin "impl" "\\implies" f g
       else
-        to_string_par (to_string_bin "impl" "=>" f g);
+        to_string_par (to_string_bin "impl" "\\implies" f g);
     | PApply_notation {
         apply_notation_prop;
         apply_notation_prop_params;
       } ->  let map_params = List.combine apply_notation_prop.notation_prop_params
                 apply_notation_prop_params
       in
-      List.fold_right (fun notation_element s -> match notation_element with 
-            Param _ as p -> (
-              (to_string_aux seq (List.assoc p map_params))) ^ s 
-          | (String sp)  -> sp ^ s ) apply_notation_prop.notation_prop_notation ""
+      List.fold_right 
+        (
+          fun notation_element s -> 
+            match notation_element 
+            with 
+            | Param _ as p ->  "(" ^ (to_string_aux "notation" (List.assoc p map_params)) ^ ")" ^ s 
+            | String sp  -> sp ^ s 
+        )
+        apply_notation_prop.notation_prop_notation 
+        ""
   in
   to_string_aux  "init" f;;
 
@@ -90,19 +98,20 @@ let printer_formula_prop ff f =
     in
     function
     | PVar i -> Format.fprintf ff (if (0<=i && i<10) then "X_%d" else "X_{%d}") i
-    | PNeg g -> Format.fprintf ff "!"; printer_formula_prop_aux ff "neg" g;
+    | PMetaVar s -> Format.fprintf ff "\\mathbb{%s}" s
+    | PNeg g -> Format.fprintf ff "\\lnot "; printer_formula_prop_aux ff "neg" g
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")
       then
-        print_bin "and" "/\\" f g
+        print_bin "and" "\\land" f g
       else
-        print_par (fun () -> print_bin "and" "/\\" f g)
+        print_par (fun () -> print_bin "and" "\\land" f g)
     | POr(f, g) ->
       if (seq = "or" || seq ="init")
       then
-        print_bin "or" "\\/" f g
+        print_bin "or" "\\lor" f g
       else
-        print_par (fun () -> print_bin "or" "\\/" f g)
+        print_par (fun () -> print_bin "or" "\\lor" f g)
     | PImpl(f, g) -> if (seq ="init")
       then
         print_bin "impl" "=>" f g
@@ -121,7 +130,7 @@ let printer_formula_prop ff f =
          }) as f ->  
       let  replace  m = function 
         | Param a  -> begin
-            try  (to_string_formula_prop  (List.assoc (Param a) m))
+            try  "(" ^ (to_string_formula_prop  (List.assoc (Param a) m)) ^ ")"
             with Not_found -> failwith "apply_notations"
           end
         | String s  -> s 

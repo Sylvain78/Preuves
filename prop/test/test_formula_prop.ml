@@ -5,16 +5,15 @@ open Proof_prop
 open Axioms_prop
 
 let () = ignore (
-        notation_from_string "Notation imply \n Param  a b\nSyntax a \" => \" b\nSemantics a \" \\implies \" b\nEnd";
+        notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \" => \" b\nSemantics\na \" \\implies \" b\nEnd";
   )
 ;;
-
 
 (* |- F  \\implies  F *)
 let verif_tauto = proof_verification ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
     ~proof:(List.map formula_from_string [
         "(X_1  \\implies  ((X_1  \\implies  X_1)  \\implies  X_1))   \\implies  
-    (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
+         (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
         "X_1  \\implies ((X_1  \\implies  X_1)  \\implies  X_1)";
         "(X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1)";
         "X_1  \\implies (X_1  \\implies  X_1)";
@@ -40,7 +39,7 @@ let verif_cut = proof_verification ~hyp:[] (formula_from_string "(X_1  \\implies
         "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))";
 
         (*s*)
-        "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))   \\implies  
+        "((X_1  \\implies  X_2)  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))   \\implies  
     (((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))  \\implies  ((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))";
 
         "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))  \\implies  ((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
@@ -185,7 +184,7 @@ let verif_ou_idempotent =
         "(((\\lnot X_1)  \\implies  (\\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1))))";
         "((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1)))";
         "((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1)))  \\implies   ((X_1\\lorX_1)   \\implies  X_1)";
-        "(X_1\\lorX_1)  \\implies  X_1";
+        "(X_1\\lor X_1)  \\implies  X_1";
       ]);;
 (*TODO 
   (* |- (A ou B)  \\implies  (A  \\implies  C)  \\implies  (B  \\implies  C)  \\implies  C*)
@@ -584,7 +583,6 @@ let verif_ou_idempotent =
   ((X_1 \\lor X_2)  \\implies   ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3)));
   ]);;
 *)
-
 let test_tauto test_ctxt = assert_bool "tauto"  (verif_tauto)
 let test_cut test_ctxt = assert_bool "cut"  (verif_cut)
 let test_contraposee test_ctxt = assert_bool "contraposee"  (verif_contraposee)
@@ -606,40 +604,44 @@ let test_to_string_formula_pvar_11 test_ctxt =
 
 let test_to_string_formula_pneg test_ctxt =
   let s = to_string_formula_prop  (formula_from_string "\\lnot X_1")
-  in assert_equal s "!X_1"
+  in assert_equal s "\\lnot X_1"
 
 let test_to_string_formula_pand test_ctxt =
   let s =  to_string_formula_prop  (formula_from_string "X_1 \\land X_2")
-  in assert_equal s "X_1 /\\ X_2"
+  in assert_equal s "X_1 \\land X_2"
 
 let test_to_string_formula_por test_ctxt = 
   let s = to_string_formula_prop  (formula_from_string "X_1 \\lor X_2")
-  in assert_equal s "X_1 \\/ X_2"
+  in assert_equal s "X_1 \\lor X_2"
 
 let test_to_string_formula_pand_por test_ctxt = 
   let s = to_string_formula_prop  (formula_from_string "(X_1 \\land X_2) \\lor X_3")
-  in assert_equal s "(X_1 /\\ X_2) \\/ X_3"
+  in assert_equal s "(X_1 \\land X_2) \\lor X_3"
 
 let test_to_string_formula_por_pand test_ctxt = 
   let s = to_string_formula_prop  (formula_from_string "(X_1 \\lor X_2) \\land X_3")
-  in assert_equal s "(X_1 \\/ X_2) /\\ X_3"
+  in assert_equal s "(X_1 \\lor X_2) \\land X_3"
 
 let test_to_string_formula_impl test_ctxt = 
   let s = to_string_formula_prop  (formula_from_string "X_1  \\implies  X_2")
-  in assert_equal s "X_1 => X_2"
+  in assert_equal s "X_1 \\implies X_2"
 
 let test_to_string_formula_and_impl test_ctxt = 
   let s = to_string_formula_prop  (formula_from_string "X_3 \\land (X_1  \\implies  X_2)")
-  in assert_equal s "X_3 /\\ (X_1 => X_2)"
+  in assert_equal s "X_3 \\land (X_1 \\implies X_2)"
 
 let test_to_string_formula_notation test_ctxt =
   let s = to_string_formula_prop (formula_from_string "X_1 => X_2")
-  in assert_equal s "X_1 => X_2"
+  in assert_equal ~printer:(fun s -> s) s "(X_1) => (X_2)"
 
 (* Tests for printer_formula *)
 let test_printer_formula_pvar test_ctxt = printer_formula_prop Format.str_formatter (PVar 1);
   let s = Format.flush_str_formatter()
   in assert_equal s "X_1"
+
+let test_printer_formula_pmetavar test_ctxt = printer_formula_prop Format.str_formatter (PMetaVar "A");
+  let s = Format.flush_str_formatter()
+  in assert_equal s "\\mathbb{A}"
 
 let test_printer_formula_pvar_11 test_ctxt = printer_formula_prop Format.str_formatter (PVar 11);
   let s = Format.flush_str_formatter()
@@ -647,54 +649,62 @@ let test_printer_formula_pvar_11 test_ctxt = printer_formula_prop Format.str_for
 
 let test_printer_formula_pneg test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "\\lnot X_1");
   let s = Format.flush_str_formatter()
-  in assert_equal s "!X_1"
+  in assert_equal ~printer:(fun s -> s) s "\\lnot X_1"
 
 let test_printer_formula_pand test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_1 \\land X_2");
   let s = Format.flush_str_formatter()
-  in assert_equal s "X_1 /\\ X_2"
+  in assert_equal s "X_1 \\land X_2"
 
 let test_printer_formula_por test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_1 \\lor X_2");
   let s = Format.flush_str_formatter()
-  in assert_equal s "X_1 \\/ X_2"
+  in assert_equal s "X_1 \\lor X_2"
 
 let test_printer_formula_pand_por test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "(X_1 \\land X_2) \\lor X_3");
   let s = Format.flush_str_formatter()
-  in assert_equal s "(X_1 /\\ X_2) \\/ X_3"
+  in assert_equal s "(X_1 \\land X_2) \\lor X_3"
 
 let test_printer_formula_por_pand test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "(X_1 \\lor X_2) \\land X_3");
   let s = Format.flush_str_formatter()
-  in assert_equal s "(X_1 \\/ X_2) /\\ X_3"
+  in assert_equal s "(X_1 \\lor X_2) \\land X_3"
 
 let test_printer_formula_impl test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_1 \\implies X_2");
   let s = Format.flush_str_formatter()
   in assert_equal s "X_1 => X_2"
 
-let test_printer_formula_impl_par test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_1 \\implies X_2 \\implies X_3");
+let test_printer_formula_impl_par test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "(X_1 \\implies X_2) \\implies X_3");
   let s = Format.flush_str_formatter()
   in assert_equal s "(X_1 => X_2) => X_3" ~printer:(fun s -> s)
 
 let test_printer_formula_and_impl test_ctxt = printer_formula_prop Format.str_formatter (formula_from_string "X_3 \\land (X_1  =>  X_2)");
   let s = Format.flush_str_formatter()
-  in assert_equal s "X_3 /\\ (X_1 => X_2)"
-
+  in assert_equal s "X_3 \\land ((X_1) => (X_2))" ~printer:(fun s -> s)
 
 let test_printer_formula_pappl_fail test_ctxt = 
-let n =         notation_from_string "Notation test \n Param  a \nSyntax c\nSemantics \"X_1\"\nEnd"
-in
-try
-printer_formula_prop Format.str_formatter 
-(PApply_notation {apply_notation_prop=n ; apply_notation_prop_params = [PVar 2]});
-assert_failure "should not happen"
-with Failure "apply_notations" -> assert_bool "" true;;
+  let n =         notation_from_string "Notation\ntest\nParam\n a\nSyntax\nc\nSemantics\n\"X_1\"\nEnd"
+  in
+  try
+    printer_formula_prop Format.str_formatter 
+      (PApply_notation {apply_notation_prop=n ; apply_notation_prop_params = [PVar 2]})
+  with 
+  | Failure _ -> assert_bool "" true;;
+
+let test_notation test_ctxt =
+  try
+    let n = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\na \" \\implies \" b\nEnd"
+    in
+    ignore n
+  with _ -> assert_failure "test_notation"
 
 let instance_suite =
   "Instance">:::
-  [ "test_instance">::test_instance ;
+  [ "test_instance">::test_instance 
   ]
+
 
 let printer_formula_suite =
   "printer_formula" >:::
   [ "test printer_formula PVar">:: test_printer_formula_pvar;
+    "test printer_formula PMetaVar">:: test_printer_formula_pmetavar;
     "test printer_formula PVar X_{11}">:: test_printer_formula_pvar_11;
     "test printer_formula PNeg">:: test_printer_formula_pneg;
     "test printer_formula PAnd">:: test_printer_formula_pand;
@@ -705,10 +715,9 @@ let printer_formula_suite =
     " test_printer_formula_impl_par">::test_printer_formula_impl_par;
     "test_printer_formula_and_impl">::test_printer_formula_and_impl;
     "test_printer_formula_PAppl_fail">::test_printer_formula_pappl_fail;
-
   ]
 
-  let to_string_formula_suite =
+let to_string_formula_suite =
   "to_string_formula" >:::
   [ "test to_string_formula PVar">:: test_to_string_formula_pvar;
     "test to_string_formula PVar X_{11}">:: test_to_string_formula_pvar_11;
@@ -735,10 +744,15 @@ let prop_suite =
   ] 
 ;;
 
+let notation_suite =
+  "Notation">:::
+  [ "test_notation" >:: test_notation
+  ]
+;;
 let () =
   run_test_tt_main instance_suite;
   run_test_tt_main printer_formula_suite;
   run_test_tt_main to_string_formula_suite;
   run_test_tt_main prop_suite;
+  run_test_tt_main notation_suite;
 ;;
-
