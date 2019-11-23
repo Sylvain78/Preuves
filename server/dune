@@ -1,0 +1,8 @@
+(env
+ (dev
+   (flags (:standard -warn-error -8))))
+
+(executable 
+ (name proof_server)
+ (modules (:standard))
+ (libraries str first_order util))

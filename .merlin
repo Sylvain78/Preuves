@@ -1,5 +1,23 @@
-S ./**
-S util/**
-S prop/**
-S first_order/**
-B _build/**
+EXCLUDE_QUERY_DIR
+B _build/default/.proof_server.eobjs/byte
+S .
+S Ensembles
+S Ensembles/test
+S first_order
+S first_order/test
+S prop
+S prop/test
+S protocol
+S repl
+S report_dir
+S report_dir/Ensembles
+S report_dir/Ensembles/test
+S report_dir/first_order
+S report_dir/first_order/test
+S report_dir/prop
+S report_dir/prop/test
+S report_dir/util
+S server
+S unification
+S util
+FLG -w @a-4-29-40-41-42-44-45-48-58-59-60-40 -strict-sequence -strict-formats -short-paths -keep-locs

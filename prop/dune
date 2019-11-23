@@ -1,0 +1,13 @@
+(env
+ (dev
+  (flags (:standard -warn-error -27-32))))
+
+(library 
+ (name prop)
+ (modules (:standard))
+ (libraries util dyp))
+
+(rule
+ (targets prop_parser.ml)
+ (deps    (:input-file prop_parser.dyp))
+ (action  (chdir %{project_root} (run %{bin:dypgen}  --noemit-token-type --no-pp --no-obj-type --no-mli %{input-file}))))

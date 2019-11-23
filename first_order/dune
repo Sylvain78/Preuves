@@ -1,0 +1,13 @@
+(env
+ (dev
+  (flags (:standard -warn-error -A))))
+
+(library 
+ (name first_order)
+ (modules (:standard))
+ (libraries prop util dyp))
+
+(rule
+ (targets first_order_parser.ml)
+ (deps    (:input-file first_order_parser.dyp))
+ (action  (chdir %{project_root} (run %{bin:dypgen}  --noemit-token-type --no-pp --no-obj-type --no-mli %{input-file}))))
