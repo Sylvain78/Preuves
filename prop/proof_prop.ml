@@ -61,10 +61,10 @@ let rec equiv_notation f g =
       List.for_all2 (fun f -> fun g -> equiv_notation f g) apply_notation_prop_params_f apply_notation_prop_params_g
     else 
       false
-  | PApply_notation ({apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f} as f), g->
+  | PApply_notation f, g ->
     let f' = get_semantique f  in
     equiv_notation f' g
-  | f,  PApply_notation ({apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params = apply_notation_prop_params_g} as g)->
+  | f,  PApply_notation g ->
     let g' = get_semantique g  in
     equiv_notation f g'
   | _ -> false
@@ -75,7 +75,7 @@ let instance f g =
     with
     | _, (PVar _ as g) | _, (PMetaVar _ as g) -> begin
         try
-          let (v, t) = List.find (fun (v1, t1) -> v1 = g) l
+          let (_, t) = List.find (fun (v1, _) -> v1 = g) l
           in
           if (t = f) then l
           else raise (Failed_Unification(f, g))
@@ -91,10 +91,10 @@ let instance f g =
       then
         (List.fold_left (fun list_instances (f,g) -> instance_aux list_instances f g) l  (List.combine apply_notation_prop_params_f apply_notation_prop_params_g) )
       else raise (Failed_Unification(f, g))
-    | PApply_notation ({apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f} as f), g->
+    | PApply_notation f, g ->
       let f' = get_semantique f  in
       instance_aux l f' g
-    | f,  PApply_notation ({apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params = apply_notation_prop_params_g} as g)->
+    | f,  PApply_notation g ->
       let g' = get_semantique g  in
       instance_aux l f g'
 
@@ -119,7 +119,7 @@ Printexc.register_printer (function Invalid_demonstration(f,t) ->
 let rec verif ~hypotheses ~proved ~to_prove = 
   match to_prove with
   | [] -> true
-  | f_i::p as demo->  
+  | f_i::p ->  
     if 
       (   List.mem f_i hypotheses (*Formula is an hypothesis*)
           || List.mem f_i proved (*Formula already present *) 

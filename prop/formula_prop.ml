@@ -119,14 +119,8 @@ let printer_formula_prop ff f =
         print_par (fun () -> print_bin "impl" "=>" f g)
     | (PApply_notation 
          {
-           apply_notation_prop = 
-             {
-               notation_prop_name ;
-               notation_prop_params;
-               notation_prop_notation;
-               notation_prop_semantique;
-             } as n;
-           apply_notation_prop_params  = apply_notation_prop_params as list_params  
+           apply_notation_prop = _  as n;
+           apply_notation_prop_params  = _ as list_params  
          }) as f ->  
       let  replace  m = function 
         | Param a  -> begin

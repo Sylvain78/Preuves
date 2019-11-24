@@ -1,6 +1,5 @@
 {
  open Formula_prop
- let local_data = []
  let parser = ref None;;
  let string_without_quote s = ( String.sub s 1 (String.length s - 2))
 
@@ -106,8 +105,9 @@ semantique:
   let formula_from_string s = 
     let l = (expr1 (Dyp.from_string (pp ()) s))
     in 
-    match l with [ (f,s) ] -> f 
-               |   _   -> raise (Failure "[Prop] Parser.formula_from_string")
+    match l with [ (f,_) ] -> f 
+               | (f,_)::(g,_)::_ -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^") : more than one interpretation"))
+	       |   _   -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^")"))
 
 let notation_from_string s =          
   let l = (notation1 (Dyp.from_string (pp ()) s))

@@ -1,4 +1,3 @@
-open Util
 open Formula_prop
 
 type proposition_prop =

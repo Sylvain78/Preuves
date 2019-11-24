@@ -21,7 +21,5 @@ type formula_prop =
          }
 ;;
 
-
-
 val printer_formula_prop : Format.formatter -> formula_prop -> unit
 val to_string_formula_prop : formula_prop -> string
