@@ -1,2 +1,3 @@
---Add a Readme
+-- Add a Readme
+-- Clean the server side : remove all printf, closes channels nicely
 
