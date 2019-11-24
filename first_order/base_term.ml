@@ -8,10 +8,24 @@ sig
   val compare_var : var -> var -> int
   module SetVar : (Set.S with type elt = var) 
 
-  type term =
-    | V of var
-    | Constant of Sig.symbol
-    | Operation of Sig.symbol * term list
+  type notation_first_order_element = Param of string | String of string
+  type notation_first_order =
+    {
+      notation_first_order_name : string;
+      notation_first_order_params : notation_first_order_element list;
+      notation_first_order_notation :  notation_first_order_element list;
+      notation_first_order_semantique :  notation_first_order_element list;
+    }
+  type apply_notation_first_order_term = 
+    {
+      apply_notation_first_order_term : notation_first_order;
+      apply_notation_first_order_term_params : term list; (*SKE TODO create database of notations*)
+    }
+  and term =
+    | TV of var
+    | TConstant of Sig.symbol
+    | TOperation of Sig.symbol * term list
+    | TApply_notation of apply_notation_first_order_term
   val printers_constants :  (Sig.symbol, Format.formatter -> unit) Hashtbl.t
   val printers_operations : (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
   val printers_relations :  (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
@@ -26,11 +40,24 @@ module Term = (functor (Sig:SIGNATURE) ->
     type var =
       | Var of int
       | Metavar of string (* TODO Verify if Metavar are still useful *)
-
-    type term =
-      | V of var
-      | Constant of Sig.symbol
-      | Operation of Sig.symbol * term list
+    type notation_first_order_element = Param of string | String of string
+    type notation_first_order =
+      {
+        notation_first_order_name : string;
+        notation_first_order_params : notation_first_order_element list;
+        notation_first_order_notation :  notation_first_order_element list;
+        notation_first_order_semantique :  notation_first_order_element list;
+      }
+    type apply_notation_first_order_term = 
+      {
+        apply_notation_first_order_term : notation_first_order;
+        apply_notation_first_order_term_params : term list; (*SKE TODO create database of notations*)
+      }
+    and term =
+      | TV of var
+      | TConstant of Sig.symbol
+      | TOperation of Sig.symbol * term list
+      | TApply_notation of apply_notation_first_order_term
 
     let printers_constants = Hashtbl.create 3;;
     let printers_operations = Hashtbl.create 3;;
@@ -50,32 +77,32 @@ module Term = (functor (Sig:SIGNATURE) ->
 
     (** Ensemble des variables d'un term **)
     let rec variables_term = function
-      | V(Var _ as t) | V(Metavar _ as t) -> SetVar.singleton t
-      | Constant _ -> SetVar.empty
-      | Operation(_, lt) -> let liste_vars = List.map (variables_term) lt
+      | TV(Var _ as t) | TV(Metavar _ as t) -> SetVar.singleton t
+      | TConstant _ -> SetVar.empty
+      | TOperation(_, lt) -> let liste_vars = List.map (variables_term) lt
         in
         List.fold_left SetVar.union SetVar.empty liste_vars
 
 
     (** Remplace la liste des variable lx par la liste des terms lt **)		
     let rec simultaneous_substitution_term lx lt = function
-      | Constant _ as c -> c
-      | V x' as v -> 
+      | TConstant _ as c -> c
+      | TV x' as v -> 
         (try List.assoc x' (List.combine lx lt)
          with | Not_found -> v 
         )
-      | Operation(s,lt') -> 
+      | TOperation(s,lt') -> 
         let lt'' = List.map (simultaneous_substitution_term lx lt) lt'
         in 
-        Operation(s,lt'')  
+        TOperation(s,lt'')  
 
-    (** Algorithme de Robinson **)
+    (** Robinson's algorithm **)
     type substitution = term -> term			
 
     let unifier_term, unifier_liste_term =
       let rec unifier_aux : (term * term) list * substitution -> substitution  = function
         | [ ],mu -> mu (* mu est la substitution *)
-        | ((V var1 as x,u1)::lt),mu ->
+        | ((TV var1 as x,u1)::lt),mu ->
           if (x = u1) then 
             unifier_aux (lt,mu)
           else
@@ -89,12 +116,12 @@ module Term = (functor (Sig:SIGNATURE) ->
             let l1',l2' = List.map mu1 l1, List.map mu1 l2
             in
             unifier_aux ((List.combine l1' l2'),(fun u -> mu1 (mu u)))
-        | ((u1, (V x1 as x))::lt),mu -> unifier_aux (((x,u1)::lt),mu)
-        | (Constant c1, Constant c2)::lt,mu -> if c1 = c2 then
+        | ((u1, (TV x1 as x))::lt),mu -> unifier_aux (((x,u1)::lt),mu)
+        | (TConstant c1, TConstant c2)::lt,mu -> if c1 = c2 then
             mu
           else 
             failwith "constants non unifiables"
-        | ((Operation(o1,l1)),(Operation(o2, l2)))::lt,mu -> 
+        | ((TOperation(o1,l1)),(TOperation(o2, l2)))::lt,mu -> 
           if (o1 = o2) && (List.length l1 = List.length l2) then
             unifier_aux ((List.combine l1 l2)@lt,mu)
           else
@@ -105,16 +132,11 @@ module Term = (functor (Sig:SIGNATURE) ->
       (fun l   -> unifier_aux       (l,(fun x -> x)))
 
 
-
-
-
-
-
     (** Formateurs d'affichage **)
     let rec print_term ff = function
-      | V(Var i) -> if 0 <= i && i < 10 then Format.fprintf ff "X_%u" i else Format.fprintf ff "X_{%u}" i
-      | V(Metavar s) -> Format.fprintf ff "%s" s
-      | Constant c -> (Hashtbl.find printers_constants c) ff
-      | Operation(op, _) as term -> (Hashtbl.find printers_operations op) ff term
+      | TV(Var i) -> if 0 <= i && i < 10 then Format.fprintf ff "X_%u" i else Format.fprintf ff "X_{%u}" i
+      | TV(Metavar s) -> Format.fprintf ff "%s" s
+      | TConstant c -> (Hashtbl.find printers_constants c) ff
+      | TOperation(op, _) as term -> (Hashtbl.find printers_operations op) ff term
   end: TERM)
 
