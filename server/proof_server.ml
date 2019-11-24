@@ -5,7 +5,9 @@ open UnixLabels
 
 open Protocol
 open Session
-open Unix_tools
+open Util__Unix_tools
+open Prop
+open First_order
 
 module type SESSION = module type of Session 
 
@@ -118,7 +120,7 @@ and eval s channels =
       begin
         let module M = (val session.prop : Session.P) 
         in 
-        if (List.exists (fun {Axioms_prop.name_proposition_prop;Axioms_prop.proposition_prop} -> name=name_proposition_prop)  !M.axioms_prop) then
+        if (List.exists (fun {Axioms_prop.name_proposition_prop;_} -> name=name_proposition_prop)  !M.axioms_prop) then
           Answer ("Axiom " ^ name ^ " already defined")  
         else 
           begin
@@ -131,19 +133,23 @@ and eval s channels =
     if session.mode = Session.Prop
     then
       begin
-        print_string "WWW\n";Pervasives.flush Pervasives.stdout;
+        print_string @@ "WWW\n"^name ^"\n";Pervasives.flush Pervasives.stdout;
         let module P = (val session.prop : Session.P)
         in
         print_string "ZZZ\n";Pervasives.flush Pervasives.stdout;
-        P.proof_verification ~hyp:(List.map P.formula_from_string premisses) (P.formula_from_string conclusion) ~proof:(List.map P.formula_from_string demonstration);
+        let verif =  (P.proof_verification ~hyp:(List.map P.formula_from_string premisses) (P.formula_from_string conclusion) ~proof:(List.map P.formula_from_string demonstration)) in
+
         print_string "TTT\n";Pervasives.flush Pervasives.stdout;
+        if verif then
+          Answer ("Theorem" ^ name ^ "verified.")
+        else
+          Answer ("Theorem" ^ name ^ "not verified.")
       end
     else if session.mode = Session.First_order
     then 
       failwith "TheoremFirst_order"
     else
-      failwith "session mode not Prop neither First_order";
-    Ok
+      failwith "session mode not Prop neither First_order"
 and repl channels =
   let command = Buffer.create 1024
   in
@@ -167,7 +173,7 @@ and repl channels =
   do 
     print_endline ("boucle "^ (string_of_int !test));incr test;
     (* read *)
-    let nb_read = print_endline "avant read";read channels.io_fd  buffer 0 1024
+    let nb_read = print_endline "avant read";read channels.io_fd  ~buf:buffer ~pos:0 ~len:1024
     in
     print_endline ("apres read (lu" ^ (BytesLabels.to_string buffer)^")");
     Buffer.add_subbytes command buffer 0 nb_read;
@@ -203,8 +209,8 @@ and repl channels =
       (* print *)
       begin
         match answer with
-        | Ok -> output_string channels.io_out "Ok" 
-        | Answer s -> output_string channels.io_out s
+        | Ok -> output_string channels.io_out "Ok.\n"; flush channels.io_out 
+        | Answer s -> output_string channels.io_out (s^"\n"); flush channels.io_out 
       end;
       flush channels.io_out
       (* loop *)
@@ -229,11 +235,11 @@ let main () =
        Some file
      | _ ->
        None);
-  let sock_listen = socket socket_domain SOCK_STREAM 0 in
+  let sock_listen = socket ~domain:socket_domain ~kind:SOCK_STREAM ~protocol:0 in
   (try
      setsockopt sock_listen SO_REUSEADDR true;
-     bind sock_listen socket_address;
-     listen sock_listen 3;
+     bind sock_listen ~addr:socket_address;
+     listen sock_listen ~max:3;
      while true do
        let (sock, _) = accept sock_listen
        in
@@ -241,12 +247,12 @@ let main () =
        in
        match pid with 
        | 0      -> (*child*)
-         ()
-       | _ -> (*father*) 
          let io_chan = io_channel_of_descr sock 
          in
-         print_endline "lancement repl";
+          print_endline "lancement repl";
          repl io_chan  
+       | _ -> (*father*) 
+         ()
 
      done
    with x -> (match !file_name with Some file -> unlink file | None -> ());close sock_listen; raise x)
