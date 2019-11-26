@@ -175,7 +175,8 @@ and repl channels =
     (* read *)
     let nb_read = print_endline "avant read";read channels.io_fd  ~buf:buffer ~pos:0 ~len:1024
     in
-    print_endline ("apres read (lu" ^ (BytesLabels.to_string buffer)^")");
+    if nb_read=0 then raise End_of_file;
+    print_endline ("apres read (lu : "^(string_of_int nb_read) ^ (BytesLabels.to_string buffer)^")");
     Buffer.add_subbytes command buffer 0 nb_read;
     print_endline ("nouvelle commande : "^ (Buffer.contents command)^"XXX");
     let s = ref ""
@@ -250,7 +251,11 @@ let main () =
          let io_chan = io_channel_of_descr sock 
          in
           print_endline "lancement repl";
-         repl io_chan  
+         begin 
+           try 
+             repl io_chan  
+           with End_of_file -> close io_chan.io_fd
+         end
        | _ -> (*father*) 
          ()
 
