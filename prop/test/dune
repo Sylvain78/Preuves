@@ -1,0 +1,7 @@
+(env
+ (dev
+  (flags (:standard -warn-error -27-32))))
+
+(tests (names test_formula_prop_parser test_formula_prop test_proof_prop test_S1)
+ (libraries prop ounit2)
+)

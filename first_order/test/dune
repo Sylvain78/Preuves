@@ -1,0 +1,7 @@
+(env
+ (dev
+  (flags (:standard -warn-error -27-32))))
+
+(tests (names test_formula_first_order test_schemas_first_order)
+ (libraries ounit2 prop first_order)
+)

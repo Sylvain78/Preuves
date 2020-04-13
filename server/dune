@@ -2,6 +2,9 @@
  (dev
    (flags (:standard -warn-error -8))))
 
+(ocamlyacc protocol_parser)
+(ocamllex protocol_lexer)
+
 (executable 
  (name proof_server)
  (modules (:standard))
