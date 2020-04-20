@@ -1,16 +1,16 @@
 open OUnit2
-open Formula_prop
-open Prop_parser
+open Prop.Formula_prop
+open Prop.Prop_parser
 
-let test_parenthesis test_ctxt = 
-assert_equal (PVar 1) (formula_from_string "(X_1)")
+let test_parenthesis _ = 
+assert_equal (PVar (PVVar 1)) (formula_from_string "(X_1)")
 
-let test_x1 test_ctxt =
-        assert_equal (formula_from_string "X_1") (PVar 1);
-        assert_equal (formula_from_string " X_1 ") (PVar 1)
+let test_x1 _ =
+        assert_equal (formula_from_string "X_1") (PVar (PVVar 1));
+        assert_equal (formula_from_string " X_1 ") (PVar (PVVar 1))
 
-let test_x1_implies_x1 test_ctxt =
-        assert_equal (PImpl (PVar 1, PVar 1)) (formula_from_string "X_1 \\implies X_1")  ~printer:to_string_formula_prop
+let test_x1_implies_x1 _ =
+        assert_equal (PImpl (PVar (PVVar 1), PVar (PVVar 1))) (formula_from_string "X_1 \\implies X_1")  ~printer:to_string_formula_prop
 
 let parser_formula_suite =
         "parser test" >:::

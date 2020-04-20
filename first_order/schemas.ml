@@ -29,38 +29,38 @@ module Schema  (Sig:SIGNATURE) =
       let rec apply_schema_formula schema_formula predicat =
         verification_variables_reservees predicat;    
       match schema_formula  with
-        | Neg s -> Neg (apply_schema_formula s predicat)
-        | Or(s,t) -> Or(apply_schema_formula s predicat, apply_schema_formula t predicat)
-        | And(s,t) -> And(apply_schema_formula s predicat, apply_schema_formula t predicat)
-        | Imply(s,t) -> Imply(apply_schema_formula s predicat, apply_schema_formula t predicat)
-        | Atomic_formula(Eq(_,_)) -> schema_formula
+        | FNeg s -> FNeg (apply_schema_formula s predicat)
+        | FOr(s,t) -> FOr(apply_schema_formula s predicat, apply_schema_formula t predicat)
+        | FAnd(s,t) -> FAnd(apply_schema_formula s predicat, apply_schema_formula t predicat)
+        | FImply(s,t) -> FImply(apply_schema_formula s predicat, apply_schema_formula t predicat)
+        | FAtomic_formula(Eq(_,_)) -> schema_formula
         (* Cas spéciaux *)
-        | Atomic_formula(Relation(r,args)) ->
-                        let args' = List.filter (fun v -> v <> (V schema.groupe_variables_neutres)) args
+        | FAtomic_formula(Relation(r,args)) ->
+                        let args' = List.filter (fun v -> v <> (TV schema.groupe_variables_neutres)) args
                         in
                         if (r = schema.variable_schematique)
                         then simultaneous_substitution_formula schema.variables_libres_utilisees_predicat args' predicat
                         else schema_formula
-        | Exists(v,s) -> if (v = schema.groupe_variables_neutres) 
+        | FExists(v,s) -> if (v = schema.groupe_variables_neutres) 
                          then 
                            let s' = apply_schema_formula s predicat
                            and variables_neutres =  
                                  List.filter (function v -> not (List.mem v schema.variables_libres_utilisees_predicat))
                                              (SetVar.elements (free_variables_of_formula predicat))
                            in
-                           List.fold_right ( fun v f -> Exists(v,f)) variables_neutres s'      
+                           List.fold_right ( fun v f -> FExists(v,f)) variables_neutres s'      
                          else 
-                           Exists(v, apply_schema_formula s predicat)       
-        | Forall(v,s) -> if (v = schema.groupe_variables_neutres) 
+                           FExists(v, apply_schema_formula s predicat)       
+        | FForall(v,s) -> if (v = schema.groupe_variables_neutres) 
                          then 
                            let s' = apply_schema_formula s predicat
                            and variables_neutres =  
                                  List.filter (function v -> not (List.mem v schema.variables_libres_utilisees_predicat))
                                              (SetVar.elements (free_variables_of_formula predicat))
                            in
-                           List.fold_right ( fun v f -> Forall(v,f)) variables_neutres s'      
+                           List.fold_right ( fun v f -> FForall(v,f)) variables_neutres s'      
                          else 
-                           Forall(v, apply_schema_formula s predicat)        
+                           FForall(v, apply_schema_formula s predicat)        
       in
       apply_schema_formula schema.formula predicat
    

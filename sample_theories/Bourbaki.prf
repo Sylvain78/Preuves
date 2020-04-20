@@ -257,3 +257,36 @@ Demonstration
 (\mathbb{A} \lor \mathbb{B}) \implies (\mathbb{B} \implies (\mathbb{B} \lor \mathbb{A}))
 (\mathbb{A} \lor \mathbb{B}) \implies (\mathbb{B} \lor \mathbb{A})
 
+Theorem
+S4
+Premisses
+Conclusion
+(\mathbb{A} \implies \mathbb{B}) \implies ((\mathbb{C} \lor \mathbb{A}) \implies (\mathbb{C} \lor \mathbb{B}))
+Demonstration
+(a=>b) => (coua => coub)
+
+*coua => ((c => coub) => ((a => coub) => coub))
+
+(a=>b) => (coua => ((c => coub) => ((a => coub) => coub)))
+(a=>b => coua) => (a=>b =>((c => coub) => ((a => coub) => coub)))
+
+*b => coub
+*(b => coub) => (a=> (b => coub) )
+*(a=> (b => coub) )
+*(a=> (b => coub) )=> ((a=>b) => (a=> (c oub)))
+*((a=>b) => (a=> (c oub)))
+
+*b=> (c=>b)
+*a=>b => a=>(c=>b)
+donc
+*(a=>b)=>coub => (a=>b)=>(coua=>coub)
+
+
+coua => ((c => coub) => ((a => coub) => coub))
+((c => coub) => ((a => coub) => coub))
+
+
+
+
+
+(a=>b)=>(coua => ((c => coub) => ((a => coub) => coub)))

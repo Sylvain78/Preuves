@@ -8,7 +8,7 @@ let x,y,x',y' =
   Metavar("x'"),
   Metavar("y'")
 
-let vx,vy,vx',vy'=V x,V y, V x',V y'
+let vx,vy,vx',vy'=TV x,TV y, TV x',TV y'
 
 let couple = Ensembles.ZF.of_string "C"
 let singleton = Ensembles.ZF.of_string "S"

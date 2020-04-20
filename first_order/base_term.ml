@@ -7,25 +7,10 @@ sig
     | Metavar of string
   val compare_var : var -> var -> int
   module SetVar : (Set.S with type elt = var) 
-
-  type notation_first_order_element = Param of string | String of string
-  type notation_first_order =
-    {
-      notation_first_order_name : string;
-      notation_first_order_params : notation_first_order_element list;
-      notation_first_order_notation :  notation_first_order_element list;
-      notation_first_order_semantique :  notation_first_order_element list;
-    }
-  type apply_notation_first_order_term = 
-    {
-      apply_notation_first_order_term : notation_first_order;
-      apply_notation_first_order_term_params : term list; (*SKE TODO create database of notations*)
-    }
-  and term =
+  type term =
     | TV of var
     | TConstant of Sig.symbol
     | TOperation of Sig.symbol * term list
-    | TApply_notation of apply_notation_first_order_term
   val printers_constants :  (Sig.symbol, Format.formatter -> unit) Hashtbl.t
   val printers_operations : (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
   val printers_relations :  (Sig.symbol, Format.formatter -> term -> unit) Hashtbl.t
@@ -40,24 +25,10 @@ module Term = (functor (Sig:SIGNATURE) ->
     type var =
       | Var of int
       | Metavar of string (* TODO Verify if Metavar are still useful *)
-    type notation_first_order_element = Param of string | String of string
-    type notation_first_order =
-      {
-        notation_first_order_name : string;
-        notation_first_order_params : notation_first_order_element list;
-        notation_first_order_notation :  notation_first_order_element list;
-        notation_first_order_semantique :  notation_first_order_element list;
-      }
-    type apply_notation_first_order_term = 
-      {
-        apply_notation_first_order_term : notation_first_order;
-        apply_notation_first_order_term_params : term list; (*SKE TODO create database of notations*)
-      }
     and term =
       | TV of var
       | TConstant of Sig.symbol
       | TOperation of Sig.symbol * term list
-      | TApply_notation of apply_notation_first_order_term
 
     let printers_constants = Hashtbl.create 3;;
     let printers_operations = Hashtbl.create 3;;
@@ -98,8 +69,8 @@ module Term = (functor (Sig:SIGNATURE) ->
 
     (** Robinson's algorithm **)
     type substitution = term -> term			
-
-    let unifier_term, unifier_liste_term =
+(*
+    let unifier_term, _ =
       let rec unifier_aux : (term * term) list * substitution -> substitution  = function
         | [ ],mu -> mu (* mu est la substitution *)
         | ((TV var1 as x,u1)::lt),mu ->
@@ -130,10 +101,10 @@ module Term = (functor (Sig:SIGNATURE) ->
       in 
       (fun t u -> unifier_aux ([(t,u)],(fun x -> x))),
       (fun l   -> unifier_aux       (l,(fun x -> x)))
-
+*)
 
     (** Formateurs d'affichage **)
-    let rec print_term ff = function
+    let print_term ff = function
       | TV(Var i) -> if 0 <= i && i < 10 then Format.fprintf ff "X_%u" i else Format.fprintf ff "X_{%u}" i
       | TV(Metavar s) -> Format.fprintf ff "%s" s
       | TConstant c -> (Hashtbl.find printers_constants c) ff

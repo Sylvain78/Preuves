@@ -1,7 +1,10 @@
 type notation_prop_element = Param of string | String of string
+type var_prop =
+  | PVVar of int
+  | PVMetaVar of string
+
 type formula_prop =
-  | PVar of int
-  | PMetaVar of string
+  | PVar of var_prop
   | PNeg of formula_prop
   | PAnd of formula_prop * formula_prop
   | POr of formula_prop * formula_prop

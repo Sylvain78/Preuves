@@ -1,7 +1,11 @@
 type notation_prop_element = Param of string | String of string
+
+type var_prop = 
+  | PVVar of int
+  | PVMetaVar of string
+
 type formula_prop =
-  | PVar of int
-  | PMetaVar of string
+  | PVar of var_prop
   | PNeg of formula_prop
   | PAnd of formula_prop * formula_prop
   | POr of formula_prop * formula_prop
@@ -42,8 +46,8 @@ let to_string_formula_prop f =
       "(" ^ f ^ ")"
     in
     function
-    | PVar i ->  if (0<=i && i<10) then "X_" ^ (string_of_int i) else "X_{"  ^ (string_of_int i) ^ "}"
-    | PMetaVar s -> "\\mathbb{" ^ s ^ "}"
+    | PVar (PVVar i) ->  if (0<=i && i<10) then "X_" ^ (string_of_int i) else "X_{"  ^ (string_of_int i) ^ "}"
+    | PVar (PVMetaVar s) -> "\\mathbb{" ^ s ^ "}"
     | PNeg g ->  "\\lnot " ^ (to_string_aux  "neg" g);
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")
@@ -97,8 +101,8 @@ let printer_formula_prop ff f =
       Format.fprintf ff ")";
     in
     function
-    | PVar i -> Format.fprintf ff (if (0<=i && i<10) then "X_%d" else "X_{%d}") i
-    | PMetaVar s -> Format.fprintf ff "\\mathbb{%s}" s
+    | PVar (PVVar i) -> Format.fprintf ff (if (0<=i && i<10) then "X_%d" else "X_{%d}") i
+    | PVar (PVMetaVar s) -> Format.fprintf ff "\\mathbb{%s}" s
     | PNeg g -> Format.fprintf ff "\\lnot "; printer_formula_prop_aux ff "neg" g
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")

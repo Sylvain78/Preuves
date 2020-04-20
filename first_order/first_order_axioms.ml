@@ -1,9 +1,6 @@
 open Signature 
-open Util
-open Prop
-open Formula_prop
-open Axioms_prop
-open Proof_prop
+open Prop.Formula_prop
+open Prop.Proof_prop
 open First_order_parser
 
 module Axioms (Sig:SIGNATURE)=
@@ -17,13 +14,13 @@ struct
 
   (** f is an instance of a propositionnal axiom **)
   let is_instance_axiom_prop (f: formula) =
-    (**  @param l list of variables of g already instanciated in f *)
+    (*  l : list of variables of g already instanciated in f *)
     let rec instance_aux (l: (formula_prop * formula) list) f prop=
       match prop with
       | PVar i as g -> begin
           try
             (* Vi already bound to t *)
-            let (v, t) = List.find (fun (v1, t1) -> v1 = g) l
+            let (_, t) = List.find (fun (v1, _) -> v1 = g) l
             in
             (* we find the same bound again, ok *)
             if (t = f) then l
@@ -75,6 +72,7 @@ struct
       v1 = v2 && f1 = f2 && g1 = g2  
       && not (SetVar.mem v1 (free_variables_of_formula f1))
     | _ -> false
+  
   (** Elimination axiom of the universal quantifier **)
   let is_forall_elim formula =
     match formula with
@@ -100,7 +98,7 @@ struct
         | FForall(v',f'),FForall(v'',f'') 
         | FExists(v',f'),FExists(v'',f'') -> 
           (* v lié,  on cherche une occurence libre*)
-          if (Pervasives.(||) (v' = v) (v'' = v))
+          if (Stdlib.(||) (v' = v) (v'' = v))
           then raise Not_found
           else find_term_instance_v f' (simultaneous_substitution_formula [v''] [TV v'] f'')
         | _ -> raise Not_found

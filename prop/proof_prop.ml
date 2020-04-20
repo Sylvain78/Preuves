@@ -1,5 +1,6 @@
 include Axioms_prop
 open Formula_prop
+open Substitution_prop
 include (Prop_parser : sig 
            val formula_from_string : string -> Formula_prop.formula_prop
            val notation_from_string : string -> Formula_prop.notation_prop
@@ -13,9 +14,30 @@ Prop_parser.formule lexbuf
 exception Failed_Unification of formula_prop * formula_prop
 
 
+type theorem_prop = 
+  {
+    name_theorem_prop : string;
+    parameters_prop : var_prop list;
+    premises_prop : formula_prop list;
+    proof_prop : proof_prop;
+    conclusion_prop: formula_prop;
+  }
+
+and term_proof_prop  = 
+  | TPPAxiom   of string * formula_prop 
+  | TPPFormula of formula_prop
+  | TPPTheorem of formula_prop * (theorem_prop * (formula_prop list)(*parametres*) * (formula_prop list)(* premisses*))
+
+and proof_prop = term_proof_prop list 
+
+let term_proof_to_formula_prop  = function
+  | TPPFormula f -> f
+  | TPPAxiom (_,f) -> f
+  | TPPTheorem(f,_) -> f
+
 (*SKE TODO : where to put this function ?*)
 let rec apply_notations = function 
-  | PVar _ | PMetaVar _ as t -> t
+  | PVar _ as t -> t
   | PNeg f -> PNeg (apply_notations f)
   | PAnd(f1,f2) -> PAnd(apply_notations f1, apply_notations f2) 
   | POr(f1,f2) -> POr(apply_notations f1, apply_notations f2) 
@@ -49,7 +71,6 @@ let rec equiv_notation f g =
   match f, g 
   with
   | PVar v1, PVar v2 -> v1=v2
-  | PMetaVar v1, PMetaVar v2 -> v1=v2
   | PNeg f1 , PNeg g1 -> equiv_notation f1 g1
   | PAnd(f1, f2) , PAnd(g1, g2) 
   | POr(f1, f2) , POr(g1, g2) 
@@ -73,7 +94,7 @@ let rec equiv_notation f g =
 let instance f g =
   let rec instance_aux l f g  = match f, g 
     with
-    | _, (PVar _ as g) | _, (PMetaVar _ as g) -> begin
+    | _, (PVar _ as g) -> begin
         try
           let (_, t) = List.find (fun (v1, _) -> v1 = g) l
           in
@@ -119,7 +140,7 @@ Printexc.register_printer (function Invalid_demonstration(f,t) ->
 let rec verif ~hypotheses ~proved ~to_prove = 
   match to_prove with
   | [] -> true
-  | f_i::p ->  
+  | (TPPFormula f_i)::p ->  
     if 
       (   List.mem f_i hypotheses (*Formula is an hypothesis*)
           || List.mem f_i proved (*Formula already present *) 
@@ -139,6 +160,19 @@ let rec verif ~hypotheses ~proved ~to_prove =
       verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
       raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
+ | TPPAxiom (name_ax, formula_ax) :: p -> 
+   if List.mem {name_proposition_prop=name_ax; proposition_prop=formula_ax} !axioms_prop then 
+      verif ~hypotheses ~proved:(formula_ax :: proved) ~to_prove:p
+   else 
+      raise (Invalid_demonstration (formula_ax,List.rev (formula_ax::proved)))
+ | TPPTheorem  (f , (theorem, parameters, premises)) :: proof -> (f = theorem.conclusion_prop) && 
+                                                                           (verif ~hypotheses ~proved:(f::proved) ~to_prove:proof) && 
+                                                                           (List.for_all (fun p -> let premise = simultaneous_substitution_formula_prop theorem.parameters_prop parameters p
+                                                                                           in
+                                                                                           List.mem premise (List.map term_proof_to_formula_prop proof)
+                                                                                         ) 
+                                                                              premises)
+
 
 let proof_verification ~hyp:hypotheses f ~proof:proof =
   (* f is at the end of the proof *)
@@ -151,7 +185,7 @@ let proof_verification ~hyp:hypotheses f ~proof:proof =
     | Failure _ -> false
   in
 
-  if not(is_end_proof f proof)
+  if not(is_end_proof (TPPFormula f) proof)
   then failwith "Formula is not at the end of the proof"
   else
     verif ~hypotheses  ~proved:[] ~to_prove:proof
@@ -172,7 +206,7 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1")
 *)
 (* |   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)*)
 proof_verification ~hyp:[] (formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))")
-  ~proof: (List.map formula_from_string [
+  ~proof: (List.map (fun s -> TPPFormula (formula_from_string s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -239,19 +273,19 @@ theorems_prop := {name_proposition_prop="contraposition"; proposition_prop=formu
 
 (* |   F ou F  \\implies  F *)
 proof_verification ~hyp:[] (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}")
-    ~proof:(List.map formula_from_string [
-        "((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))";
-        "((\\lnot \\mathbb{A})  \\implies   ((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}))";
-        "((\\lnot \\mathbb{A})  \\implies   ((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}))  \\implies  ((((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies  ((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
-        "((((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies  ((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
-        "((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))";
-        "((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies   (((\\lnot \\mathbb{A})  \\implies  (\\lnot \\mathbb{A}))  \\implies  ((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
-        "((\\lnot \\mathbb{A})  \\implies  (\\lnot \\mathbb{A}))";
-        "(((\\lnot \\mathbb{A})  \\implies  (\\lnot \\mathbb{A}))  \\implies  ((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
-        "((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A})))";
-        "((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies   ((\\mathbb{A}\\lor\\mathbb{A})   \\implies  \\mathbb{A})";
-        "(\\mathbb{A}\\lor \\mathbb{A})  \\implies  \\mathbb{A}";
-      ]);;
+  ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
+      "((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))";
+      "((\\lnot \\mathbb{A})  \\implies   ((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}))";
+      "((\\lnot \\mathbb{A})  \\implies   ((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}))  \\implies  ((((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies  ((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
+      "((((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies  ((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
+      "((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))";
+      "((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies   (((\\lnot \\mathbb{A})  \\implies  (\\lnot \\mathbb{A}))  \\implies  ((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
+      "((\\lnot \\mathbb{A})  \\implies  (\\lnot \\mathbb{A}))";
+      "(((\\lnot \\mathbb{A})  \\implies  (\\lnot \\mathbb{A}))  \\implies  ((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";
+      "((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A})))";
+      "((\\lnot \\mathbb{A})  \\implies  (\\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies   ((\\mathbb{A}\\lor\\mathbb{A})   \\implies  \\mathbb{A})";
+      "(\\mathbb{A}\\lor \\mathbb{A})  \\implies  \\mathbb{A}";
+    ]);;
 
 theorems_prop := {name_proposition_prop="[Bourbaki]S1"; proposition_prop=(formula_from_string "(X_1 \\lor X_1) \\implies X_1");}::!theorems_prop;;
 

@@ -1,6 +1,6 @@
 (env
  (dev
-  (flags (:standard -warn-error -A))))
+  (flags (:standard -w -8-27))))
 
 (library 
  (name first_order)

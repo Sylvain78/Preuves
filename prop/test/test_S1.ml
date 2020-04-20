@@ -1,31 +1,25 @@
-#use "topfind";;
-#require "dyp";;
-#require "oUnit";;
-#load "dyp.cma";;
-open Dyp;;
-#directory "_build/default/util";;
-#load "util.cma";;
+open Prop__Formula_prop
+open Prop__Proof_prop
 
-#directory "_build/default/prop";; 
-#load "prop.cma"
-open Prop
-open Formula_prop
-open Prop_parser
-open Proof_prop
 
-#install_printer printer_formula_prop;;
-#use "prop/test/test_S1.ml";;
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
 let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 let x1,x2,x3 = PVar (PVVar 1), PVar (PVVar 2), PVar (PVVar 3)
-let a,b,c=x1,x2,x3
+let a,b=x1,x2
 let tout = neg (a=>.a)
 and a_ou_b = (a||.b)
-and a_entraine_c = (a=>.c)
-  and b_entraine_c = (b=>.c)
+and b_ou_a = ( b||.a)
+let c = b_ou_a
+let a_entraine_c = (a=>.c)
+and b_entraine_c = (b=>.c)
 let demo = 
+  let x1,x2 = PVar (PVVar 1), PVar (PVVar 2)
+  in
+  let 
+    a,b=x1,x2
+  in
   let tout = neg (a=>.a)
   and a_ou_b = (a||.b)
   and a_entraine_c = (a=>.c)
@@ -421,26 +415,31 @@ let demo =
       (a_entraine_c=>.(b_entraine_c=>.c))=>. (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));*)
 
     (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));
-  ]
+  ];;
 
-(*
-let verif_ou_diamant =
+(*let verif_ou_diamant =
   (proof_verification ~hyp:[] (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c)))
      ~proof:demo);;
-#cd "_build/default/first_order";; 
-#load "first_order.cma"
-#cd "test"
-#load "test_schemas_first_order.cmo"
-open Test_schemas_first_order
-#cd ".."
-
-#cd "../Ensembles";;
-#load "ensembles.cmo";;
-open Ensembles
-open Ensembles.ZF
-#install_printer printer_first_order_formula;;
-Hashtbl.find zf_dehornoy.relations (of_string "\\subset");;
-#cd "test"
-#load "test_ensembles.cmo"
-open Test_ensembles
 *)
+let demo1 = demo @ [
+    (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c))) =>.
+    ((a_ou_b =>. a_entraine_c) =>. (a_ou_b =>.(b_entraine_c=>.c)));
+    ((a_ou_b =>. a_entraine_c) =>. (a_ou_b =>.(b_entraine_c=>.c)));
+    
+    a_entraine_c;
+    a_entraine_c =>. ( a_ou_b =>. a_entraine_c);
+    ( a_ou_b =>. a_entraine_c);
+    (a_ou_b =>.(b_entraine_c=>.c));
+    (a_ou_b =>.(b_entraine_c=>.c)) =>. ((a_ou_b =>. b_entraine_c) =>. (a_ou_b =>. c));
+
+    ((a_ou_b =>. b_entraine_c) =>. (a_ou_b =>. c));
+
+    b_entraine_c;
+    b_entraine_c =>.((a_ou_b =>. b_entraine_c));
+    ((a_ou_b =>. b_entraine_c));
+
+    a_ou_b =>. c;];;
+
+let verif_S3 = 
+  (proof_verification ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> TPPFormula s) demo1))
+;;

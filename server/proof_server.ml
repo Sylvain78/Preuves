@@ -2,12 +2,12 @@
  * Code inspired by the ocaml debugger socket managment
  **)
 open UnixLabels
-
+open First_order
+open Prop
 open Protocol
+open Protocol_commands
 open Session
 open Util__Unix_tools
-open Prop
-open First_order
 
 module type SESSION = module type of Session 
 
@@ -39,10 +39,10 @@ let specs =
 
 let session =
   {
-     mode = Session.Prop ; 
-     history = [] ;
-     prop = (module Proof_prop : Session.P);
-     first_order = (module Formula : Session.F);
+    mode = Session.Prop ; 
+    history = [] ;
+    prop = (module Proof_prop : Session.P);
+    first_order = (module Formula : Session.F);
   }
 
 let save_session mode file= 
@@ -64,14 +64,14 @@ let rec load_session mode file channels =
   in
   begin
     match mode with 
-    | Session.Text ->
+    | Session.Text -> print_endline ("Load Text"^file);
       repl {io_in=ic ; io_out = channels.io_out ; io_fd = channels.io_fd} 
     | Session.Binary ->
       let (session_loaded : Session.session) =  (Marshal.from_channel ic) 
       in
       print_string "history read :\n";
       List.iter print_string session_loaded.history;
-      Pervasives.flush Pervasives.stdout;
+      Stdlib.flush Stdlib.stdout;
       session.mode <- session_loaded.mode;
       session.history <- session_loaded.history;
       session.prop <- session_loaded.prop;
@@ -86,11 +86,11 @@ and eval s channels =
   match command with 
   | Prop ->  
     session.mode<-Session.Prop;
-    print_string s;Pervasives.flush Pervasives.stdout;
+    print_string s;Stdlib.flush Stdlib.stdout;
     Ok
   | First_order -> 
     session.mode<-Session.First_order;
-    print_string s;Pervasives.flush Pervasives.stdout;
+    print_string s;Stdlib.flush Stdlib.stdout;
     Ok
   | Save (mode,file) -> 
     begin
@@ -100,20 +100,31 @@ and eval s channels =
   | Load (mode,file) ->
     begin
       print_string "command : load\n";
-      Pervasives.flush Pervasives.stdout;
+      Stdlib.flush Stdlib.stdout;
       load_session mode file channels;
       Answer ("Loaded file "^file)
     end
-  | Notation s ->
+  | Notation { name; params; syntax; semantics } ->
     if (!Session.mode = Session.Prop) (*Replace if on Session.mode by match.*)
     then
       let module M = (val session.prop : Session.P) 
-      in 
-      let n = print_string ("XXX\n"^s ^"\nXXX\n");M.notation_from_string s
       in
-      Answer ("Notation"^n.Formula_prop.notation_prop_name)
+      let concat_notation_elements lp p = 
+        ( lp ^ " " ^ (match p with 
+              | Param s -> s 
+              | String s -> "\"" ^ s ^ "\""))
+          in
+          let _ = print_string ("XXX\n"^s ^"\nXXX\n");
+            "Notation "^name^"\n"^ 
+            "Param " ^ (List.fold_left (fun lp p-> lp^" "^ p) "" params  )^ "\n" ^
+            "Syntax " ^ (List.fold_left concat_notation_elements "" syntax  )^ "\n" ^
+            "Semantics " ^(List.fold_left concat_notation_elements "" semantics  )^ "\n" ^
+            "End" 
+          in
+          let n =  (M.notation_from_string s) in
+          Answer ("Notation"^n.Formula_prop.notation_prop_name)
     else
-        Answer "Notation first_order : unimplemented"
+      Answer "Notation first_order : unimplemented"
   | Axiom { name ; formula } -> 
     if (!Session.mode = Session.Prop) 
     then
@@ -129,17 +140,17 @@ and eval s channels =
           end
       end
     else Answer("Axiom for first order unimplemented")
-  | Theorem {name; premisses;conclusion;demonstration} ->
+  | Theorem {name; params=_; premisses; conclusion; demonstration} ->
     if session.mode = Session.Prop
     then
       begin
-        print_string @@ "WWW\n"^name ^"\n";Pervasives.flush Pervasives.stdout;
+        print_string @@ "WWW\n"^name ^"\n";Stdlib.flush Stdlib.stdout;
         let module P = (val session.prop : Session.P)
         in
-        print_string "ZZZ\n";Pervasives.flush Pervasives.stdout;
-        let verif =  (P.proof_verification ~hyp:(List.map P.formula_from_string premisses) (P.formula_from_string conclusion) ~proof:(List.map P.formula_from_string demonstration)) in
+        print_string "ZZZ\n";Stdlib.flush Stdlib.stdout;
+        let verif =  (P.proof_verification ~hyp:(List.map P.formula_from_string premisses) (P.formula_from_string conclusion) ~proof:(List.map (fun s -> P.TPPFormula (P.formula_from_string s)) demonstration)) in
 
-        print_string "TTT\n";Pervasives.flush Pervasives.stdout;
+        print_string "TTT\n";Stdlib.flush Stdlib.stdout;
         if verif then
           Answer ("Theorem" ^ name ^ "verified.")
         else
@@ -236,10 +247,19 @@ let main () =
        Some file
      | _ ->
        None);
-  let sock_listen = socket ~domain:socket_domain ~kind:SOCK_STREAM ~protocol:0 in
+  let sock_listen = socket ~cloexec:true ~domain:socket_domain ~kind:SOCK_STREAM ~protocol:0 in
   (try
      setsockopt sock_listen SO_REUSEADDR true;
      bind sock_listen ~addr:socket_address;
+
+     if socket_domain = PF_INET then 
+       begin
+         match getsockname sock_listen
+         with 
+         | ADDR_INET(_,port) -> print_int port;print_newline()
+         | _ -> ()
+       end;
+
      listen sock_listen ~max:3;
      while true do
        let (sock, _) = accept sock_listen
@@ -250,7 +270,7 @@ let main () =
        | 0      -> (*child*)
          let io_chan = io_channel_of_descr sock 
          in
-          print_endline "lancement repl";
+         print_endline "lancement repl";
          begin 
            try 
              repl io_chan  

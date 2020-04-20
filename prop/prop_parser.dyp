@@ -32,9 +32,9 @@ notation1 :
     | ...@{(),match !parser with | None -> [] | Some pdev -> [Dyp.Parser pdev] } notation eof { $2 }
 
 expr:
-    | "X_" ['0'-'9']+  { PVar (int_of_string $2) }
-    | "X_{" ['0'-'9']+ "}" { PVar (int_of_string $2) }
-    | "\\mathbb{" ['a'-'z''A'-'Z'] "}" { PMetaVar ($2) }
+    | "X_" ['0'-'9']+  { PVar (PVVar (int_of_string $2)) }
+    | "X_{" ['0'-'9']+ "}" { PVar (PVVar (int_of_string $2)) }
+    | "\\mathbb{" ['a'-'z''A'-'Z'] "}" { PVar (PVMetaVar ($2)) }
     | "(" expr ")" { $2 }
     | "\\lnot" expr { PNeg($2) }
     | expr "\\implies" expr { PImpl($1,$3) }

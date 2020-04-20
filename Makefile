@@ -1,4 +1,5 @@
 EXT=byte
+#EXT=native
 
 .PHONY: clean build install uninstall default doc
 
@@ -23,11 +24,16 @@ parser:
 	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order  first_order_parser.${EXT}
 
 build: parser
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop proof_prop.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop proof_prop.${EXT}
 	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order theory.${EXT}
 	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles ensembles.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg str -pkg dyp -I util -I prop -I first_order -I Ensembles -I protocol -I server proof_server.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I repl test.${EXT}
+
 
 test: build
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I repl repl.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I repl test.${EXT}
 	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop_parser.${EXT}  && \
 		rm test_formula_prop_parser.${EXT} && \
 		mv _build/prop/test/test_formula_prop_parser.${EXT} test_formula_prop_parser && \
@@ -53,6 +59,11 @@ test: build
 		mv _build/Ensembles/test/test_ensembles.${EXT} test_ensembles && \
 		./test_ensembles
 
+test_S1.debug:
+		rm -f test_S1.byte && \
+	ocamlbuild -use-ocamlfind -tag 'debug' -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_S1.byte  && \
+		mv _build/prop/test/test_S1.byte test_S1 && \
+		ocamldebug -I _build/prop -I _build/prop/test -I _build/util  ./test_S1
 test_prop.debug:
 		rm -f test_formula_prop.byte && \
 	ocamlbuild -use-ocamlfind -tag 'debug' -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.byte  && \
@@ -126,3 +137,9 @@ doc:
 cov_report: 
 	cd _build && \
 		bisect-ppx-report -html ../report_dir ../bisect*.out
+
+
+#####Private targets
+proof_server:
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg str -pkg dyp -I util -I prop -I first_order -I Ensembles -I protocol -I server proof_server.${EXT}
+

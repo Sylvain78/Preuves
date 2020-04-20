@@ -5,25 +5,25 @@ open Base_term
 
 module Formula (Sig:SIGNATURE) =
 struct
-  include Term(Sig)
-
+  module Bt=Term(Sig)
+  include  Bt
   type atomic_formula =
     | Eq of term * term
     | Relation of Sig.symbol * term list
   let (printers_relations : (Sig.symbol, Format.formatter -> atomic_formula -> unit) Hashtbl.t) = Hashtbl.create 3
 
   type formula =
-    | Atomic_formula of atomic_formula
-    | Neg of formula
-    | And of formula * formula
-    | Or of formula * formula
-    | Imply  of formula * formula
-    | Exists of var * formula 
-    | Forall of var * formula 
+    | FAtomic_formula of atomic_formula
+    | FNeg of formula
+    | FAnd of formula * formula
+    | FOr of formula * formula
+    | FImply  of formula * formula
+    | FExists of var * formula 
+    | FForall of var * formula 
 
-  let equiv f g = And( Imply (f,g),
-                       Imply (g,f)
-                     )
+  let equiv f g = FAnd( FImply (f,g),
+                        FImply (g,f)
+                      )
 
   exception Failed_unification_atomic_formula of atomic_formula * atomic_formula
   (** Free variables of an atomic formula. These are all the variables of the formula *)
@@ -37,13 +37,13 @@ struct
 
   (** Free variables of a formula. A variable is considered as free  if at least one of its occurence is free. **)
   let rec free_variables_of_formula = function
-    | Atomic_formula f -> free_variables_of_atomic_formula f
-    | Neg f -> free_variables_of_formula f
-    | And(f1,f2) | Or(f1,f2) | Imply(f1,f2) -> SetVar.union (free_variables_of_formula f1) (free_variables_of_formula f2)
-    | Forall(v,f) | Exists(v,f) -> SetVar.remove v (free_variables_of_formula f) 
+    | FAtomic_formula f -> free_variables_of_atomic_formula f
+    | FNeg f -> free_variables_of_formula f
+    | FAnd(f1,f2) | FOr(f1,f2) | FImply(f1,f2) -> SetVar.union (free_variables_of_formula f1) (free_variables_of_formula f2)
+    | FForall(v,f) | FExists(v,f) -> SetVar.remove v (free_variables_of_formula f) 
 
   (** Replace the list of x by the list of t in an atomic formula **) 
-  let rec simultaneous_substitution_atomic_formula lx lt = function
+  let simultaneous_substitution_atomic_formula lx lt = function
     | Eq (t1, t2) -> 
       let t'1,t'2 = simultaneous_substitution_term lx lt t1,  
                     simultaneous_substitution_term lx lt t2
@@ -59,33 +59,32 @@ struct
   (** Replace the list of x's by the list of terms t's  in a formula  **)
   let rec simultaneous_substitution_formula lx lt =
     function
-    | Atomic_formula f_atomic -> Atomic_formula (
+    | FAtomic_formula f_atomic -> FAtomic_formula (
         simultaneous_substitution_atomic_formula lx lt f_atomic ) 
-    | Neg f -> Neg (simultaneous_substitution_formula lx lt f )
-    | And (f1, f2) -> 
+    | FNeg f -> FNeg (simultaneous_substitution_formula lx lt f )
+    | FAnd (f1, f2) -> 
       let f'1,f'2 = simultaneous_substitution_formula lx lt f1,  
                     simultaneous_substitution_formula lx lt f2
       in
-      And(f'1, f'2)
-    | Or(f1,f2) -> 
+      FAnd(f'1, f'2)
+    | FOr(f1,f2) -> 
       let f'1,f'2 = simultaneous_substitution_formula lx lt f1,  
                     simultaneous_substitution_formula lx lt f2
       in
-      Or(f'1, f'2)
-    | Imply(f1,f2) -> 
+      FOr(f'1, f'2)
+    | FImply(f1,f2) -> 
       let f'1,f'2 = simultaneous_substitution_formula lx lt f1,  
                     simultaneous_substitution_formula lx lt f2
       in
-      Imply(f'1, f'2)
+      FImply(f'1, f'2)
     (* alpha-renaming of v to enforce that v does not capture a free variable of the substituted terms *)
-    | Forall(v,f1) ->
-
+    | FForall(v,f1) ->
       (*v captured in the lx*)
-      if List.mem v lx then  
+      if List.mem v lx 
+      then  
         let (lx',lt') = List.split(List.remove_assoc v (List.combine lx lt))
         in
-        Forall(v, simultaneous_substitution_formula lx' lt' f1)
-
+        FForall(v, simultaneous_substitution_formula lx' lt' f1)
       else (*if lt from (free_vars of f1 intersect lx ) contains v as a free variable then v will be captured, so renaming*)
         let free_vars_of_f1_intersect_lx = SetVar.inter (free_variables_of_formula f1) (SetVar.of_list lx)
         and lx_to_lt = List.combine lx lt
@@ -97,19 +96,17 @@ struct
         then
           let  new_v = Var(new_var())
           in
-          Forall(new_v, simultaneous_substitution_formula lx lt (simultaneous_substitution_formula [v] [(V new_v)] f1))
+          FForall(new_v, simultaneous_substitution_formula lx lt (simultaneous_substitution_formula [v] [(TV new_v)] f1))
         else (*it is safe to do forall(v, simultaneous_substitution_formula lx lt f1*)
-          Forall(v, simultaneous_substitution_formula lx lt f1)
-
+          FForall(v, simultaneous_substitution_formula lx lt f1)
     (* alpha-renaming of v to enforce that v does not capture a free variable of the substituted terms *)
-    | Exists(v,f1) ->
-
+    | FExists(v,f1) ->
       (*v captured in the lx*)
-      if List.mem v lx then  
+      if List.mem v lx 
+      then  
         let (lx',lt') = List.split(List.remove_assoc v (List.combine lx lt))
         in
-        Exists(v, simultaneous_substitution_formula lx' lt' f1)
-
+        FExists(v, simultaneous_substitution_formula lx' lt' f1)
       else (*if lt from (free_vars of f1 intersect lx ) contains v as a free variable then v will be captured, so renaming*)
         let free_vars_of_f1_intersect_lx = SetVar.inter (free_variables_of_formula f1) (SetVar.of_list lx)
         and lx_to_lt = List.combine lx lt
@@ -121,24 +118,24 @@ struct
         then
           let  new_v = Var(new_var())
           in
-          Exists(new_v, simultaneous_substitution_formula lx lt (simultaneous_substitution_formula [v] [(V new_v)] f1))
+          FExists(new_v, simultaneous_substitution_formula lx lt (simultaneous_substitution_formula [v] [(TV new_v)] f1))
         else (*it is safe to do forall(v, simultaneous_substitution_formula lx lt f1*)
-          Exists(v, simultaneous_substitution_formula lx lt f1)
+          FExists(v, simultaneous_substitution_formula lx lt f1)
 
 
   (** The occurences of variables in t are not captured during a substition at the variable x in f **)
   let rec term_free_for_var t x = function
-    | Neg f ->
+    | FNeg f ->
       term_free_for_var t x f
-    | And(f,g) | Or(f,g) | Imply(f,g) -> 
+    | FAnd(f,g) | FOr(f,g) | FImply(f,g) -> 
       (term_free_for_var  t x f) && (term_free_for_var t x g)
-    | Forall(v,f) | Exists(v,f) -> not (SetVar.mem v (variables_term t))
-    | Atomic_formula f_atomic -> true
+    | FForall(v,f) | FExists(v,f) -> not (SetVar.mem v (variables_term t))
+    | FAtomic_formula f_atomic -> true
 
 
 
   (** Printing formatters **)
-  let rec printer_first_order_atomic_formula ff = function
+  let printer_first_order_atomic_formula ff = function
     | Eq (t1, t2) -> print_term ff t1;
       Format.fprintf ff " = ";
       print_term ff t2;
@@ -165,10 +162,10 @@ struct
         Format.fprintf ff ")";
       in
       function
-      | Neg g -> Format.fprintf ff "\\lnot "; print_par (fun () -> printer_first_order_formula_aux ff "neg" g);
-      | And(f, g) -> begin
+      | FNeg g -> Format.fprintf ff "\\lnot "; print_par (fun () -> printer_first_order_formula_aux ff "neg" g);
+      | FAnd(f, g) -> begin
           match f, g with
-          | Imply(h1, h2), Imply(h2', h1') ->
+          | FImply(h1, h2), FImply(h2', h1') ->
             if (h1 = h1' && h2 = h2')
             (**TODO   TESTER ALPHA EQUIV????? **)
             then print_bin "equiv" "<=>" h1 h2
@@ -186,23 +183,23 @@ struct
             else
               print_par (fun () -> print_bin "and" "\\land" f g)
         end
-      | Or(f, g) ->
+      | FOr(f, g) ->
         if seq = "or" || seq ="init" || (seq ="forall") || (seq ="exists")
         then
           print_bin "or" "\\lor" f g
         else
           print_par (fun () -> print_bin "or" "\\lor" f g)
-      | Imply(f, g) -> if (seq ="init") || (seq ="forall") || (seq ="exists")
+      | FImply(f, g) -> if (seq ="init") || (seq ="forall") || (seq ="exists")
         then
           print_bin "impl" "=>" f g
         else
           print_par (fun () -> print_bin "impl" "=>" f g);
-      | Forall(Var i, f) ->
+      | FForall(Var i, f) ->
         if (seq ="init")
         then
           begin
             Format.fprintf ff "\\forall ";
-            print_term ff (V (Var i));
+            print_term ff (TV (Var i));
             Format.fprintf ff ", ";
             printer_first_order_formula_aux ff "forall" f;
           end
@@ -210,16 +207,16 @@ struct
         if (seq = "forall")
         then
           begin
-            print_term ff (V (Var i));
+            print_term ff (TV (Var i));
             Format.fprintf ff ", ";
             printer_first_order_formula_aux ff "forall" f;
           end
         else
           begin
-            print_par (fun () -> Format.fprintf ff "\\forall "; print_term ff (V (Var i)); Format.fprintf ff ", ";
+            print_par (fun () -> Format.fprintf ff "\\forall "; print_term ff (TV (Var i)); Format.fprintf ff ", ";
                         printer_first_order_formula_aux ff "forall" f);
           end
-      | Forall(Metavar i, f) ->
+      | FForall(Metavar i, f) ->
         if (seq ="init")
         then
           begin
@@ -237,12 +234,12 @@ struct
           begin
             print_par (fun () -> Format.fprintf ff "\\forall %s, " i;printer_first_order_formula_aux ff "forall" f);
           end
-      | Exists(Var i, f) ->
+      | FExists(Var i, f) ->
         if (seq ="init")
         then
           begin
             Format.fprintf ff "\\exists ";
-            print_term ff (V (Var i));
+            print_term ff (TV (Var i));
             Format.fprintf ff ", ";
             printer_first_order_formula_aux ff "exists" f;
           end
@@ -250,16 +247,16 @@ struct
         if (seq = "exists")
         then
           begin
-            print_term ff (V (Var i));
+            print_term ff (TV (Var i));
             Format.fprintf ff ", ";
             printer_first_order_formula_aux ff "exists" f;
           end
         else
           begin
-            print_par (fun () -> Format.fprintf ff "\\exists "; print_term ff (V (Var i)); Format.fprintf ff ", ";
+            print_par (fun () -> Format.fprintf ff "\\exists "; print_term ff (TV (Var i)); Format.fprintf ff ", ";
                         printer_first_order_formula_aux ff "exists" f);
           end
-      | Exists(Metavar i, f) ->
+      | FExists(Metavar i, f) ->
         if (seq ="init")
         then
           begin
@@ -277,7 +274,7 @@ struct
           begin
             print_par (fun () -> Format.fprintf ff "\\exists %s, " i;printer_first_order_formula_aux ff "exists" f);
           end
-      | Atomic_formula f -> printer_first_order_atomic_formula ff f
+      | FAtomic_formula f -> printer_first_order_atomic_formula ff f
 
     in
     printer_first_order_formula_aux ff "init" f

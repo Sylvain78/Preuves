@@ -15,7 +15,7 @@ module type SIGNATURE =
 		(* References on lists of symbols *)
                 val constants : symbol list ref
 		val operations : (symbol * int) list ref
-		val binary_relations : symbol list ref
+		val binary_operations : symbol list ref
 		val relations  : (symbol * int) list ref
 		val binary_relations  : symbol list ref
 		
@@ -41,7 +41,7 @@ module AbstractSignature (Symb: SYMB) : (SIGNATURE) =
                   | MetaSymbol s -> "\\mathbb{"^(Symb.to_string s)^"}"
 		let constants = ref ([] : symbol list)
 		let operations = ref  ([] : (symbol * int) list)
-		let binary_relations = ref ([] : symbol list)
+		let binary_operations = ref ([] : symbol list)
 		let relations = ref ([] : (symbol * int) list)
 		let binary_relations = ref ([] : symbol list)
 	
@@ -58,7 +58,7 @@ module AbstractSignature (Symb: SYMB) : (SIGNATURE) =
 			else try Some (snd (List.find (fun (op,_) -> op = s) !liste))
 					 with Not_found -> None 
 		
-		let operation_arity s = arity s binary_relations operations
+		let operation_arity s = arity s binary_operations operations
 		let relation_arity s = arity s binary_relations  relations
 		
 		let is_relation s =

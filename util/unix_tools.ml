@@ -59,8 +59,8 @@ let close_io io_channel =
 ;;
 
 let std_io = {
-  io_in = Pervasives.stdin;
-  io_out = Pervasives.stdout;
+  io_in = Stdlib.stdin;
+  io_out = Stdlib.stdout;
   io_fd = Unix.stdin
   }
 
