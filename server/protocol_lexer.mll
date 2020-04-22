@@ -7,9 +7,12 @@ let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v)
       ("Notation",NOTATION) ; 
       ("Param",PARAM) ;
       ("Syntax",SYNTAX) ;
-      ("Semantics",SEMANTICS);
+      ("Semantics",SEMANTICS) ;
       ("End",END) ;
       ("Theorem",THEOREM) ;
+      ("Premisses", PREMISSES) ;
+      ("Conclusion", CONCLUSION) ;
+      ("Demonstration", DEMONSTRATION) ;
     ]
 let buffer = Buffer.create 256
 let store_string_char c = Buffer.add_char buffer c
@@ -20,7 +23,6 @@ let lowercase = ['a'-'z']
 let uppercase = ['A'-'Z']
 let digit = ['0'-'9']
 let ident = (lowercase|uppercase)(lowercase|uppercase|digit)*
-let any_string = (['\000'-'\033'] | ['\035'-'\255'])* 
 rule token = parse 
   | [' ' '\t']     { print_string "<space>";flush stdout;token lexbuf } 
   | newline { NEWLINE }
@@ -35,7 +37,11 @@ rule token = parse
         string lexbuf;
         QUOTED_STRING (get_stored_string())
       } 
-  | any_string as s { STRING s }
+  | "$" { latex (Buffer.create 17) lexbuf; }
+and latex buf = parse
+ | '$' { FORMULA (Buffer.contents buf)}
+ | "\\$" { Buffer.add_char buf '$' ; latex buf lexbuf }
+ | _ as c { Buffer.add_char buf c ; latex buf lexbuf }
 and string = parse
   | '\"'
      { () }

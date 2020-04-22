@@ -11,10 +11,11 @@
 %token DEMONSTRATION
 %token END
 %token THEOREM
+%token PREMISSES
+%token CONCLUSION
 
 %token<string> IDENT
 %token<string> QUOTED_STRING
-%token<string> STRING
 %token<string> FORMULA
 %start phrase
 %type<Protocol_commands.command> phrase
@@ -44,12 +45,14 @@ theorem:
  THEOREM NEWLINE
  IDENT NEWLINE
  PARAM NEWLINE
- string_list NEWLINE
- premisses NEWLINE
+ formula_list 
+ PREMISSES NEWLINE
+ formula_list
+ CONCLUSION NEWLINE
  FORMULA NEWLINE
  DEMONSTRATION NEWLINE
  term_proof_list 
- END { Theorem{name=$3;params=$7;premisses=$9;conclusion=$11;demonstration=$15} } 
+ END { Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17} } 
 ;
 
 
@@ -59,7 +62,6 @@ mode:
 ;
 ident_list:
 |  {[]}
-| IDENT {[$1]}
 | IDENT ident_list { $1 :: $2 }
 ;
 
@@ -73,19 +75,13 @@ syntax_elt:
 | QUOTED_STRING {print_string ("qs " ^$1);String $1 }
 ;
 
-string_list:
-| STRING { [$1] }
-| STRING NEWLINE 
- string_list { $1::$3 }
-;
-
-premisses:
-| FORMULA { [$1] }
-| FORMULA NEWLINE premisses { $1::$3 }
+formula_list :
+        | { [] }
+        | FORMULA NEWLINE formula_list { $1::$3 }
 ;
 
 term_proof_list:
-| FORMULA { [$1] }
+| { [] }
 | FORMULA NEWLINE term_proof_list { $1::$3 }
 ;
 
