@@ -87,8 +87,8 @@ let printer_formula_prop ff f =
         print_par (fun () -> print_bin "or" "\\lor" f g)
     | PImpl(f, g) -> if (seq ="init")
       then
-        print_bin "impl" "=>" f g
+        print_bin "impl" "\\implies" f g
       else
-        print_par (fun () -> print_bin "impl" "=>" f g)
+        print_par (fun () -> print_bin "impl" "\\implies" f g)
   in
   printer_formula_prop_aux ff "init" f

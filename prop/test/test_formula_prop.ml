@@ -601,6 +601,10 @@ let test_to_string_formula_pvar_11 _ =
   let s = to_string_formula_prop  (PVar (PVVar 11))
   in assert_equal s "X_{11}"
 
+let test_to_string_formula_pvar_metavar _ =
+  let s = to_string_formula_prop  (PVar (PVMetaVar "A"))
+  in assert_equal  "\\mathbb{A}" s
+
 let test_to_string_formula_pneg _ =
   let s = to_string_formula_prop  (formula_from_string "\\lnot X_1")
   in assert_equal s "\\lnot X_1"
@@ -639,7 +643,7 @@ let test_to_string_formula_and_impl _ =
 
 let test_to_string_formula_notation _ =
   let s = to_string_formula_prop (formula_from_string "X_1 \\implies X_2")
-  in assert_equal ~printer:(fun s -> s) s "(X_1) \\implies (X_2)"
+  in assert_equal ~printer:(fun s -> s) "X_1 \\implies X_2" (*TODO \\implies --> =>*) s
 
 (* Tests for printer_formula *)
 let test_printer_formula_pvar _ = printer_formula_prop Format.str_formatter (PVar (PVVar 1));
@@ -690,9 +694,9 @@ let test_printer_formula_impl_par _ = printer_formula_prop Format.str_formatter 
   let s = Format.flush_str_formatter()
   in assert_equal s "(X_1 \\implies X_2) \\implies X_3" ~printer:(fun s -> s)
 
-let test_printer_formula_and_impl _ = printer_formula_prop Format.str_formatter (formula_from_string "X_3 \\land (X_1  \\implies  X_2)");
+let test_printer_formula_and_impl _ = printer_formula_prop Format.str_formatter (formula_from_string "X_3 \\land (X_1 \\implies X_2)");
   let s = Format.flush_str_formatter()
-  in assert_equal s "X_3 \\land ((X_1) \\implies (X_2))" ~printer:(fun s -> s)
+  in assert_equal s "X_3 \\land (X_1 \\implies X_2)" ~printer:(fun s -> s)
 (*
 let test_printer_formula_pappl_fail _ = 
   let n =         notation_from_string "Notation\ntest\nParam\n a\nSyntax\nc\nSemantics\n\"X_1\"\nEnd"
@@ -738,6 +742,7 @@ let to_string_formula_suite =
   "to_string_formula" >:::
   [ "test to_string_formula PVar">:: test_to_string_formula_pvar;
     "test to_string_formula PVar X_{11}">:: test_to_string_formula_pvar_11;
+    "test to_string_formula PMetaVar ">:: test_to_string_formula_pvar_metavar;
     "test to_string_formula PNeg">:: test_to_string_formula_pneg;
     "test to_string_formula PAnd">:: test_to_string_formula_pand;
     "test to_string_formula PAnd par">:: test_to_string_formula_pand_par;
