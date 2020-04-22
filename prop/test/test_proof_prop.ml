@@ -14,6 +14,9 @@ let test_invalid_proof test_ctxt =
 let test_invalid_proof_length_2 test_ctxt =
   assert_raises ~msg:"Invalid proof" (Invalid_demonstration (x1,[x1])) (fun () -> proof_verification ~hyp:[] ~proof:[TPPFormula x1;TPPFormula x2] x2)
 
+let test_invalid_proof_length_2_hyp test_ctxt =
+        assert_raises ~msg:"Invalid proof" (Invalid_demonstration (x2,[x1;x2])) (fun () -> proof_verification ~hyp:[x1] ~proof:[TPPFormula x1;TPPFormula x2] x2)
+
 let test_S1_Bourbaki test_ctxt =
   (*let _ = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"\\implies\" b\nSemantics\na \" \\implies \" b\nEnd"
   in*)
@@ -25,6 +28,7 @@ let proof_prop_suite = "Proof prop" >:::
         [ "test invalid empty proof">::test_invalid_empty_proof;
           "test_invalid_proof">::test_invalid_proof;
           "test_invalid_proof_length_2">::test_invalid_proof_length_2; 
+          "test_invalid_proof_length_2_hyp">::test_invalid_proof_length_2_hyp; 
           "test_S1_Bourbaki">::test_S1_Bourbaki
         ]
 

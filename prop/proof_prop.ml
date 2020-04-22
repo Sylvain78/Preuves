@@ -1,6 +1,6 @@
 include Axioms_prop
 open Formula_prop
-open Substitution_prop
+(*TODO open Substitution_prop*)
 include (Prop_parser : sig 
            val formula_from_string : string -> Formula_prop.formula_prop
          end)
@@ -12,7 +12,6 @@ Prop_parser.formule lexbuf
 *)
 exception Failed_Unification of formula_prop * formula_prop
 
-
 type theorem_prop = 
   {
     name_theorem_prop : string;
@@ -23,16 +22,18 @@ type theorem_prop =
   }
 
 and term_proof_prop  = 
-  | TPPAxiom   of string * formula_prop 
+  (*TODO | TPPAxiom   of string * formula_prop *)
   | TPPFormula of formula_prop
-  | TPPTheorem of formula_prop * (theorem_prop * (formula_prop list)(*parametres*) * (formula_prop list)(* premisses*))
+(*TODO  | TPPTheorem of formula_prop * (theorem_prop * (formula_prop list)(*parametres*) * (formula_prop list)(* premisses*))*)
 
 and proof_prop = term_proof_prop list 
 
+(*TODO
 let term_proof_to_formula_prop  = function
   | TPPFormula f -> f
   | TPPAxiom (_,f) -> f
   | TPPTheorem(f,_) -> f
+*)
 
 (*SKE TODO : where to put this function ?*)
 (*let rec apply_notations = function 
@@ -42,7 +43,7 @@ let term_proof_to_formula_prop  = function
   | POr(f1,f2) -> POr(apply_notations f1, apply_notations f2) 
   | PImpl(f1,f2) -> PImpl(apply_notations f1, apply_notations f2) 
 *)
-
+(*TODO
 (* Equivalence of formulas, modulo notations*)
 let rec equiv_notation f g =
   match f, g 
@@ -53,7 +54,7 @@ let rec equiv_notation f g =
   | POr(f1, f2) , POr(g1, g2) 
   | PImpl(f1, f2) , PImpl(g1, g2) ->  (equiv_notation f2 g2) && (equiv_notation f1 g1)
   | _ (*TODO apply notations*)-> false
-
+*)
 (**	@param l list of PVariables of g already instanciated in f *)
 let instance f g =
   let rec instance_aux l f g  = match f, g 
@@ -92,26 +93,29 @@ let rec verif ~hypotheses ~proved ~to_prove =
   match to_prove with
   | [] -> true
   | (TPPFormula f_i)::p ->  
-    if 
-      (   List.mem f_i hypotheses (*Formula is an hypothesis*)
-          || List.mem f_i proved (*Formula already present *) 
-          (*instance of a theorem or axiom *)
+    if (
+          (*Formula is an hypothesis*)
+             List.mem f_i hypotheses 
+          (*Formula already present *)
+          || List.mem f_i proved 
+          (*Formula is an instance of a theorem or axiom *)
           || (List.exists (fun a -> instance f_i a.proposition_prop) 
-                (!theorems_prop @ !axioms_prop)) 
+                          (!theorems_prop @ !axioms_prop)) 
           (*cut*)
           || (cut f_i proved) 
-          || begin
+          (*TODO || begin
             match proved with 
             | [] -> false 
             (*application of notations*)
             | f::_ -> equiv_notation f_i f
           end
+          *)
       )
     then 
       verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
       raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
- | TPPAxiom (name_ax, formula_ax) :: p -> 
+(*TODO | TPPAxiom (name_ax, formula_ax) :: p -> 
    if List.mem {name_proposition_prop=name_ax; proposition_prop=formula_ax} !axioms_prop then 
       verif ~hypotheses ~proved:(formula_ax :: proved) ~to_prove:p
    else 
@@ -123,7 +127,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
                                                                                            List.mem premise (List.map term_proof_to_formula_prop proof)
                                                                                          ) 
                                                                               premises)
-
+*)
 
 let proof_verification ~hyp:hypotheses f ~proof:proof =
   (* f is at the end of the proof *)
