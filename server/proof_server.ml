@@ -104,27 +104,6 @@ and eval s channels =
       load_session mode file channels;
       Answer ("Loaded file "^file)
     end
-  | Notation { name; params; syntax; semantics } ->
-    if (!Session.mode = Session.Prop) (*Replace if on Session.mode by match.*)
-    then
-      let module M = (val session.prop : Session.P) 
-      in
-      let concat_notation_elements lp p = 
-        ( lp ^ " " ^ (match p with 
-              | Param s -> s 
-              | String s -> "\"" ^ s ^ "\""))
-          in
-          let _ = print_string ("XXX\n"^s ^"\nXXX\n");
-            "Notation "^name^"\n"^ 
-            "Param " ^ (List.fold_left (fun lp p-> lp^" "^ p) "" params  )^ "\n" ^
-            "Syntax " ^ (List.fold_left concat_notation_elements "" syntax  )^ "\n" ^
-            "Semantics " ^(List.fold_left concat_notation_elements "" semantics  )^ "\n" ^
-            "End" 
-          in
-          let n =  (M.notation_from_string s) in
-          Answer ("Notation"^n.Formula_prop.notation_prop_name)
-    else
-      Answer "Notation first_order : unimplemented"
   | Axiom { name ; formula } -> 
     if (!Session.mode = Session.Prop) 
     then

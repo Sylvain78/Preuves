@@ -5,7 +5,7 @@ open Prop__Proof_prop
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
-let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
+(*let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;*)
 let x1,x2,x3 = PVar (PVVar 1), PVar (PVVar 2), PVar (PVVar 3)
 let a,b=x1,x2
 let tout = neg (a=>.a)

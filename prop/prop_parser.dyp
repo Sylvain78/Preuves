@@ -11,7 +11,6 @@
 }
 
 %start expr1
-%start notation1
 %layout [' ' '\t' '\n']
 
 %lexer
@@ -28,8 +27,6 @@ Load the parser at beginning of parsing*/
 expr1 : 
     | ...@{(),match !parser with | None -> [] | Some pdev -> [Dyp.Parser pdev] } expr eof { $2 }
 
-notation1 :
-    | ...@{(),match !parser with | None -> [] | Some pdev -> [Dyp.Parser pdev] } notation eof { $2 }
 
 expr:
     | "X_" ['0'-'9']+  { PVar (PVVar (int_of_string $2)) }
@@ -55,50 +52,6 @@ End
 "
 */
 
-notation:
-    | "Notation" '\n' ['a'-'z']+ '\n'
-    "Param" '\n' param_list '\n'
-    "Syntax" '\n' syntax '\n' /*Extract params list*/
-    "Semantics" '\n' semantique '\n'
-    "End" ...@{
-        let rec notation_elements_to_regexp = function 
-        | [] -> []
-        | Param _ ::l -> (Dyp.Non_ter("expr", Dyp.No_priority)) :: notation_elements_to_regexp l
-        | String s ::l -> Dyp.Regexp(Dyp.RE_String s) :: notation_elements_to_regexp l
-        in
-        let notation = 
-            {
-               notation_prop_name = $3;
-               notation_prop_params = $7;
-               notation_prop_notation = $11;
-               notation_prop_semantique = $15; 
-            }    
-        in
-        let rule       = ("expr", notation_elements_to_regexp $11, "default_priority",[]) 
-        and action _ l = Obj_expr (PApply_notation({apply_notation_prop = notation; 
-						    apply_notation_prop_params = List.map (function Obj_expr e -> e | _ -> assert false) 
-						    				          (List.filter (function Obj_expr _ -> true | _ -> false) l)
-						   })),
-			 [] 
-        in
-        notation, 
-        [ Dyp.Add_rules [(rule,action)] ; Dyp.Keep_grammar]
-        } 
-    
-    {parser := Some dyp.Dyp.parser_pilot.Dyp.pp_dev; $18}
-
-param_list: 
-    | param* { $1 }
-param:
-    | ident { Param $1 }
-syntax:
-    | term_syntax+   { $1 }
-term_syntax:
-    | ident { Param $1 }
-    | any_string { String (string_without_quote $1) }
-semantique:
-    |  syntax  { $1 }
-
 %%
 
 {
@@ -109,13 +62,7 @@ semantique:
                | (f,_)::(g,_)::_ -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^") : more than one interpretation"))
 	       |   _   -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^")"))
 
-let notation_from_string s =          
-  let l = (notation1 (Dyp.from_string (pp ()) s))
-  in 
-  match l with [ (n,_) ] -> n 
-             |   _   -> raise (Failure "[Prop] Parser.notation_from_string")
 } 
 %mli {
 val formula_from_string : string -> Formula_prop.formula_prop 
-val notation_from_string : string -> Formula_prop.notation_prop
 }

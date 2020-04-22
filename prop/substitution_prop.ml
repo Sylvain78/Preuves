@@ -26,4 +26,3 @@ let rec simultaneous_substitution_formula_prop lx lt =
                   simultaneous_substitution_formula_prop lx lt f2
     in
     PImpl(f'1, f'2)
-  | PApply_notation {apply_notation_prop= n ; apply_notation_prop_params= params} as p->p 

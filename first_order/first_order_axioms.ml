@@ -47,7 +47,6 @@ struct
           | FImply(f1, f2) -> instance_aux (instance_aux l f2 g2) f1 g1
           | _ -> raise (Failed_Unification(f, g))
         end
-      | PApply_notation _ as g -> instance_aux l f (apply_notations g)
     in
     List.exists (fun a ->
         let is_instance = 

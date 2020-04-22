@@ -3,7 +3,6 @@ open Formula_prop
 open Substitution_prop
 include (Prop_parser : sig 
            val formula_from_string : string -> Formula_prop.formula_prop
-           val notation_from_string : string -> Formula_prop.notation_prop
          end)
 (*
 let (read_formule : string -> (formula_prop * string) list) = function s ->
@@ -42,29 +41,7 @@ let rec apply_notations = function
   | PAnd(f1,f2) -> PAnd(apply_notations f1, apply_notations f2) 
   | POr(f1,f2) -> POr(apply_notations f1, apply_notations f2) 
   | PImpl(f1,f2) -> PImpl(apply_notations f1, apply_notations f2) 
-  | PApply_notation {apply_notation_prop = n ; apply_notation_prop_params = list_params } ->
-    let  replace  m = function 
-      | Param a  -> begin
-          try  (to_string_formula_prop  (List.assoc (Param a) m))
-          with Not_found -> failwith "apply_notations"
-        end
-      | String s  -> s 
-    in
-    let map_param_val = List.combine n.notation_prop_params list_params
-    in 
-    let notation_with_params_replaced = List.map (replace map_param_val ) n.notation_prop_semantique
-    in
-    formula_from_string (List.fold_left  (fun s t -> s ^ " " ^ t) "" notation_with_params_replaced)
 
-let get_semantique ({apply_notation_prop; apply_notation_prop_params}:apply_notation_prop) =
-  let map_params = List.combine apply_notation_prop.notation_prop_params apply_notation_prop_params
-  in
-  let replace = function 
-    | String s -> " " ^ s ^ " "
-    | Param _ as p -> "(" ^ (to_string_formula_prop (List.assoc p map_params)) ^ ")"
-  in
-  formula_from_string
-    (        List.fold_left (fun s e -> s^(replace e)) "" apply_notation_prop.notation_prop_semantique)
 
 (* Equivalence of formulas, modulo notations*)
 let rec equiv_notation f g =
@@ -75,19 +52,6 @@ let rec equiv_notation f g =
   | PAnd(f1, f2) , PAnd(g1, g2) 
   | POr(f1, f2) , POr(g1, g2) 
   | PImpl(f1, f2) , PImpl(g1, g2) ->  (equiv_notation f2 g2) && (equiv_notation f1 g1)
-  | PApply_notation {apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f}, 
-    PApply_notation {apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params=apply_notation_prop_params_g} -> 
-    if  (apply_notation_prop_f.notation_prop_name = apply_notation_prop_g.notation_prop_name) 
-    then
-      List.for_all2 (fun f -> fun g -> equiv_notation f g) apply_notation_prop_params_f apply_notation_prop_params_g
-    else 
-      false
-  | PApply_notation f, g ->
-    let f' = get_semantique f  in
-    equiv_notation f' g
-  | f,  PApply_notation g ->
-    let g' = get_semantique g  in
-    equiv_notation f g'
   | _ -> false
 
 (**	@param l list of PVariables of g already instanciated in f *)
@@ -106,19 +70,6 @@ let instance f g =
     | PAnd(f1, f2) , PAnd(g1, g2) 
     | POr(f1, f2) , POr(g1, g2) 
     | PImpl(f1, f2) , PImpl(g1, g2) -> instance_aux (instance_aux l f2 g2) f1 g1
-    | PApply_notation {apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f}, 
-      PApply_notation {apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params=apply_notation_prop_params_g} -> 
-      if  (apply_notation_prop_f.notation_prop_name = apply_notation_prop_g.notation_prop_name) 
-      then
-        (List.fold_left (fun list_instances (f,g) -> instance_aux list_instances f g) l  (List.combine apply_notation_prop_params_f apply_notation_prop_params_g) )
-      else raise (Failed_Unification(f, g))
-    | PApply_notation f, g ->
-      let f' = get_semantique f  in
-      instance_aux l f' g
-    | f,  PApply_notation g ->
-      let g' = get_semantique g  in
-      instance_aux l f g'
-
     | _ -> raise (Failed_Unification(f, g))
   in
   try  

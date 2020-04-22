@@ -10,3 +10,4 @@
 	    (>= 1.9))
          (bisect_ppx	
 	    (>= 1.4))))
+(using menhir 2.1)

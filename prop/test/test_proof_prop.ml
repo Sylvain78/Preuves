@@ -15,9 +15,9 @@ let test_invalid_proof_length_2 test_ctxt =
   assert_raises ~msg:"Invalid proof" (Invalid_demonstration (x1,[x1])) (fun () -> proof_verification ~hyp:[] ~proof:[TPPFormula x1;TPPFormula x2] x2)
 
 let test_S1_Bourbaki test_ctxt =
-  let _ = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\na \" \\implies \" b\nEnd"
-  in
-  let f = formula_from_string "((\\mathbb{A} \\lor \\mathbb{A})  =>  \\mathbb{A})  =>  ((\\lnot \\mathbb{A})  =>  \\lnot (\\mathbb{A} \\lor \\mathbb{A}))"
+  (*let _ = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"\\implies\" b\nSemantics\na \" \\implies \" b\nEnd"
+  in*)
+  let f = formula_from_string "((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A} \\lor \\mathbb{A}))"
   in
   assert_bool "test_S1_Bourbaki" (proof_verification ~hyp:[] ~proof:[TPPFormula f] f)
 
