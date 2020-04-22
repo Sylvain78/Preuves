@@ -26,8 +26,9 @@ let v1 = Var (new_var())
 let v2 = Var (new_var())
 let v3 = Var (new_var())
 let v4 = Var (new_var())
+let v11 = Var 11
 
-let x1,x2,x3,x4 = TV v1, TV v2, TV v3, TV v4
+let x1,x2,x3,x4,x11 = TV v1, TV v2, TV v3, TV v4, TV v11
 let f1 = Eq(x1, x2)
 let f2 = Eq(x3, x4)
 
@@ -220,6 +221,13 @@ let test_printer_first_order_atomic_formula_relation_bin test_ctxt =
   in
   assert_equal s "X_1 s X_2"
 
+let test_printer_first_order_atomic_formula_relation_bin_11 test_ctxt =
+  ignore (Format.flush_str_formatter ()) ;
+  (printer_first_order_atomic_formula Format.str_formatter (Relation(r,[x1;x11])));
+  let s = Format.flush_str_formatter ()
+  in
+  assert_equal ~printer:(fun s -> s) "X_1 s X_{11}" s
+
 let test_printer_first_order_atomic_formula_relation test_ctxt =
   (printer_first_order_atomic_formula Format.str_formatter (Relation(r,[])));
   let s = Format.flush_str_formatter ()
@@ -383,6 +391,7 @@ let formula_suite = "First order formula tests">:::
                       "test_term_free_for_var_atomic">::test_term_free_for_var_atomic;
                       "test_printer_first_order_atomic_formula_eq">::test_printer_first_order_atomic_formula_eq;
                       "test_printer_first_order_atomic_formula_relation_bin">::test_printer_first_order_atomic_formula_relation_bin;
+                      "test_printer_first_order_atomic_formula_relation_bin_11">::test_printer_first_order_atomic_formula_relation_bin_11;
                       "test_printer_first_order_atomic_formula_relation">::test_printer_first_order_atomic_formula_relation;
                       "test_printer_first_order_formula_neg">::test_printer_first_order_formula_neg;
                       "test_printer_first_order_formula_and">::test_printer_first_order_formula_and;

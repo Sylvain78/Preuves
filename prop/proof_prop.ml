@@ -35,13 +35,13 @@ let term_proof_to_formula_prop  = function
   | TPPTheorem(f,_) -> f
 
 (*SKE TODO : where to put this function ?*)
-let rec apply_notations = function 
+(*let rec apply_notations = function 
   | PVar _ as t -> t
   | PNeg f -> PNeg (apply_notations f)
   | PAnd(f1,f2) -> PAnd(apply_notations f1, apply_notations f2) 
   | POr(f1,f2) -> POr(apply_notations f1, apply_notations f2) 
   | PImpl(f1,f2) -> PImpl(apply_notations f1, apply_notations f2) 
-
+*)
 
 (* Equivalence of formulas, modulo notations*)
 let rec equiv_notation f g =
@@ -52,7 +52,7 @@ let rec equiv_notation f g =
   | PAnd(f1, f2) , PAnd(g1, g2) 
   | POr(f1, f2) , POr(g1, g2) 
   | PImpl(f1, f2) , PImpl(g1, g2) ->  (equiv_notation f2 g2) && (equiv_notation f1 g1)
-  | _ -> false
+  | _ (*TODO apply notations*)-> false
 
 (**	@param l list of PVariables of g already instanciated in f *)
 let instance f g =
@@ -104,7 +104,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
             match proved with 
             | [] -> false 
             (*application of notations*)
-            | f::_ -> equiv_notation f_i f 
+            | f::_ -> equiv_notation f_i f
           end
       )
     then 
