@@ -127,7 +127,7 @@ and eval s channels =
         let module P = (val session.prop : Session.P)
         in
         print_string "ZZZ\n";Stdlib.flush Stdlib.stdout;
-        let verif =  (P.proof_verification ~hyp:(List.map P.formula_from_string premisses) (P.formula_from_string conclusion) ~proof:(List.map (fun s -> P.TPPFormula (P.formula_from_string s)) demonstration)) in
+        let verif =  (P.prop_proof_kernel_verif ~hyp:(List.map P.formula_from_string premisses) (P.formula_from_string conclusion) ~proof:(List.map (fun s -> P.TPPFormula (P.formula_from_string s)) demonstration)) in
 
         print_string "TTT\n";Stdlib.flush Stdlib.stdout;
         if verif then

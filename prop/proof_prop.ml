@@ -89,7 +89,7 @@ Printexc.register_printer (function Invalid_demonstration(f,t) ->
                                   | _ -> None)
 ;;
 
-let rec verif ~hypotheses ~proved ~to_prove = 
+let rec kernel_verif ~hypotheses ~proved ~to_prove = 
   match to_prove with
   | [] -> true
   | (TPPFormula f_i)::p ->  
@@ -112,7 +112,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
           *)
       )
     then 
-      verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
+      kernel_verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
       raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
 (*TODO | TPPAxiom (name_ax, formula_ax) :: p -> 
@@ -129,7 +129,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
                                                                               premises)
 *)
 
-let proof_verification ~hyp:hypotheses f ~proof:proof =
+let prop_proof_kernel_verif ~hyp:hypotheses f ~proof:proof =
   (* f is at the end of the proof *)
   let is_end_proof f t =
     let rev_t = List.rev t
@@ -139,11 +139,10 @@ let proof_verification ~hyp:hypotheses f ~proof:proof =
     with
     | Failure _ -> false
   in
-
   if not(is_end_proof (TPPFormula f) proof)
   then failwith "Formula is not at the end of the proof"
   else
-    verif ~hypotheses  ~proved:[] ~to_prove:proof
+    kernel_verif ~hypotheses  ~proved:[] ~to_prove:proof
 ;;
 (*SKE TODO To remove*)
 theorems_prop := {name_proposition_prop="C8 Bourbaki"; proposition_prop=formula_from_string "(X_1 \\implies X_1)";}::!theorems_prop;;
@@ -160,7 +159,7 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1")
     ]);;
 *)
 (* |   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)*)
-proof_verification ~hyp:[] (formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))")
+prop_proof_kernel_verif ~hyp:[] (formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))")
   ~proof: (List.map (fun s -> TPPFormula (formula_from_string s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -227,7 +226,7 @@ theorems_prop := {name_proposition_prop="chainage"; proposition_prop=(formula_fr
 theorems_prop := {name_proposition_prop="contraposition"; proposition_prop=formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}::!theorems_prop;;
 
 (* |   F ou F  \\implies  F *)
-proof_verification ~hyp:[] (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}")
+prop_proof_kernel_verif ~hyp:[] (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}")
   ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
       "((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))";
       "((\\lnot \\mathbb{A})  \\implies   ((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}))";

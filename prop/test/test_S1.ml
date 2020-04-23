@@ -418,7 +418,7 @@ let demo =
   ];;
 
 (*let verif_ou_diamant =
-  (proof_verification ~hyp:[] (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c)))
+  (prop_proof_kernel_verif ~hyp:[] (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c)))
      ~proof:demo);;
 *)
 let demo1 = demo @ [
@@ -441,5 +441,5 @@ let demo1 = demo @ [
     a_ou_b =>. c;];;
 
 let verif_S3 = 
-  (proof_verification ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> TPPFormula s) demo1))
+  (prop_proof_kernel_verif ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> TPPFormula s) demo1))
 ;;

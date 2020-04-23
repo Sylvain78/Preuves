@@ -9,7 +9,7 @@ let () = ignore (
 ;;
 
 (* |- F  \\implies  F *)
-let verif_tauto = proof_verification ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
+let verif_tauto = prop_proof_kernel_verif ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
     ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
         "(X_1  \\implies  ((X_1  \\implies  X_1)  \\implies  X_1))   \\implies  
          (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
@@ -20,7 +20,7 @@ let verif_tauto = proof_verification ~hyp:[] (formula_from_string "X_1  \\implie
       ]);;
 
 (* |- (F  \\implies  G)  \\implies  (G  \\implies  H)  \\implies  (F  \\implies  H)*)
-let verif_cut = proof_verification ~hyp:[] (formula_from_string "(X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))")
+let verif_cut = prop_proof_kernel_verif ~hyp:[] (formula_from_string "(X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))")
     ~proof: (List.map (fun s -> TPPFormula (formula_from_string s)) [
         "(X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))";
         "((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
@@ -54,7 +54,7 @@ let verif_contraposee =
     and a2=    (X_2  \\implies  \\lnot (\\lnot X_2))
     in
   *)
-  proof_verification ~hyp:[] (formula_from_string "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))")
+  prop_proof_kernel_verif ~hyp:[] (formula_from_string "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))")
     ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
         "((\\lnot (\\lnot X_1))  \\implies   X_1)";
         "((\\lnot (\\lnot X_1))  \\implies   X_1)  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1))";
@@ -87,7 +87,7 @@ let verif_tiers_exclus =
     and tout = \\lnot (X_1  \\implies  X_1)
     in
   *)
-  proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
+  prop_proof_kernel_verif ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
 
         "(X_1  \\implies  X_1)";
@@ -151,7 +151,7 @@ let verif_rajout_hypothese =
     let (X_1  \\implies  X_3) = (X_1  \\implies  X_3)
     and (X_2  \\implies  X_3) = (b  \\implies  X_3)
     in*)
-  proof_verification ~hyp:[] (formula_from_string "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))")
+  prop_proof_kernel_verif ~hyp:[] (formula_from_string "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))")
     ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
         (*((S (K (S (K K)))) I)*)    
         "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)";(*i*)
@@ -171,7 +171,7 @@ let verif_rajout_hypothese =
 
 (* |- F ou F  \\implies  F *)
 let verif_ou_idempotent =
-  proof_verification ~hyp:[] (formula_from_string "(X_1 \\lor X_1)  \\implies  X_1")
+  prop_proof_kernel_verif ~hyp:[] (formula_from_string "(X_1 \\lor X_1)  \\implies  X_1")
     ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
         "((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))";
         "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))";
@@ -196,7 +196,7 @@ let verif_ou_idempotent =
   and (X_1  \\implies  X_3) = (X_1  \\implies  X_3)
   and (X_2  \\implies  X_3) = (b  \\implies  X_3)
   in
-  (proof_verification ~hyp:[] ((X_1 \\lor X_2)  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3)))
+  (prop_proof_kernel_verif ~hyp:[] ((X_1 \\lor X_2)  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3)))
   ~proof:[
   X_1  \\implies  X_1;
   (X_1  \\implies  X_1)  \\implies  (\\lnot tout);
