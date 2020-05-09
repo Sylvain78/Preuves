@@ -13,9 +13,14 @@
 %token THEOREM
 %token PREMISSES
 %token CONCLUSION
+%token SAVE
+%token LOAD
+%token BINARY
+%token TEXT
 
 %token<string> IDENT
 %token<string> QUOTED_STRING
+%token<string> STRING
 %token<string> FORMULA
 %start phrase
 %type<Protocol_commands.command> phrase
@@ -26,12 +31,9 @@ phrase:
 | mode { $1 }
 | notation { $1 }
 | theorem { $1 }
-| test { Prop }
+| file_command { $1 }
 ;
 
-test:
-  NOTATION IDENT {print_string "test ok\n";flush stdout;}
-;
 notation:
  NOTATION NEWLINE 
  IDENT NEWLINE 
@@ -55,7 +57,6 @@ theorem:
  END { Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17} } 
 ;
 
-
 mode:
 | PROP { Prop }
 | FIRST_ORDER { First_order }
@@ -66,7 +67,7 @@ ident_list:
 ;
 
 syntax_elt_list:
- syntax_elt {[$1]}
+| syntax_elt {[$1]}
 | syntax_elt syntax_elt_list{ $1 :: $2 }
 ;
 
@@ -76,8 +77,8 @@ syntax_elt:
 ;
 
 formula_list :
-        | { [] }
-        | FORMULA NEWLINE formula_list { $1::$3 }
+| { [] }
+| FORMULA NEWLINE formula_list { $1::$3 }
 ;
 
 term_proof_list:
@@ -85,4 +86,9 @@ term_proof_list:
 | FORMULA NEWLINE term_proof_list { $1::$3 }
 ;
 
-
+file_command :
+| SAVE NEWLINE BINARY NEWLINE QUOTED_STRING{ Save(Binary, $5) }
+| SAVE NEWLINE TEXT NEWLINE QUOTED_STRING { Save(Text, $5) }
+| LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { Load(Binary, $5) } 
+| LOAD NEWLINE TEXT NEWLINE QUOTED_STRING { Load(Text, $5) } 
+;

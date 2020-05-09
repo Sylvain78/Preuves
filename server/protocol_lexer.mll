@@ -13,6 +13,10 @@ let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v)
       ("Premisses", PREMISSES) ;
       ("Conclusion", CONCLUSION) ;
       ("Demonstration", DEMONSTRATION) ;
+      ("Save", SAVE) ;
+      ("Load", LOAD) ;
+      ("binary", BINARY);
+      ("text", TEXT) ;
     ]
 let buffer = Buffer.create 256
 let store_string_char c = Buffer.add_char buffer c
@@ -23,6 +27,7 @@ let lowercase = ['a'-'z']
 let uppercase = ['A'-'Z']
 let digit = ['0'-'9']
 let ident = (lowercase|uppercase)(lowercase|uppercase|digit)*
+
 rule token = parse 
   | [' ' '\t']     { print_string "<space>";flush stdout;token lexbuf } 
   | newline { NEWLINE }
@@ -32,19 +37,19 @@ rule token = parse
       with 
       | Not_found -> print_string (" ident "^id^ "\n"); flush stdout;IDENT(Lexing.lexeme lexbuf)
     }
-  | "\"" 
-      {
-        string lexbuf;
-        QUOTED_STRING (get_stored_string())
-      } 
+  | "\"" { quoted_string lexbuf;
+           QUOTED_STRING (get_stored_string())
+         } 
   | "$" { latex (Buffer.create 17) lexbuf; }
 and latex buf = parse
  | '$' { FORMULA (Buffer.contents buf)}
  | "\\$" { Buffer.add_char buf '$' ; latex buf lexbuf }
  | _ as c { Buffer.add_char buf c ; latex buf lexbuf }
-and string = parse
+and quoted_string = parse
   | '\"'
      { () }
   | (_ as c)
     { store_string_char c;
-      string lexbuf }
+      quoted_string lexbuf }
+ and string = parse 
+| [^'\n']* as s { STRING s }
