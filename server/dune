@@ -5,7 +5,15 @@
 (ocamlyacc protocol_parser)
 (ocamllex protocol_lexer)
 
+;;(library 
+;; (name server)
+;; (modules (:standard))
+;; (libraries str first_order util)
+;; )
+
+
 (executable 
  (name proof_server)
  (modules (:standard))
- (libraries str first_order util))
+ (libraries str first_order util)
+)

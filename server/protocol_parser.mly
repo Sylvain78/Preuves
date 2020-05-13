@@ -17,6 +17,8 @@
 %token LOAD
 %token BINARY
 %token TEXT
+%token HISTORY
+%token SHOW
 
 %token<string> IDENT
 %token<string> QUOTED_STRING
@@ -32,7 +34,7 @@ phrase:
 | notation { $1 }
 | theorem { $1 }
 | file_command { $1 }
-;
+| info { $1} ;
 
 notation:
  NOTATION NEWLINE 
@@ -72,8 +74,8 @@ syntax_elt_list:
 ;
 
 syntax_elt:
-| IDENT { print_string ("param " ^$1);Param $1 }
-| QUOTED_STRING {print_string ("qs " ^$1);String $1 }
+| IDENT { Param $1 }
+| QUOTED_STRING {String $1 }
 ;
 
 formula_list :
@@ -92,3 +94,8 @@ file_command :
 | LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { Load(Binary, $5) } 
 | LOAD NEWLINE TEXT NEWLINE QUOTED_STRING { Load(Text, $5) } 
 ;
+
+info :
+| HISTORY { History }
+| SHOW NEWLINE
+  IDENT { Show $3 }
