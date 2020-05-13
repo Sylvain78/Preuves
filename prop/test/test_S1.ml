@@ -6,7 +6,7 @@ let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
 (*let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;*)
-let x1,x2,x3 = PVar (PVVar 1), PVar (PVVar 2), PVar (PVVar 3)
+let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 let a,b=x1,x2
 let tout = neg (a=>.a)
 and a_ou_b = (a||.b)
@@ -15,7 +15,7 @@ let c = b_ou_a
 let a_entraine_c = (a=>.c)
 and b_entraine_c = (b=>.c)
 let demo = 
-  let x1,x2 = PVar (PVVar 1), PVar (PVVar 2)
+  let x1,x2 = PVar 1, PVar 2
   in
   let 
     a,b=x1,x2
@@ -441,5 +441,5 @@ let demo1 = demo @ [
     a_ou_b =>. c;];;
 
 let verif_S3 = 
-  (prop_proof_kernel_verif ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> TPPFormula s) demo1))
+  (prop_proof_kernel_verif ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> (*TPPFormula*) s) demo1))
 ;;

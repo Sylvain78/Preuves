@@ -3,6 +3,7 @@ open Formula_prop
 (*TODO open Substitution_prop*)
 include (Prop_parser : sig 
            val formula_from_string : string -> Formula_prop.formula_prop
+           val notation_from_string : string -> Formula_prop.notation_prop
          end)
 (*
 let (read_formule : string -> (formula_prop * string) list) = function s ->
@@ -15,7 +16,7 @@ exception Failed_Unification of formula_prop * formula_prop
 type theorem_prop = 
   {
     name_theorem_prop : string;
-    parameters_prop : var_prop list;
+    parameters_prop : [`Pvar of int | `PMetaVar of string] list;
     premises_prop : formula_prop list;
     proof_prop : proof_prop;
     conclusion_prop: formula_prop;
@@ -24,12 +25,12 @@ type theorem_prop =
 and term_proof_prop  = 
   (*TODO | TPPAxiom   of string * formula_prop *)
   | TPPFormula of formula_prop
-(*TODO  | TPPTheorem of formula_prop * (theorem_prop * (formula_prop list)(*parametres*) * (formula_prop list)(* premisses*))*)
+  (*TODO  | TPPTheorem of formula_prop * (theorem_prop * (formula_prop list)(*parametres*) * (formula_prop list)(* premisses*))*)
 
 and proof_prop = term_proof_prop list 
 
 (*TODO
-let term_proof_to_formula_prop  = function
+  let term_proof_to_formula_prop  = function
   | TPPFormula f -> f
   | TPPAxiom (_,f) -> f
   | TPPTheorem(f,_) -> f
@@ -44,8 +45,8 @@ let term_proof_to_formula_prop  = function
   | PImpl(f1,f2) -> PImpl(apply_notations f1, apply_notations f2) 
 *)
 (*TODO
-(* Equivalence of formulas, modulo notations*)
-let rec equiv_notation f g =
+  (* Equivalence of formulas, modulo notations*)
+  let rec equiv_notation f g =
   match f, g 
   with
   | PVar v1, PVar v2 -> v1=v2
@@ -92,25 +93,25 @@ Printexc.register_printer (function Invalid_demonstration(f,t) ->
 let rec kernel_verif ~hypotheses ~proved ~to_prove = 
   match to_prove with
   | [] -> true
-  | (TPPFormula f_i)::p ->  
+  | f_i::p ->  
     if (
-          (*Formula is an hypothesis*)
-             List.mem f_i hypotheses 
-          (*Formula already present *)
-          || List.mem f_i proved 
-          (*Formula is an instance of a theorem or axiom *)
-          || (List.exists (fun a -> instance f_i a.proposition_prop) 
-                          (!theorems_prop @ !axioms_prop)) 
-          (*cut*)
-          || (cut f_i proved) 
-          (*TODO || begin
-            match proved with 
-            | [] -> false 
-            (*application of notations*)
-            | f::_ -> equiv_notation f_i f
-          end
-          *)
-      )
+      (*Formula is an hypothesis*)
+      List.mem f_i hypotheses 
+      (*Formula already present *)
+      || List.mem f_i proved 
+      (*Formula is an instance of a theorem or axiom *)
+      || (List.exists (fun a -> instance f_i a.proposition_prop) 
+            (!theorems_prop @ !axioms_prop)) 
+      (*cut*)
+      || (cut f_i proved) 
+      (*TODO || begin
+        match proved with 
+        | [] -> false 
+        (*application of notations*)
+        | f::_ -> equiv_notation f_i f
+        end
+      *)
+    )
     then 
       kernel_verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
@@ -120,7 +121,7 @@ let rec kernel_verif ~hypotheses ~proved ~to_prove =
       verif ~hypotheses ~proved:(formula_ax :: proved) ~to_prove:p
    else 
       raise (Invalid_demonstration (formula_ax,List.rev (formula_ax::proved)))
- | TPPTheorem  (f , (theorem, parameters, premises)) :: proof -> (f = theorem.conclusion_prop) && 
+  | TPPTheorem  (f , (theorem, parameters, premises)) :: proof -> (f = theorem.conclusion_prop) && 
                                                                            (verif ~hypotheses ~proved:(f::proved) ~to_prove:proof) && 
                                                                            (List.for_all (fun p -> let premise = simultaneous_substitution_formula_prop theorem.parameters_prop parameters p
                                                                                            in
@@ -139,7 +140,7 @@ let prop_proof_kernel_verif ~hyp:hypotheses f ~proof:proof =
     with
     | Failure _ -> false
   in
-  if not(is_end_proof (TPPFormula f) proof)
+  if not (is_end_proof f proof)
   then failwith "Formula is not at the end of the proof"
   else
     kernel_verif ~hypotheses  ~proved:[] ~to_prove:proof
@@ -160,7 +161,7 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1")
 *)
 (* |   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)*)
 prop_proof_kernel_verif ~hyp:[] (formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))")
-  ~proof: (List.map (fun s -> TPPFormula (formula_from_string s)) [
+  ~proof: (List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -227,7 +228,7 @@ theorems_prop := {name_proposition_prop="contraposition"; proposition_prop=formu
 
 (* |   F ou F  \\implies  F *)
 prop_proof_kernel_verif ~hyp:[] (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}")
-  ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
+  ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
       "((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))";
       "((\\lnot \\mathbb{A})  \\implies   ((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}))";
       "((\\lnot \\mathbb{A})  \\implies   ((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A}))  \\implies  ((((\\mathbb{A} \\lor\\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A})))  \\implies  ((\\lnot \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A}\\lor\\mathbb{A}))))";

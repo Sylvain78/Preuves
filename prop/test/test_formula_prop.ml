@@ -4,13 +4,13 @@ open Formula_prop
 open Proof_prop
 
 let () = ignore (
-        (* TODO notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \" => \" b\nSemantics\na \" \\implies \" b\nEnd";*)
+        notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \" => \" b\nSemantics\na \" \\implies \" b\nEnd";
   )
 ;;
 
 (* |- F  \\implies  F *)
 let verif_tauto = prop_proof_kernel_verif ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
-    ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
+    ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         "(X_1  \\implies  ((X_1  \\implies  X_1)  \\implies  X_1))   \\implies  
          (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
         "X_1  \\implies ((X_1  \\implies  X_1)  \\implies  X_1)";
@@ -21,7 +21,7 @@ let verif_tauto = prop_proof_kernel_verif ~hyp:[] (formula_from_string "X_1  \\i
 
 (* |- (F  \\implies  G)  \\implies  (G  \\implies  H)  \\implies  (F  \\implies  H)*)
 let verif_cut = prop_proof_kernel_verif ~hyp:[] (formula_from_string "(X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))")
-    ~proof: (List.map (fun s -> TPPFormula (formula_from_string s)) [
+    ~proof: (List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         "(X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))";
         "((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
         "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
@@ -55,7 +55,7 @@ let verif_contraposee =
     in
   *)
   prop_proof_kernel_verif ~hyp:[] (formula_from_string "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))")
-    ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
+    ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         "((\\lnot (\\lnot X_1))  \\implies   X_1)";
         "((\\lnot (\\lnot X_1))  \\implies   X_1)  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1))";
         "((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1)";
@@ -88,7 +88,7 @@ let verif_tiers_exclus =
     in
   *)
   prop_proof_kernel_verif ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
-    ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
+    ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
 
         "(X_1  \\implies  X_1)";
         "(X_1  \\implies  X_1)  \\implies  (\\lnot (\\lnot (X_1  \\implies  X_1)))"; 
@@ -152,7 +152,7 @@ let verif_rajout_hypothese =
     and (X_2  \\implies  X_3) = (b  \\implies  X_3)
     in*)
   prop_proof_kernel_verif ~hyp:[] (formula_from_string "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))")
-    ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
+    ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         (*((S (K (S (K K)))) I)*)    
         "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)";(*i*)
         "X_3  \\implies  (X_2  \\implies  X_3)"; (*k*)
@@ -172,7 +172,7 @@ let verif_rajout_hypothese =
 (* |- F ou F  \\implies  F *)
 let verif_ou_idempotent =
   prop_proof_kernel_verif ~hyp:[] (formula_from_string "(X_1 \\lor X_1)  \\implies  X_1")
-    ~proof:(List.map (fun s -> TPPFormula (formula_from_string s)) [
+    ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         "((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))";
         "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))";
         "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))  \\implies  ((((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies  ((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))))";
@@ -594,15 +594,15 @@ let test_instance _ = assert_bool "instance" (instance (formula_from_string "X_1
 
 (** Tests for to_string *)
 let test_to_string_formula_pvar _ =
-  let s = to_string_formula_prop  (PVar (PVVar 1))
+  let s = to_string_formula_prop  (PVar 1)
   in assert_equal s "X_1"
 
 let test_to_string_formula_pvar_11 _ =
-  let s = to_string_formula_prop  (PVar (PVVar 11))
+  let s = to_string_formula_prop  (PVar 11)
   in assert_equal s "X_{11}"
 
 let test_to_string_formula_pvar_metavar _ =
-  let s = to_string_formula_prop  (PVar (PVMetaVar "A"))
+  let s = to_string_formula_prop  (PMetaVar "A")
   in assert_equal  "\\mathbb{A}" s
 
 let test_to_string_formula_pneg _ =
@@ -646,15 +646,15 @@ let test_to_string_formula_notation _ =
   in assert_equal ~printer:(fun s -> s) "X_1 \\implies X_2" (*TODO \\implies --> =>*) s
 
 (* Tests for printer_formula *)
-let test_printer_formula_pvar _ = printer_formula_prop Format.str_formatter (PVar (PVVar 1));
+let test_printer_formula_pvar _ = printer_formula_prop Format.str_formatter (PVar 1);
   let s = Format.flush_str_formatter()
   in assert_equal s "X_1"
 
-let test_printer_formula_pmetavar _ = printer_formula_prop Format.str_formatter (PVar (PVMetaVar "A"));
+let test_printer_formula_pmetavar _ = printer_formula_prop Format.str_formatter (PMetaVar "A");
   let s = Format.flush_str_formatter()
   in assert_equal s "\\mathbb{A}"
 
-let test_printer_formula_pvar_11 _ = printer_formula_prop Format.str_formatter (PVar (PVVar 11));
+let test_printer_formula_pvar_11 _ = printer_formula_prop Format.str_formatter (PVar 11);
   let s = Format.flush_str_formatter()
   in assert_equal s "X_{11}"
 
@@ -696,14 +696,14 @@ let test_printer_formula_impl_par _ = printer_formula_prop Format.str_formatter 
 
 let test_printer_formula_and_impl _ = printer_formula_prop Format.str_formatter (formula_from_string "X_3 \\land (X_1 \\implies X_2)");
   let s = Format.flush_str_formatter()
-  in assert_equal s "X_3 \\land (X_1 \\implies X_2)" ~printer:(fun s -> s)
+  in assert_equal "X_3 \\land (X_1 \\implies X_2)" s ~printer:(fun s -> s)
 (*
 let test_printer_formula_pappl_fail _ = 
   let n =         notation_from_string "Notation\ntest\nParam\n a\nSyntax\nc\nSemantics\n\"X_1\"\nEnd"
   in
   try
     printer_formula_prop Format.str_formatter 
-      (PApply_notation {apply_notation_prop=n ; apply_notation_prop_params = [PVar (PVVar 2)]})
+      (PApply_notation {apply_notation_prop=n ; apply_notation_prop_params = [PVar 2]})
   with 
   | Failure _ -> assert_bool "" true;;
 
