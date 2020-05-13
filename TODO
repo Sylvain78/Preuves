@@ -1,14 +1,9 @@
--- Remove Notation in server/
+--Notations and substitutions : when substituting within a notation, 
+should we just 
+-substitute the parameters of the notation
+or
+-apply the notation and then subsitute, to see if there is a collision during subsitution with  a free variable occuring only in the notation semantics (and not its syntax) ?
+
+
 -- Add a Readme
--- Clean the server side : remove all printf, closes channels nicely
-
-
-
---tasks
-dune build server/proof_server.exe
-dune runtest
-BISECT_ENABLE=YES dune runtest --no-buffer --force
-bisect-ppx-report html
-dune build prop/prop.cma
-dune build util/util.cma
-ocaml -I _build/default/prop/.prop.objs/byte/
+-- Clean the server side : closes channels nicely
