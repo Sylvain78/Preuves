@@ -1,10 +1,4 @@
-open Formula_prop
-
-type proposition_prop =
-  {
-    name_proposition_prop : string;
-    proposition_prop : formula_prop;
-  }
+open Kernel_theorems_prop
 
 let a1 = Prop_parser.formula_from_string "X_1 \\implies (X_2 \\implies X_1)";;
 let a2 = Prop_parser.formula_from_string "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";;
@@ -23,47 +17,69 @@ let a11 = Prop_parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_
 
 let axioms_prop = ref [
   {
-    name_proposition_prop="A1";
-    proposition_prop=a1;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A1";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a1;
   };
   {
-    name_proposition_prop="A2";
-    proposition_prop=a2;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A2";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a2;
   };
   {
-    name_proposition_prop="A3";
-    proposition_prop=a3;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A3";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a3;
   };
   {
-    name_proposition_prop="A4";
-    proposition_prop=a4;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A4";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a4;
   };
   {
-    name_proposition_prop="A5";
-    proposition_prop=a5;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A5";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a5;
   };
   {
-    name_proposition_prop="A6";
-    proposition_prop=a6;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A6";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a6;
   };
   {
-    name_proposition_prop="A7";
-    proposition_prop=a7;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A7";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a7;
   };
   {
-    name_proposition_prop="A8";
-    proposition_prop=a8;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A8";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a8;
   };
   {
-    name_proposition_prop="A9";
-    proposition_prop=a9;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A9";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a9;
   };
   {
-    name_proposition_prop="A10";
-    proposition_prop=a10;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A10";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a10;
   };
   {
-    name_proposition_prop="A11";
-    proposition_prop=a11;
+    kernel_kind_prop=Axiom;
+    kernel_name_theorem_prop="A11";
+    kernel_proof_prop=[];
+    kernel_conclusion_prop=a11;
   };
 ];;
