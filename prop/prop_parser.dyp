@@ -1,17 +1,20 @@
 {
- open Formula_prop
+open Formula_prop
  let parser = ref None;;
  let string_without_quote s = ( String.sub s 1 (String.length s - 2))
 
 (*keep all interpretations*)
  let dyp_merge_Obj_expr l = match l with
    | (_,gd,ld)::_ -> List.map (fun (o,_,_) -> o) l, gd, ld
-      | [] -> assert false
+   | [] -> assert false
 
 }
 
 %start expr1
 %start notation1
+/* TODO one day...
+%start save
+*/
 %layout [' ' '\t' '\n']
 
 %lexer
@@ -25,10 +28,10 @@ let any_string = '"' (['\000'-'\033'] | ['\035'-'\255'])* '"'
 %parser
 /* Load the parser at beginning of parsing*/
 expr1 : 
-    | ...@{(),match !parser with | None -> [] | Some pdev -> [Dyp.Parser pdev] } expr eof { $2 }
+    | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.Dyp.pp_dev] } expr eof { $2 }
 
 notation1 :
-    | ...@{(),match !parser with | None -> [] | Some pdev -> [Dyp.Parser pdev] } notation eof { $2 }
+    | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.pp_dev] } notation eof { $2 }
 
 expr:
     | "X_" ['0'-'9']+  { PVar (int_of_string $2) }
@@ -84,7 +87,7 @@ notation:
         [ Dyp.Add_rules [(rule,action)] ; Dyp.Keep_grammar]
         } 
     
-    {parser := Some dyp.Dyp.parser_pilot.Dyp.pp_dev; $18}
+    {parser := Some dyp.Dyp.parser_pilot; $18}
 
 param_list: 
     | param* { $1 }
@@ -98,23 +101,56 @@ term_syntax:
 semantique:
     |  syntax  { $1 }
 
+/*TODO one day...
+save:
+    | any_string eof @{
+      let oc = open_out (String.sub $1 1 (String.length $1 -2)) in
+      print_endline "avant save parser";
+      Marshal.to_channel oc
+      ((*dyp.global_data,*) Dyp.function_free_pdev dyp.parser_pilot.pp_dev)
+      [];
+      print_endline "après save parser";
+      close_out oc;
+     (), [Keep_grammar] }
+*/
 %%
 
 {
-  let formula_from_string s = 
-    let l = (expr1 (Dyp.from_string (pp ()) s))
-    in 
-    match l with [ (f,_) ] -> f 
-               | (f,_)::(g,_)::_ -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^") : more than one interpretation"))
-	       |   _   -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^")"))
+  let formula_from_string s =
+  let pp = match !parser with 
+  | None -> let pp = pp() in parser := Some pp; pp
+  | Some p -> p
+  in
+  let l = (expr1 (Dyp.from_string pp s))
+  in 
+  match l with [ (f,_) ] -> f 
+  | (_,_)::(_,_)::_ -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^") : more than one interpretation"))
+  |   _   -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^")"))
 
-let notation_from_string s =          
-  let l = (notation1 (Dyp.from_string (pp ()) s))
+  let notation_from_string s =          
+  let pp = match !parser with 
+  | None -> let pp = pp() in parser := Some pp; pp
+  | Some p -> p
+  in
+  let l = (notation1 (Dyp.from_string pp s))
   in 
   match l with [ (n,_) ] -> n 
-             |   _   -> raise (Failure "[Prop] Parser.notation_from_string")
+  |   _   -> raise (Failure "[Prop] Parser.notation_from_string")
+
+(*
+let save_parser s = 
+  let pp = match !parser with 
+  | None -> let pp = pp() in parser := Some pp; pp
+  | Some p -> p
+  in
+ignore (save (Dyp.from_string pp s))
+*)
 } 
+
 %mli {
 val formula_from_string : string -> Formula_prop.formula_prop 
 val notation_from_string : string -> Formula_prop.notation_prop
+(* TODO one day...
+   val save_parser : string -> unit
+*)
 }

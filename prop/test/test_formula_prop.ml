@@ -1,6 +1,5 @@
 open OUnit2
 open Prop
-open Formula_prop
 open Proof_prop
 
 let () = ignore (
@@ -773,6 +772,7 @@ let notation_suite =
   [ (*"test_notation" >:: test_notation*)
   ]
 ;;
+
 let () =
   run_test_tt_main instance_suite;
   run_test_tt_main printer_formula_suite;

@@ -4,12 +4,14 @@
 %token NEWLINE
 %token PROP
 %token FIRST_ORDER
+%token FAST
 %token NOTATION
 %token PARAM
 %token SYNTAX
 %token SEMANTICS
 %token DEMONSTRATION
 %token END
+%token AXIOM
 %token THEOREM
 %token PREMISSES
 %token CONCLUSION
@@ -32,6 +34,7 @@
 phrase:
 | mode { $1 }
 | notation { $1 }
+| axiom { $1 }
 | theorem { $1 }
 | file_command { $1 }
 | info { $1} ;
@@ -45,6 +48,12 @@ notation:
  END { Notation{name=$3 ; params=$7 ; syntax = $11 ; semantics=$15} }
 ;
 
+axiom:
+  AXIOM NEWLINE
+  IDENT NEWLINE
+  FORMULA { Axiom{name=$3 ; formula=$5} }
+;
+
 theorem:
  THEOREM NEWLINE
  IDENT NEWLINE
@@ -56,12 +65,13 @@ theorem:
  FORMULA NEWLINE
  DEMONSTRATION NEWLINE
  term_proof_list 
- END { Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17} } 
+ END { Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17;status=Unverified} } 
 ;
 
 mode:
 | PROP { Prop }
 | FIRST_ORDER { First_order }
+| FAST { Fast}
 ;
 ident_list:
 |  {[]}
@@ -89,10 +99,10 @@ term_proof_list:
 ;
 
 file_command :
-| SAVE NEWLINE BINARY NEWLINE QUOTED_STRING{ Save(Binary, $5) }
-| SAVE NEWLINE TEXT NEWLINE QUOTED_STRING { Save(Text, $5) }
-| LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { Load(Binary, $5) } 
-| LOAD NEWLINE TEXT NEWLINE QUOTED_STRING { Load(Text, $5) } 
+| SAVE NEWLINE BINARY NEWLINE QUOTED_STRING{ Save(Binary, String.sub $5 1 ((String.length $5) - 2)) }
+| SAVE NEWLINE TEXT NEWLINE QUOTED_STRING { Save(Text, String.sub $5 1 ((String.length $5) - 2)) }
+| LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { Load(Binary, String.sub $5 1 ((String.length $5) - 2)) }
+| LOAD NEWLINE TEXT NEWLINE QUOTED_STRING { Load(Text, String.sub $5 1 ((String.length $5) - 2)) } 
 ;
 
 info :

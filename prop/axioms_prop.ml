@@ -1,4 +1,4 @@
-open Kernel_theorems_prop
+open Kernel_theorem_prop
 
 let a1 = Prop_parser.formula_from_string "X_1 \\implies (X_2 \\implies X_1)";;
 let a2 = Prop_parser.formula_from_string "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";;

@@ -1,4 +1,3 @@
-open Prop__Formula_prop
 open Prop__Proof_prop
 
 

@@ -9,11 +9,12 @@
 ;; (name server)
 ;; (modules (:standard))
 ;; (libraries str first_order util)
-;; )
+;;)
 
 
 (executable 
  (name proof_server)
+ (modes byte exe)
  (modules (:standard))
  (libraries str first_order util)
 )

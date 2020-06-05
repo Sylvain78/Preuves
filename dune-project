@@ -1,4 +1,4 @@
-(lang dune 1.9)
+(lang dune 2.2)
 
 (package
  (name Preuves)
@@ -9,5 +9,7 @@
 	 (dune
 	    (>= 1.9))
          (bisect_ppx	
-	    (>= 1.4))))
+	    (>= 1.4))
+	 (dyp
+	    (>= 20120619))))
 (using menhir 2.1)

@@ -147,7 +147,12 @@ struct
         Format.fprintf ff "%s" (" "^(Sig.to_string op)^" ");
         print_term ff (List.hd (List.tl lt))
       | _ -> Format.fprintf ff "%s" ((Sig.to_string op)^"(");
-        print_liste ff print_term lt;
+        let rec print_liste f = function
+          | [] -> ()
+          | [a] -> f ff a
+          | a:: l -> f ff a; Format.fprintf ff (", "); print_liste f l
+        in
+        print_liste print_term lt;
         Format.fprintf ff "%s" (")")
 
   let printer_first_order_formula ff f =
