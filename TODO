@@ -1,3 +1,7 @@
+-- Better separation of work between verif/kernel_verif
+-- Better loading/saving of session
+-- Adding more units test to prop
+--Finish the first_order layer once prop is finished
 --Take account for paranoid verification
 --Clean the session to be able to marshal them
 
