@@ -1,3 +1,4 @@
+--Take account for paranoid verification
 --Clean the session to be able to marshal them
 
 --Notations and substitutions : when substituting within a notation, 

@@ -1,0 +1,52 @@
+open OUnit2
+open Prop.Proof_prop
+
+let notation = Prop.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
+let f() = prop_proof_verif ~hyp:[]
+    (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}")
+    ~proof:(List.map formula_from_string [
+          "((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})) \\implies ((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies (((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A}))";
+          "(((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})";
+          "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}";
+        ])
+
+let g() = prop_proof_verif ~hyp:[]
+(formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}")
+~proof:(List.map formula_from_string [
+		"((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
+		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}))";
+		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})) => ((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => (((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A}))";
+		"(((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})";
+		"(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}";
+])
+
+
+let test_without_notation _ =
+assert_bool "without notation : failed" (f())
+
+let test_with_notation _ =
+assert_bool "with notation : failed" (g())
+
+let notation_suite =
+  "Notation">:::
+  [ "test_without_notation" >:: test_without_notation;
+    "test_with_notation" >:: test_with_notation
+  ]
+;;
+    
+let () =
+run_test_tt_main notation_suite

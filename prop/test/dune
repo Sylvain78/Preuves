@@ -2,6 +2,14 @@
  (dev
   (flags (:standard -warn-error -27-32))))
 
-(tests (names test_formula_prop_parser test_formula_prop test_proof_prop test_S1)
+(tests (names test_formula_prop_parser test_formula_prop test_proof_prop test_S1 test_notation)
  (libraries prop ounit2)
 )
+
+
+;;(executable
+;; (name test_notation)
+;; (modes byte)
+;; (modules test_notation)
+;; (libraries util prop)
+;;)
