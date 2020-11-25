@@ -30,7 +30,7 @@ HAVE FUN !
 
 CONTACT
 
-sylvain.kerjean "@" hotmail.com
+sylvain_kerjean "@" hotmail.com
 I would be really glad to get your appreciation of my work! I did it for fun but i hope some others will try it one day.
 
 Sincerely yours, Sylvain.
