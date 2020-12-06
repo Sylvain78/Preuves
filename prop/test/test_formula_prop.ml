@@ -602,7 +602,7 @@ let test_to_string_formula_pvar_11 _ =
 
 let test_to_string_formula_pvar_metavar _ =
   let s = to_string_formula_prop  (PMetaVar "A")
-  in assert_equal  "\\mathbb{A}" s
+  in assert_equal  "\\mathbf{A}" s
 
 let test_to_string_formula_pneg _ =
   let s = to_string_formula_prop  (formula_from_string "\\lnot X_1")
@@ -651,7 +651,7 @@ let test_printer_formula_pvar _ = printer_formula_prop Format.str_formatter (PVa
 
 let test_printer_formula_pmetavar _ = printer_formula_prop Format.str_formatter (PMetaVar "A");
   let s = Format.flush_str_formatter()
-  in assert_equal s "\\mathbb{A}"
+  in assert_equal s "\\mathbf{A}"
 
 let test_printer_formula_pvar_11 _ = printer_formula_prop Format.str_formatter (PVar 11);
   let s = Format.flush_str_formatter()

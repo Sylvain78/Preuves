@@ -19,7 +19,7 @@ let test_invalid_proof_length_2_hyp test_ctxt =
 let test_S1_Bourbaki test_ctxt =
   (*let _ = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"\\implies\" b\nSemantics\na \" \\implies \" b\nEnd"
   in*)
-  let f = formula_from_string "((\\mathbb{A} \\lor \\mathbb{A})  \\implies  \\mathbb{A})  \\implies  ((\\lnot \\mathbb{A})  \\implies  \\lnot (\\mathbb{A} \\lor \\mathbb{A}))"
+  let f = formula_from_string "((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A} \\lor \\mathbf{A}))"
   in
   assert_bool "test_S1_Bourbaki" (prop_proof_kernel_verif ~hyp:[] ~proof:[(*(*TPPFormula*)*) f] f)
 

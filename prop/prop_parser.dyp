@@ -36,7 +36,7 @@ notation1 :
 expr:
     | "X_" ['0'-'9']+  { PVar (int_of_string $2) }
     | "X_{" ['0'-'9']+ "}" { PVar (int_of_string $2) }
-    | "\\mathbb{" ['a'-'z''A'-'Z'] "}" { PMetaVar ($2) }
+    | "\\mathbf{" ['a'-'z''A'-'Z'] "}" { PMetaVar ($2) }
     | "(" expr ")" { $2 }
     | "\\lnot" expr { PNeg($2) }
     | expr "\\implies" expr { PImpl($1,$3) }

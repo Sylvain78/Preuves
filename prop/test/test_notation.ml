@@ -3,35 +3,35 @@ open Prop.Proof_prop
 
 let notation = Prop.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 let f() = prop_proof_verif ~hyp:[]
-    (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}")
+    (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}")
     ~proof:(List.map formula_from_string [
-          "((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})) \\implies ((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies (((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A}))";
-          "(((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})";
-          "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}";
+          "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))";
+          "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
+          "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies ((((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+          "((((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+          "((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A})))";
+          "((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (((\\lnot \\mathbf{A}) \\implies (\\lnot \\mathbf{A})) \\implies ((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+          "((\\lnot \\mathbf{A}) \\implies (\\lnot \\mathbf{A}))";
+          "(((\\lnot \\mathbf{A}) \\implies (\\lnot \\mathbf{A})) \\implies ((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+          "((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A})))";
+          "((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})";
+          "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}";
         ])
 
 let g() = prop_proof_verif ~hyp:[]
-(formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}")
+(formula_from_string "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}")
 ~proof:(List.map formula_from_string [
-		"((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
-		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}))";
-		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})) => ((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => (((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A}))";
-		"(((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})";
-		"(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}";
+		"((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))";
+		"((\\lnot \\mathbf{A}) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}))";
+		"((\\lnot \\mathbf{A}) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A})) => ((((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => ((\\lnot \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+		"((((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => ((\\lnot \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+		"((\\lnot \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A})))";
+		"((\\lnot \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => (((\\lnot \\mathbf{A}) => (\\lnot \\mathbf{A})) => ((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+		"((\\lnot \\mathbf{A}) => (\\lnot \\mathbf{A}))";
+		"(((\\lnot \\mathbf{A}) => (\\lnot \\mathbf{A})) => ((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
+		"((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A})))";
+		"((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A})";
+		"(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}";
 ])
 
 

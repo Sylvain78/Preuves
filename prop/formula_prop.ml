@@ -49,7 +49,7 @@ let rec printer_formula_prop ff f =
     in
     function
     | PVar i -> Format.fprintf ff (if (0<=i && i<10) then "X_%d" else "X_{%d}") i
-    | PMetaVar s -> Format.fprintf ff "\\mathbb{%s}" s
+    | PMetaVar s -> Format.fprintf ff "\\mathbf{%s}" s
     | PNeg g -> Format.fprintf ff "\\lnot "; printer_formula_prop_aux ff "neg" g
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")
