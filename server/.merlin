@@ -1,16 +1,16 @@
 EXCLUDE_QUERY_DIR
-B /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/bisect_ppx/common
-B /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/bisect_ppx/runtime
-B /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/dyp
-B /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/ocaml
+B /boot/home/.opam/4.11.1/lib/bisect_ppx/common
+B /boot/home/.opam/4.11.1/lib/bisect_ppx/runtime
+B /boot/home/.opam/4.11.1/lib/dyp
+B /boot/home/.opam/4.11.1/lib/ocaml
 B ../_build/default/first_order/.first_order.objs/byte
 B ../_build/default/prop/.prop.objs/byte
 B ../_build/default/server/.proof_server.eobjs/byte
 B ../_build/default/util/.util.objs/byte
-S /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/bisect_ppx/common
-S /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/bisect_ppx/runtime
-S /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/dyp
-S /boot/home/.opam/ocaml-variants.4.11.0+trunk/lib/ocaml
+S /boot/home/.opam/4.11.1/lib/bisect_ppx/common
+S /boot/home/.opam/4.11.1/lib/bisect_ppx/runtime
+S /boot/home/.opam/4.11.1/lib/dyp
+S /boot/home/.opam/4.11.1/lib/ocaml
 S ../first_order
 S ../prop
 S .
