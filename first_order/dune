@@ -4,8 +4,7 @@
 
 (library 
  (name first_order)
- (preprocess
-   (pps bisect_ppx --conditional))
+ (instrumentation (backend bisect_ppx))
  (modules (:standard))
  (libraries prop util dyp))
 

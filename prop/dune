@@ -4,11 +4,10 @@
 
 (library 
  (name prop)
- (preprocess
-   (pps bisect_ppx --conditional))
- (modules (:standard))
+ (instrumentation (backend bisect_ppx))
+  (modules (:standard))
  (libraries util dyp)
- )
+)
 
 (rule
  (targets prop_parser.ml)
