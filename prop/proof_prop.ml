@@ -25,24 +25,6 @@ exception Failed_Unification of formula_prop * formula_prop
   | TPPTheorem(f,_) -> f
 *)
 
-(*SKE TODO : where to put this function ?*)
-(*let rec apply_notations = function 
-  | PVar _ as t -> t
-  | PNeg f -> PNeg (apply_notations f)
-  | PAnd(f1,f2) -> PAnd(apply_notations f1, apply_notations f2) 
-  | POr(f1,f2) -> POr(apply_notations f1, apply_notations f2) 
-  | PImpl(f1,f2) -> PImpl(apply_notations f1, apply_notations f2) 
-*)
-
-let get_semantique ({apply_notation_prop; apply_notation_prop_params}:apply_notation_prop) =
-  let map_params = List.combine apply_notation_prop.notation_prop_params apply_notation_prop_params
-  in
-  let replace = function 
-    | String s -> " " ^ s ^ " "
-    | Param _ as p -> "(" ^ (to_string_formula_prop (List.assoc p map_params)) ^ ")"
-  in
-  formula_from_string
-    (        List.fold_left (fun s e -> s^(replace e)) "" apply_notation_prop.notation_prop_semantique)
 
 (* Equivalence of formulas, modulo notations*)
 let rec equiv_notation f g =
@@ -62,10 +44,10 @@ let rec equiv_notation f g =
     else 
             false
   | PApply_notation f, g ->
-        let f' = get_semantique f  in
+        let f' = get_semantique formula_from_string f  in
             equiv_notation f' g
   | f,  PApply_notation g ->
-        let g' = get_semantique g  in
+        let g' = get_semantique formula_from_string g  in
             equiv_notation f g'
   | _ -> false
 
@@ -92,10 +74,10 @@ let instance f g =
         (List.fold_left (fun list_instances (f,g) -> instance_aux list_instances f g) l  (List.combine apply_notation_prop_params_f apply_notation_prop_params_g) )
       else raise (Failed_Unification(f, g))
     | PApply_notation f, g ->
-      let f' = get_semantique f  in
+      let f' = get_semantique formula_from_string f  in
       instance_aux l f' g
     | f,  PApply_notation g ->
-      let g' = get_semantique g  in
+      let g' = get_semantique formula_from_string g  in
       instance_aux l f g'
     | _ -> raise (Failed_Unification(f, g))
   in
@@ -107,7 +89,7 @@ let cut f p =
   List.exists (function | PImpl(g1, g2) -> g2 = f && List.mem g1 p 
                         | PApply_notation n -> 
                           begin
-                            match get_semantique n 
+                            match get_semantique formula_from_string n 
                             with 
                             | PImpl(g1,g2) -> g2 = f && List.mem g1 p
                             | PApply_notation _ -> failwith "cut : get_semantique evaluates to another notation"
