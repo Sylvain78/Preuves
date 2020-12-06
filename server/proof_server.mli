@@ -53,13 +53,13 @@ module type SESSION =
           kernel_proof_prop : Prop.Formula_prop.formula_prop list;
           kernel_conclusion_prop : Prop.Formula_prop.formula_prop;
         }
+        val get_semantique : (string -> formula_prop) ->  apply_notation_prop -> formula_prop
         val formula_from_string : string -> Prop.Formula_prop.formula_prop
         val notation_from_string : string -> Prop.Formula_prop.notation_prop
         (* TODO one day...
          * val save_parser : string -> unit
          *)
         exception Failed_Unification of formula_prop * formula_prop
-        val get_semantique : apply_notation_prop -> formula_prop
         val equiv_notation : formula_prop -> formula_prop -> bool
         val instance : formula_prop -> formula_prop -> bool
         val cut : formula_prop -> formula_prop list -> bool
