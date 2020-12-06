@@ -91,4 +91,14 @@ let rec printer_formula_prop ff f =
   printer_formula_prop_aux ff "init" f
 and to_string_formula_prop f =
   printer_formula_prop Format.str_formatter f;
-  Format.flush_str_formatter ();
+  Format.flush_str_formatter ()
+
+let get_semantique formula_from_string ({apply_notation_prop; apply_notation_prop_params}:apply_notation_prop) =
+  let map_params = List.combine apply_notation_prop.notation_prop_params apply_notation_prop_params
+  in
+  let replace = function 
+    | String s -> " " ^ s ^ " "
+    | Param _ as p -> "(" ^ (to_string_formula_prop (List.assoc p map_params)) ^ ")"
+  in
+  formula_from_string
+    (List.fold_left (fun s e -> s^(replace e)) "" apply_notation_prop.notation_prop_semantique)
