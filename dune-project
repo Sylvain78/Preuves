@@ -1,5 +1,4 @@
-(lang dune 2.2)
-
+(lang dune 2.7)
 (package
  (name Preuves)
   (synopsis "Verification of first order demonstrations")
