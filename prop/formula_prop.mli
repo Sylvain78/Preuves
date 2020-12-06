@@ -23,3 +23,4 @@ type notation_prop_element = Param of string | String of string
  
 val printer_formula_prop : Format.formatter -> formula_prop -> unit
 val to_string_formula_prop : formula_prop -> string
+val get_semantique : (string -> formula_prop) ->apply_notation_prop -> formula_prop
