@@ -180,9 +180,9 @@ and eval s channels =
             in
             (* TODO Add theorem to the list, with its status*)
             if verif then
-              Answer ("Theorem" ^ name ^ "verified.")
+              Answer ("Theorem " ^ name ^ " verified.")
             else
-              Answer ("Theorem" ^ name ^ "not verified.")
+              Answer ("Theorem " ^ name ^ " not verified.")
           end
         else if session.mode = Session.First_order
         then 
@@ -329,7 +329,7 @@ let main () =
          ()
 
      done
-   with x -> (match !file_name with Some file -> unlink file | None -> ());close sock_listen; raise x)
+   with x -> (Printexc.print_backtrace Stdlib.stdout ; match !file_name with Some file -> unlink file | None -> ());close sock_listen; raise x)
 
 
 let _ = main()
