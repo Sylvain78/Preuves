@@ -51,6 +51,10 @@ Premisses
 Conclusion
 $(\mathbf{A} \lor \mathbf{B}) => (\mathbf{B} \lor \mathbf{A}) $
 Demonstration
+$(\mathbf{A} => ((\mathbf{A} => \mathbf{A}) => \mathbf{A})) => ((\mathbf{A} => (\mathbf{A} => \mathbf{A})) => (\mathbf{A} => \mathbf{A}))$
+$\mathbf{A} => ((\mathbf{A} => \mathbf{A}) => \mathbf{A})$
+$(\mathbf{A} => (\mathbf{A} => \mathbf{A})) => (\mathbf{A} => \mathbf{A})$
+$\mathbf{A} => (\mathbf{A} => \mathbf{A})$
 $\mathbf{A} => \mathbf{A}$
 $(\mathbf{A} => \mathbf{A}) => \lnot \lnot (\mathbf{A} => \mathbf{A})$
 $\lnot \lnot (\mathbf{A} => \mathbf{A})$
