@@ -26,7 +26,7 @@ struct
                       )
 
   exception Failed_unification_atomic_formula of atomic_formula * atomic_formula
-  (** Free variables of an atomic formula. These are all the variables of the formula *)
+  (* Free variables of an atomic formula. These are all the variables of the formula *)
   let free_variables_of_atomic_formula = function
     | Eq(t1,t2) -> SetVar.union (variables_term t1) (variables_term t2)
     | Relation(_, lt) -> List.fold_left SetVar.union SetVar.empty (List.map variables_term lt)
@@ -172,7 +172,7 @@ struct
           match f, g with
           | FImply(h1, h2), FImply(h2', h1') ->
             if (h1 = h1' && h2 = h2')
-            (**TODO   TESTER ALPHA EQUIV????? **)
+            (*TODO   TESTER ALPHA EQUIV????? *)
             then print_bin "equiv" "<=>" h1 h2
             else begin
               if seq = "and" || seq ="init" || (seq ="forall") || (seq ="exists")
