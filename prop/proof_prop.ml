@@ -101,12 +101,13 @@ let theorems_prop = ref []
 
 exception Invalid_demonstration of formula_prop * formula_prop list;;
 Printexc.register_printer (function Invalid_demonstration(f,t) -> 
-    Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
+    Printexc.print_backtrace stdout; Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
          (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n") 
                                   | _ -> None)
 ;;
 
 let rec kernel_verif ~hypotheses ~proved ~to_prove = 
+Printexc.record_backtrace true;
   match to_prove with
   | [] -> true
   | f_i::p ->  
@@ -131,7 +132,7 @@ let rec kernel_verif ~hypotheses ~proved ~to_prove =
     then 
       kernel_verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
-      raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
+            (Printexc.print_backtrace stderr ; raise (Invalid_demonstration (f_i,List.rev (f_i::proved))))
 (*TODO | TPPAxiom (name_ax, formula_ax) :: p -> 
    if List.mem {kernel_name_theorem_prop=name_ax;kernel_conclusion_propformula_ax} !axioms_prop then 
       verif ~hypotheses ~proved:(formula_ax :: proved) ~to_prove:p
@@ -170,7 +171,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
     then 
       verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
-      raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
+                  (Printexc.print_backtrace stderr ;raise (Invalid_demonstration (f_i,List.rev (f_i::proved))))
 
 (*TODO | TPPAxiom (name_ax, formula_ax) :: p -> 
    if List.mem {kernel_name_theorem_prop=name_ax;kernel_conclusion_propformula_ax} !axioms_prop then 

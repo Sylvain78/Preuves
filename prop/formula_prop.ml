@@ -40,7 +40,7 @@ let rec printer_formula_prop ff f =
   let rec print_bin seq op f g =
     printer_formula_prop_aux ff seq f;
     Format.fprintf ff "%s" (" "^op^" ");
-    printer_formula_prop_aux ff seq g;
+    printer_formula_prop_aux ff seq g
   and printer_formula_prop_aux ff seq =
     let print_par f =
       Format.fprintf ff "(";
@@ -70,12 +70,16 @@ let rec printer_formula_prop ff f =
         print_par (fun () -> print_bin "impl" "\\implies" f g)
     | (PApply_notation 
          {
-           apply_notation_prop = _  as n;
+           apply_notation_prop         = _  as n;
            apply_notation_prop_params  = _ as list_params  
-         }) as f ->  
+         }) as f -> 
       let  replace  m = function 
         | Param a  -> begin
-            try  "(" ^ (to_string_formula_prop  (List.assoc (Param a) m)) ^ ")"
+            try  
+              match List.assoc (Param a) m
+              with 
+              | PVar _ | PMetaVar _ as v ->  to_string_formula_prop v
+              | f      -> "(" ^ (to_string_formula_prop f) ^ ")"
             with Not_found -> failwith "apply_notations"
           end
         | String s  -> s 
@@ -85,13 +89,20 @@ let rec printer_formula_prop ff f =
       let notation_with_params_replaced = List.map (replace map_param_val ) n.notation_prop_notation
       in
       if (seq = "notation" || seq = "init") then 
-        Format.fprintf ff "%s" (List.fold_left  (fun s t -> s ^ t) "" notation_with_params_replaced)
+        begin
+          Format.fprintf ff "%s" (List.fold_left  (fun s t -> s ^ t) "" notation_with_params_replaced)
+        end
       else print_par (fun () -> printer_formula_prop_aux ff "notation" f)
   in
   printer_formula_prop_aux ff "init" f
 and to_string_formula_prop f =
-  printer_formula_prop Format.str_formatter f;
-  Format.flush_str_formatter ()
+  let b = Buffer.create 13
+  in
+  let ff = Format.formatter_of_buffer b
+  in
+  printer_formula_prop ff f;
+  Format.pp_print_flush ff ();
+  Buffer.contents b
 
 let get_semantique formula_from_string ({apply_notation_prop; apply_notation_prop_params}:apply_notation_prop) =
   let map_params = List.combine apply_notation_prop.notation_prop_params apply_notation_prop_params

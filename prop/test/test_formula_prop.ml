@@ -605,8 +605,12 @@ let test_to_string_formula_pvar_metavar _ =
   in assert_equal  "\\mathbf{A}" s
 
 let test_to_string_formula_pneg _ =
-  let s = to_string_formula_prop  (formula_from_string "\\lnot X_1")
+  let s = to_string_formula_prop (formula_from_string "\\lnot X_1")
   in assert_equal s "\\lnot X_1"
+
+let test_to_string_formula_pneg_notation _ =
+  let s = to_string_formula_prop (formula_from_string "\\lnot \\lnot (\\mathbf{A} => \\mathbf{A})")
+  in assert_equal ~printer:(fun s -> s) "\\lnot \\lnot (\\mathbf{A} => \\mathbf{A})" s
 
 let test_to_string_formula_pand _ =
   let s =  to_string_formula_prop  (formula_from_string "X_1 \\land X_2")
@@ -743,6 +747,7 @@ let to_string_formula_suite =
     "test to_string_formula PVar X_{11}">:: test_to_string_formula_pvar_11;
     "test to_string_formula PMetaVar ">:: test_to_string_formula_pvar_metavar;
     "test to_string_formula PNeg">:: test_to_string_formula_pneg;
+    "test to_string_formula PNeg Notation ">:: test_to_string_formula_pneg_notation;
     "test to_string_formula PAnd">:: test_to_string_formula_pand;
     "test to_string_formula PAnd par">:: test_to_string_formula_pand_par;
     "test to_string_formula POr">:: test_to_string_formula_por;
