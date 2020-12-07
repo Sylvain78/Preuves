@@ -1,7 +1,7 @@
 --tasks
 dune build server/proof_server.exe
 dune runtest
-BISECT_ENABLE=YES dune runtest --no-buffer --force
+dune runtest --instrument-with bisect_ppx --force
 bisect-ppx-report html
 dune build prop/prop.cma
 dune build util/util.cma
