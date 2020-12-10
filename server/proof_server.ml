@@ -13,7 +13,9 @@ open Util__Unix_tools
 module type SESSION = module type of Session
 
 let socket_name = 
-  ref None  
+  ref None
+let max_session =
+  ref None
 let file_name = ref (None : string option)
 
 let usage = "usage: proof-server [options] "
@@ -33,6 +35,7 @@ let specs =
   [
     "-socket", Arg.String (fun x -> socket_name := Some x),
     " <socket>  Set socket name to <socket> : filename, host:port, ip:port";
+    "-max_session", Arg.Int (fun x -> max_session := Some x), " maximum number of sessions accepted by the server before shutdown";
     "-v",  Arg.Unit print_version_string, " Print version and exit";
     "-version",  Arg.Unit print_version_string, " Print version and exit";
     "-vnum",  Arg.Unit print_version_num, " Print version number and exit";
@@ -62,7 +65,7 @@ let save_session mode file=
        * in
        * print_endline ("Save parser to : "^"\""^base^"_parser"^ext^"\"");
        * Prop.Prop_parser.save_parser ("\""^base^"_parser"^ext^"\"");
-       *)
+      *)
       Marshal.to_channel oc 
         (session: Prop.Kernel_theorem_prop.kernel_theorem_prop Session.session) 
         []
@@ -92,8 +95,8 @@ let rec load_session mode file channels =
 and eval s channels =  
   print_endline ("eval : " ^ s); 
   (*let module M = (val session.prop : Session.P) 
-  in 
-  print_endline ("number of axioms : "^ (string_of_int @@ List.length @@ !M.axioms_prop));
+    in 
+    print_endline ("number of axioms : "^ (string_of_int @@ List.length @@ !M.axioms_prop));
   *)
   try
     let command = decode s
@@ -153,42 +156,42 @@ and eval s channels =
       end
     | Axiom { name ; formula } -> 
       if (session.mode = Session.Prop) 
-        then
-          begin
-            if (List.exists (fun {kernel_name_theorem_prop; _} -> name=kernel_name_theorem_prop) session.axioms)
-            then
-              Answer ("Axiom " ^ name ^ " already defined")  
-            else 
-              begin
-                session.axioms <- {kernel_kind_prop=Axiom;kernel_proof_prop=[];kernel_name_theorem_prop = name;kernel_conclusion_prop=Prop.Prop_parser.formula_from_string formula} :: session.axioms;
-                Ok
-              end
-          end
-        else Answer("Axiom for first order unimplemented")
+      then
+        begin
+          if (List.exists (fun {kernel_name_theorem_prop; _} -> name=kernel_name_theorem_prop) session.axioms)
+          then
+            Answer ("Axiom " ^ name ^ " already defined")  
+          else 
+            begin
+              session.axioms <- {kernel_kind_prop=Axiom;kernel_proof_prop=[];kernel_name_theorem_prop = name;kernel_conclusion_prop=Prop.Prop_parser.formula_from_string formula} :: session.axioms;
+              Ok
+            end
+        end
+      else Answer("Axiom for first order unimplemented")
     | Theorem {name; params=_; premisses; conclusion; demonstration; status=_} ->
-        if session.mode = Session.Prop (*TODO remplacer par un match sur mode*)
-        then
-          begin
-            let verif_function =
-              match session.speed with
-              | Paranoid ->Prop.Proof_prop.prop_proof_kernel_verif 
-              | Fast -> Prop.Proof_prop.prop_proof_verif
-            in
-            let verif =  (verif_function ~hyp:(List.map Prop.Proof_prop.formula_from_string premisses) 
-                            (Prop.Proof_prop.formula_from_string conclusion) 
-                            ~proof:(List.map (fun s -> Prop.Proof_prop.formula_from_string s) demonstration)) 
-            in
-            (* TODO Add theorem to the list, with its status*)
-            if verif then
-              Answer ("Theorem " ^ name ^ " verified.")
-            else
-              Answer ("Theorem " ^ name ^ " not verified.")
-          end
-        else if session.mode = Session.First_order
-        then 
-          failwith "TheoremFirst_order"
-        else
-          failwith "session mode not Prop neither First_order"
+      if session.mode = Session.Prop (*TODO remplacer par un match sur mode*)
+      then
+        begin
+          let verif_function =
+            match session.speed with
+            | Paranoid ->Prop.Proof_prop.prop_proof_kernel_verif 
+            | Fast -> Prop.Proof_prop.prop_proof_verif
+          in
+          let verif =  (verif_function ~hyp:(List.map Prop.Proof_prop.formula_from_string premisses) 
+                          (Prop.Proof_prop.formula_from_string conclusion) 
+                          ~proof:(List.map (fun s -> Prop.Proof_prop.formula_from_string s) demonstration)) 
+          in
+          (* TODO Add theorem to the list, with its status*)
+          if verif then
+            Answer ("Theorem " ^ name ^ " verified.")
+          else
+            Answer ("Theorem " ^ name ^ " not verified.")
+        end
+      else if session.mode = Session.First_order
+      then 
+        failwith "TheoremFirst_order"
+      else
+        failwith "session mode not Prop neither First_order"
     | Show theorem_name ->
       if (session.mode = Session.Prop)
       then
@@ -311,7 +314,11 @@ let main () =
        end;
 
      listen sock_listen ~max:3;
-     while true do
+     while (match !max_session 
+            with 
+            | None -> true 
+            | Some n -> n > 0)
+     do
        let (sock, _) = accept sock_listen
        in
        let pid = fork()
@@ -323,7 +330,14 @@ let main () =
          begin 
            try 
              repl io_chan  
-           with End_of_file -> close io_chan.io_fd
+           with End_of_file -> 
+             begin 
+               match !max_session
+               with 
+               | Some n -> max_session:= Some (n-1) 
+               | None -> ();
+                 close io_chan.io_fd
+             end
          end
        | _ -> (*father*) 
          ()
