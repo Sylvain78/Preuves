@@ -6,8 +6,8 @@
  (name prop)
  (instrumentation (backend bisect_ppx))
   (modules (:standard))
- (libraries util dyp)
-)
+ (libraries util dyp landmarks)
+ (preprocess (pps landmarks.ppx --auto)))
 
 (rule
  (targets prop_parser.ml)
