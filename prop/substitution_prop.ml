@@ -1,6 +1,6 @@
 open Formula_prop
 
-(** Remplace la liste des variable lx par la liste des terms lt **)
+(** Replace the list of variable lx by the list of termes lt **)
 let simultaneous_substitution_var lx lt v = 
   (try List.assoc v (List.combine lx lt)
    with | Not_found -> v 
