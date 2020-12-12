@@ -27,7 +27,7 @@ let any_string = '"' (['\000'-'\033'] | ['\035'-'\255'])* '"'
 
 %parser
 /* Load the parser at beginning of parsing*/
-expr1 : 
+expr1 :
     | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.Dyp.pp_dev] } expr eof { $2 }
 
 notation1 :
@@ -50,7 +50,7 @@ equiv
 Param
 a b
 Syntax
-a "\equiv" b 
+a "\equiv" b
 Semantics
 "(" a "\imply" b ")/\\(" b "\imply" a ")"
 End
@@ -63,33 +63,33 @@ notation:
     "Syntax" '\n' syntax '\n' /*Extract params list*/
     "Semantics" '\n' semantique '\n'
     "End" ...@{
-        let rec notation_elements_to_regexp = function 
+        let rec notation_elements_to_regexp = function
         | [] -> []
         | Param _ ::l -> (Dyp.Non_ter("expr", Dyp.No_priority)) :: notation_elements_to_regexp l
         | String s ::l -> Dyp.Regexp(Dyp.RE_String s) :: notation_elements_to_regexp l
         in
-        let notation = 
+        let notation =
             {
                notation_prop_name = $3;
                notation_prop_params = $7;
                notation_prop_notation = $11;
-               notation_prop_semantique = $15; 
-            }    
+               notation_prop_semantique = $15;
+            }
         in
-        let rule       = ("expr", notation_elements_to_regexp $11, "default_priority",[]) 
-        and action _ l = Obj_expr (PApply_notation({apply_notation_prop = notation; 
-						    apply_notation_prop_params = List.map (function Obj_expr e -> e | _ -> assert false) 
+        let rule       = ("expr", notation_elements_to_regexp $11, "default_priority",[])
+        and action _ l = Obj_expr (PApply_notation({apply_notation_prop = notation;
+						    apply_notation_prop_params = List.map (function Obj_expr e -> e | _ -> assert false)
 						    				          (List.filter (function Obj_expr _ -> true | _ -> false) l)
 						   })),
-			 [] 
+			 []
         in
-        notation, 
+        notation,
         [ Dyp.Add_rules [(rule,action)] ; Dyp.Keep_grammar]
-        } 
-    
+        }
+
     {parser := Some dyp.Dyp.parser_pilot; $18}
 
-param_list: 
+param_list:
     | param* { $1 }
 param:
     | ident { Param $1 }
@@ -116,39 +116,47 @@ save:
 %%
 
 {
-  let formula_from_string s =
-  let pp = match !parser with 
-  | None -> let pp = pp() in parser := Some pp; pp
-  | Some p -> p
-  in
-  let l = (expr1 (Dyp.from_string pp s))
-  in 
-  match l with [ (f,_) ] -> f 
-  | (_,_)::(_,_)::_ -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^") : more than one interpretation"))
-  |   _   -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^")"))
+  let formulas_cache = Hashtbl.create 3
 
-  let notation_from_string s =          
-  let pp = match !parser with 
-  | None -> let pp = pp() in parser := Some pp; pp
-  | Some p -> p
+  let formula_from_string s =
+    try
+      Hashtbl.find formulas_cache s
+    with
+    | Not_found ->
+      let pp = match !parser with
+        | None -> let pp = pp() in parser := Some pp; pp
+        | Some p -> p
+      in
+      let l = (expr1 (Dyp.from_string pp s))
+      in
+      match l with [ (f,_) ] -> Hashtbl.add formulas_cache s f;f
+                 | (_,_)::(_,_)::_ -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^") : more than one interpretation"))
+                 |   _   -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^")"))
+
+let notation_from_string s =
+  let pp = match !parser with
+    | None -> let pp = pp() in parser := Some pp; pp
+    | Some p -> p
   in
   let l = (notation1 (Dyp.from_string pp s))
-  in 
-  match l with [ (n,_) ] -> n 
+  in
+  match l
+  with
+  | [ (n,_) ] -> (*in case of notation, reset the cache*) Hashtbl.clear formulas_cache;n
   |   _   -> raise (Failure "[Prop] Parser.notation_from_string")
 
 (*
-let save_parser s = 
-  let pp = match !parser with 
+let save_parser s =
+  let pp = match !parser with
   | None -> let pp = pp() in parser := Some pp; pp
   | Some p -> p
   in
 ignore (save (Dyp.from_string pp s))
 *)
-} 
+}
 
 %mli {
-val formula_from_string : string -> Formula_prop.formula_prop 
+val formula_from_string : string -> Formula_prop.formula_prop
 val notation_from_string : string -> Formula_prop.notation_prop
 (* TODO one day...
    val save_parser : string -> unit
