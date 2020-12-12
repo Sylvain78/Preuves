@@ -21,6 +21,7 @@ let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v)
       ("Load", LOAD) ;
       ("binary", BINARY);
       ("text", TEXT) ;
+      ("Quit", QUIT) ;
 ]
 let buffer = Buffer.create 256
 let store_string_char c = Buffer.add_char buffer c

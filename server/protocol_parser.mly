@@ -21,6 +21,7 @@
 %token TEXT
 %token HISTORY
 %token SHOW
+%token QUIT
 
 %token<string> IDENT
 %token<string> QUOTED_STRING
@@ -106,6 +107,7 @@ file_command :
 ;
 
 info :
+| QUIT {Quit}
 | HISTORY { History }
 | SHOW NEWLINE
   IDENT { Show $3 }
