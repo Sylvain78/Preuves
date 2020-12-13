@@ -1,0 +1,7 @@
+(env
+ (dev
+  (flags (:standard -warn-error -27-32))))
+
+(tests (names test_kernel_prop_proof)
+ (libraries kernel_prop ounit2)
+)

@@ -1,0 +1,10 @@
+(env
+ (dev
+  (flags (:standard -warn-error -27-32))))
+
+(library 
+ (name kernel_prop)
+ (instrumentation (backend bisect_ppx))
+  (modules (:standard))
+ (libraries util prop landmarks)
+ (preprocess (pps landmarks.ppx --auto)))
