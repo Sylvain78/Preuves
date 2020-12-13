@@ -440,5 +440,5 @@ let demo1 = demo @ [
     a_ou_b =>. c;];;
 
 let verif_S3 = 
-  (prop_proof_kernel_verif ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> (*TPPFormula*) s) demo1))
+  (prop_proof_verif ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> s) demo1))
 ;;
