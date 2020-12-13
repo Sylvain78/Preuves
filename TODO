@@ -1,10 +1,10 @@
-
---remove kernel_verif : it is clear that expansing definition deep to the kernel level will lead to untractable and too lengthy terms
+-- Implement verification in 2 passes : 
+	* compile proof (list of formula) to proof AST (list of proof_term)
+	* verification of AST (apply all proof terms to get the desired formula on top of stack)
 -- Better separation of work between verif/kernel_verif
 -- Better loading/saving of session
 -- Adding more units test to prop
 --Finish the first_order layer once prop is finished
---Take account for paranoid verification
 --Clean the session to be able to marshal them
 
 --Notations and substitutions : when substituting within a notation, 
