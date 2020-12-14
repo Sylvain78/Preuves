@@ -102,6 +102,7 @@ and eval s channels =
     let command = decode s
     in
     match command with 
+    | Quit -> raise Exit
     | Prop ->  
       session.mode<-Session.Prop;
       Ok
@@ -293,14 +294,21 @@ let main () =
       | _ -> Filename.concat (Filename.get_temp_dir_name ())
                ("student_socket" ^ (string_of_int (Unix.getpid ())))
   in
-  let socket_domain,socket_address = convert_address address  in
+  let socket_domain,socket_address = convert_address address in
   file_name :=
     (match socket_address with
      | ADDR_UNIX file ->
        Some file
      | _ ->
        None);
-  let sock_listen = socket ~cloexec:true ~domain:socket_domain ~kind:SOCK_STREAM ~protocol:0 in
+  let sock_listen = socket ~cloexec:true ~domain:socket_domain ~kind:SOCK_STREAM ~protocol:0
+  in
+  let close_sock_listen () =
+    match !file_name
+    with
+    | Some file -> unlink file
+    | None -> close sock_listen
+  in
   (try
      setsockopt sock_listen SO_REUSEADDR true;
      bind sock_listen ~addr:socket_address;
@@ -317,10 +325,17 @@ let main () =
      while (match !max_session 
             with 
             | None -> true 
-            | Some n -> n > 0)
+            | Some n -> Format.printf  "max_sessions = %d\n" n; flush Stdlib.stdout;n > 0)
      do
        let (sock, _) = accept sock_listen
        in
+       begin
+         match !max_session
+         with 
+         | Some n -> max_session:= Some (n-1) 
+         | None -> ()
+       end; 
+
        let pid = fork()
        in
        match pid with 
@@ -330,20 +345,18 @@ let main () =
          begin 
            try 
              repl io_chan  
-           with End_of_file -> 
+           with 
+           | End_of_file | Exit -> 
              begin 
-               match !max_session
-               with 
-               | Some n -> max_session:= Some (n-1) 
-               | None -> ();
-                 close io_chan.io_fd
+               close io_chan.io_fd;
+               exit 0 (*child quit the loop*)
              end
          end
        | _ -> (*father*) 
          ()
-
-     done
-   with x -> (Printexc.print_backtrace Stdlib.stdout ; match !file_name with Some file -> unlink file | None -> ());close sock_listen; raise x)
+     done;
+     close_sock_listen();
+   with x -> Printexc.print_backtrace Stdlib.stdout ; close_sock_listen(); raise x)
 
 
 let _ = main()

@@ -10,3 +10,4 @@ type command =
   | Axiom of {name:string; formula:string} 
   | History
   | Show of string
+  | Quit

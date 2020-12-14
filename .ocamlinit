@@ -1,13 +1,24 @@
-#use "topfind";;
-#require "dyp";;
-#require "oUnit";;
-#load "dyp.cma";;
-open Dyp;;
-#directory "_build/default/util";;
-#load "util.cma";;
+#directory "/boot/home/.opam/4.11.1/lib/landmarks";;
+#load "landmark.cma"
 
-#directory "_build/default/prop";; 
-#load "prop.cma"
+#load "unix.cma"
+#load "str.cma"
+#directory "/boot/home/.opam/4.11.1/lib/dyp";;
+
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/.first_order.objs/byte";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/.first_order.objs/native";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/byte";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/native";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/native";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/byte";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/native";;
+#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/util.cma";;
+#load "dyp.cma";;
+#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/prop.cma";;
+(*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/first_order.cma";;*)
+(*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/server.cma";;*)
+
 open Prop
 open Formula_prop
 open Prop_parser
@@ -19,12 +30,12 @@ let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
 let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
-let x1,x2,x3 = PVar (PVVar 1), PVar (PVVar 2), PVar (PVVar 3)
+let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 let a,b,c=x1,x2,x3
 let tout = neg (a=>.a)
 and a_ou_b = (a||.b)
 and a_entraine_c = (a=>.c)
-  and b_entraine_c = (b=>.c)
+and b_entraine_c = (b=>.c)
 let demo = 
   let tout = neg (a=>.a)
   and a_ou_b = (a||.b)
@@ -423,11 +434,43 @@ let demo =
     (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));
   ]
 
-(*
+let f() = prop_proof_verif ~hyp:[]
+    (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}")
+    ~proof:(List.map formula_from_string [
+          "((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})) \\implies ((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies (((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A}))";
+          "(((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})";
+          "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}";
+        ])
+
+let g() = prop_proof_verif ~hyp:[]
+(formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}")
+~proof:(List.map formula_from_string [
+		"((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
+		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}))";
+		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})) => ((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => (((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A}))";
+		"(((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})";
+		"(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}";
+])
+
+
 let verif_ou_diamant =
-  (proof_verification ~hyp:[] (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c)))
+  (prop_proof_kernel_verif ~hyp:[] (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c)))
      ~proof:demo);;
-#cd "_build/default/first_order";; 
+(*#cd "_build/default/first_order";; 
 #load "first_order.cma"
 #cd "test"
 #load "test_schemas_first_order.cmo"

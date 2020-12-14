@@ -271,6 +271,12 @@ $(\mathbf{A} \lor \mathbf{B}) => (\mathbf{B} => (\mathbf{B} \lor \mathbf{A}))$
 $(\mathbf{A} \lor \mathbf{B}) => (\mathbf{B} \lor \mathbf{A})$
 End
 
+Quit
+
+Save
+binary
+"/tmp/save.bin"
+
 Theorem
 S4
 Premisses
