@@ -16,12 +16,10 @@ let (read_formule : string -> (formula_prop * string) list) = function s ->
         in
 Prop_parser.formule lexbuf
 *)
-exception Failed_Unification of formula_prop * formula_prop
-
 
 (* Equivalence of formulas, modulo notations*)
 let rec equiv_notation f g =
-    match f, g 
+  match f, g 
   with
   | PVar v1, PVar v2 -> v1=v2
   | PMetaVar v1, PMetaVar v2 -> v1=v2
@@ -30,59 +28,26 @@ let rec equiv_notation f g =
   | POr(f1, f2) , POr(g1, g2) 
   | PImpl(f1, f2) , PImpl(g1, g2) ->  (equiv_notation f2 g2) && (equiv_notation f1 g1)
   | PApply_notation {apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f}, 
-        PApply_notation {apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params=apply_notation_prop_params_g} -> 
-        if  (apply_notation_prop_f.notation_prop_name = apply_notation_prop_g.notation_prop_name) 
+    PApply_notation {apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params=apply_notation_prop_params_g} -> 
+    if (apply_notation_prop_f.notation_prop_name = apply_notation_prop_g.notation_prop_name) 
     then
-            List.for_all2 (fun f -> fun g -> equiv_notation f g) apply_notation_prop_params_f apply_notation_prop_params_g
+      List.for_all2 (fun f -> fun g -> equiv_notation f g) apply_notation_prop_params_f apply_notation_prop_params_g
     else 
-            false
+      false
   | PApply_notation f, g ->
-        let f' = get_semantique formula_from_string f  in
-            equiv_notation f' g
+    let f' = get_semantique f in
+    equiv_notation f' g
   | f,  PApply_notation g ->
-        let g' = get_semantique formula_from_string g  in
-            equiv_notation f g'
+    let g' = get_semantique g in
+    equiv_notation f g'
   | _ -> false
 
-(**	@param l list of PVariables of g already instanciated in f *)
-let instance f g =
-  let rec instance_aux l f g  = match f, g 
-    with
-    | _, (PVar _ as g) -> begin
-        try
-          let (_, t) = List.find (fun (v1, _) -> v1 = g) l
-          in
-          if (t = f) then l
-          else raise (Failed_Unification(f, g))
-        with Not_found -> (g, f)::l (*g=Xi bound to f*)
-      end
-    | PNeg f1 , PNeg g1 -> instance_aux l f1 g1
-    | PAnd(f1, f2) , PAnd(g1, g2) 
-    | POr(f1, f2) , POr(g1, g2) 
-    | PImpl(f1, f2) , PImpl(g1, g2) -> instance_aux (instance_aux l f2 g2) f1 g1
-    | PApply_notation {apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f}, 
-      PApply_notation {apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params=apply_notation_prop_params_g} -> 
-      if  (apply_notation_prop_f.notation_prop_name = apply_notation_prop_g.notation_prop_name) 
-      then
-        (List.fold_left (fun list_instances (f,g) -> instance_aux list_instances f g) l  (List.combine apply_notation_prop_params_f apply_notation_prop_params_g) )
-      else raise (Failed_Unification(f, g))
-    | PApply_notation f, g ->
-      let f' = get_semantique formula_from_string f  in
-      instance_aux l f' g
-    | f,  PApply_notation g ->
-      let g' = get_semantique formula_from_string g  in
-      instance_aux l f g'
-    | _ -> raise (Failed_Unification(f, g))
-  in
-  try  
-    instance_aux [] f g <> []
-  with _ -> false
 
 let cut f p =
   List.exists (function | PImpl(g1, g2) -> g2 = f && List.mem g1 p 
                         | PApply_notation n -> 
                           begin
-                            match get_semantique formula_from_string n 
+                            match get_semantique n 
                             with 
                             | PImpl(g1,g2) -> g2 = f && List.mem g1 p
                             | PApply_notation _ -> failwith "cut : get_semantique evaluates to another notation"
@@ -95,7 +60,7 @@ let theorems_prop = ref []
 exception Invalid_demonstration of formula_prop * formula_prop list;;
 Printexc.register_printer (function Invalid_demonstration(f,t) -> 
     Printexc.print_backtrace stdout; Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
-         (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n") 
+                                          (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n") 
                                   | _ -> None)
 ;;
 
@@ -118,12 +83,12 @@ let rec verif ~hypotheses ~proved ~to_prove =
         | [] -> false 
         (*application of notations*)
         | f::_ -> equiv_notation f_i f
-        end
+      end
     )
     then 
       verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
-                  (Printexc.print_backtrace stderr ;raise (Invalid_demonstration (f_i,List.rev (f_i::proved))))
+      (Printexc.print_backtrace stderr ;raise (Invalid_demonstration (f_i,List.rev (f_i::proved))))
 
 
 let prop_proof_verif ~hyp:hypotheses f ~proof:proof =
@@ -142,9 +107,9 @@ let prop_proof_verif ~hyp:hypotheses f ~proof:proof =
     verif ~hypotheses  ~proved:[] ~to_prove:proof
 ;;
 
-(*
-(* |   F \\implies  *)
-proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1") 
+
+(* |   F \\implies  F *)
+prop_proof_verif  ~hyp:[] (formula_from_string "X_1 \\implies X_1") 
   ~proof:(List.map formula_from_string [
       "(X_1  \\implies ((X_1  \\implies  X_1) \\implies X_1))  \\implies 
     (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
@@ -153,32 +118,39 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\implies X_1")
       "X_1 \\implies (X_1 \\implies X_1)";
       "X_1 \\implies X_1"
     ]);;
-*)
+
+theorems_prop := {
+  kernel_kind_prop = Theorem;
+  kernel_name_theorem_prop="[Bourbaki]C8";
+  kernel_proof_prop = [];
+  kernel_conclusion_prop=formula_from_string "X_1 \\implies X_1";
+}::!theorems_prop;;
+
 (* |   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)*)
 let demo_chaining = 
-List.map (fun s -> (formula_from_string s)) [
-      "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
-      "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-      "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-      "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-      "(((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
-      "((X_2 \\implies X_3) \\implies  (X_1 \\implies (X_2 \\implies X_3)))";
-      "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))";
-      "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
-      "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
-      "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))) \\implies ((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
-      "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+  List.map (fun s -> (formula_from_string s)) [
+    "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
+    "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "(((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+    "((X_2 \\implies X_3) \\implies  (X_1 \\implies (X_2 \\implies X_3)))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))";
+    "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+    "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+    "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))) \\implies ((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+    "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
 
-      (*k*)
-      "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)))";
+    (*k*)
+    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)))";
 
-      (*s*)
-      "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))  \\implies 
+    (*s*)
+    "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))  \\implies 
     (((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
 
-      "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
-      "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
-    ] 
+    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+    "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
+  ] 
 ;;
 
 
@@ -257,22 +229,6 @@ theorems_prop := {
 }::!theorems_prop;;
 
 
-(* | A  \\implies A*)
-prop_proof_verif ~hyp:[] (formula_from_string "\\mathbf{A} => \\mathbf{A}")
-  ~proof:(List.map formula_from_string [
-      "(\\mathbf{A} => ((\\mathbf{A} => \\mathbf{A}) => \\mathbf{A})) => ((\\mathbf{A} => (\\mathbf{A} => \\mathbf{A})) => (\\mathbf{A} => \\mathbf{A}))";
-      "\\mathbf{A} => ((\\mathbf{A} => \\mathbf{A}) => \\mathbf{A})";
-      "(\\mathbf{A} => (\\mathbf{A} => \\mathbf{A})) => (\\mathbf{A} => \\mathbf{A})";
-      "\\mathbf{A} => (\\mathbf{A} => \\mathbf{A})";
-      "\\mathbf{A} => \\mathbf{A}"
-    ]);;
-
-theorems_prop := {
-  kernel_kind_prop = Assumed;
-  kernel_name_theorem_prop="[Bourbaki]C8";
-  kernel_proof_prop = [];
-  kernel_conclusion_prop=formula_from_string "X_1 \\implies X_1";
-}::!theorems_prop;;
 (*|   A ou \\lnot A*)
 (* TODO delete when not need anymore
    let X_1 \\lor \\lnot X_1 = X_1 \\lor \\lnot X_1
