@@ -581,15 +581,15 @@ let verif_ou_idempotent =
   ((X_1 \\lor X_2)  \\implies   ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3)));
   ]);;
 *)
-let test_tauto _ = assert_bool "tauto"  (verif_tauto)
-let test_cut _ = assert_bool "cut"  (verif_cut)
-let test_contraposee _ = assert_bool "contraposee"  (verif_contraposee)
-let test_tiers_exclus _ = assert_bool "tiers exclus"  (verif_tiers_exclus)
-let test_rajout_hypothese _ = assert_bool "rajout hypothese"  (verif_rajout_hypothese)
+let test_tauto _ = assert_bool "tauto" (verif_tauto)
+let test_cut _ = assert_bool "cut" (verif_cut)
+let test_contraposee _ = assert_bool "contraposee" (verif_contraposee)
+let test_tiers_exclus _ = assert_bool "tiers exclus" (verif_tiers_exclus)
+let test_rajout_hypothese _ = assert_bool "rajout hypothese" (verif_rajout_hypothese)
 let test_ou_idempotent _ = assert_bool "ou idempotent" (verif_ou_idempotent)
 (*let test_ou_diamant _ = assert_bool "ou diamant" (verif_ou_diamant)*)
 
-let test_instance _ = assert_bool "instance" (instance (formula_from_string "X_1 \\land X_2") (formula_from_string "X_1 \\land X_2"))
+let test_instance _ = assert_equal [(PVar 1, PVar 1); (PVar 2, PVar 2)] (instance (formula_from_string "X_1 \\land X_2") (formula_from_string "X_1 \\land X_2"))
 
 (** Tests for to_string *)
 let test_to_string_formula_pvar _ =

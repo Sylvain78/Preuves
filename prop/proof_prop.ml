@@ -74,7 +74,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
       (*Formula already present *)
       || List.mem f_i proved 
       (*Formula is an instance of a theorem or axiom *)
-      || (List.exists (fun a -> instance f_i a.kernel_conclusion_prop) 
+      || (List.exists (fun a -> try ignore(instance f_i a.kernel_conclusion_prop);true with _ -> false) 
             (!theorems_prop @ !axioms_prop)) 
       (*cut*)
       || (cut f_i proved) 

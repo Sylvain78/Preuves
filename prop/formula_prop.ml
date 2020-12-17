@@ -41,12 +41,12 @@ let get_semantique_aux to_string_formula_prop formula_from_string ({apply_notati
     | String s -> " " ^ s ^ " "
     | Param _ as p -> "(" ^ (to_string_formula_prop (List.assoc p map_params)) ^ ")"
   in
-  formula_from_string
+  !formula_from_string
     (List.fold_left (fun s e -> s^(replace e)) "" apply_notation_prop.notation_prop_semantique)
 
 (**	@param l list of PVariables of g already instanciated in f *)
 let instance_aux to_string_formula_prop formula_from_string f g =
-  let rec instance_aux l f g  = match f, g 
+  let rec instance_aux2 l f g  = match f, g 
     with
     | _, (PVar _ as g) -> begin
         try
@@ -56,28 +56,25 @@ let instance_aux to_string_formula_prop formula_from_string f g =
           else raise (Failed_Unification(f, g))
         with Not_found -> (g, f)::l (*g=Xi bound to f*)
       end
-    | PNeg f1 , PNeg g1 -> instance_aux l f1 g1
+    | PNeg f1 , PNeg g1 -> instance_aux2 l f1 g1
     | PAnd(f1, f2) , PAnd(g1, g2) 
     | POr(f1, f2) , POr(g1, g2) 
-    | PImpl(f1, f2) , PImpl(g1, g2) -> instance_aux (instance_aux l f2 g2) f1 g1
+    | PImpl(f1, f2) , PImpl(g1, g2) -> instance_aux2 (instance_aux2 l f2 g2) f1 g1
     | PApply_notation {apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f}, 
       PApply_notation {apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params=apply_notation_prop_params_g} -> 
       if  (apply_notation_prop_f.notation_prop_name = apply_notation_prop_g.notation_prop_name) 
       then
-        (List.fold_left (fun list_instances (f,g) -> instance_aux list_instances f g) l  (List.combine apply_notation_prop_params_f apply_notation_prop_params_g) )
+        (List.fold_left (fun list_instances (f,g) -> instance_aux2 list_instances f g) l  (List.combine apply_notation_prop_params_f apply_notation_prop_params_g) )
       else raise (Failed_Unification(f, g))
     | PApply_notation f, g ->
       let f' = get_semantique_aux to_string_formula_prop formula_from_string  f in
-      instance_aux l f' g
+      instance_aux2 l f' g
     | f,  PApply_notation g ->
       let g' = get_semantique_aux to_string_formula_prop formula_from_string g in
-      instance_aux l f g'
+      instance_aux2 l f g'
     | _ -> raise (Failed_Unification(f, g))
   in
-  try  
-    instance_aux [] f g <> []
-  with _ -> false
-
+    instance_aux2 [] f g 
 
 (**
    Print formatters and String conversions
@@ -151,5 +148,5 @@ and to_string_formula_prop f =
   Buffer.contents b
 
 
-let get_semantique = get_semantique_aux to_string_formula_prop !formula_from_string
-let instance = instance_aux to_string_formula_prop !formula_from_string
+let get_semantique = get_semantique_aux to_string_formula_prop formula_from_string
+let instance = instance_aux to_string_formula_prop formula_from_string

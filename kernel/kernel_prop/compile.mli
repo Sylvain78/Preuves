@@ -1,4 +1,4 @@
 open Prop.Formula_prop
-open Kernel_prop_proof
+open Verif
 
-val compile_demonstration : formula_prop list -> kernel_proof
+val compile_demonstration : demo:formula_prop list -> theory:formula_prop list -> kernel_proof

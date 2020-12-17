@@ -1,3 +1,4 @@
+-- refactor the verif
 -- Implement verification in 2 passes : 
 	* compile proof (list of formula) to proof AST (list of proof_term)
 	* verification of AST (apply all proof terms to get the desired formula on top of stack)

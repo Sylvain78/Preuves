@@ -10,12 +10,14 @@
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/byte";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/native";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/native";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/.kernel_prop.objs/byte";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/byte";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/native";;
 #load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/util.cma";;
 #load "dyp.cma";;
 #load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/prop.cma";;
+#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/kernel_prop.cma";;
 (*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/first_order.cma";;*)
 (*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/server.cma";;*)
 
@@ -487,3 +489,7 @@ Hashtbl.find zf_dehornoy.relations (of_string "\\subset");;
 #load "test_ensembles.cmo"
 open Test_ensembles
 *)
+open Kernel_prop;;
+open Compile;;
+(compile_demonstration ~demo:[PImpl (PVar 3, PImpl(PVar 4, PVar 3))] ~theory:[]);;
+
