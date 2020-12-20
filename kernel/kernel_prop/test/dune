@@ -2,6 +2,6 @@
  (dev
   (flags (:standard -warn-error -27-32))))
 
-(tests (names test_kernel_prop_proof)
- (libraries kernel_prop ounit2)
+(tests (names test_compile test_compile_S1 )
+ (libraries kernel_prop prop ounit2)
 )

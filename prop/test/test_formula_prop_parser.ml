@@ -14,7 +14,8 @@ let test_x1_implies_x1 _ =
 
 let parser_formula_suite =
         "parser test" >:::
-                [ "test parenthesis ">:: test_parenthesis;
+                [ 
+                  "test parenthesis ">:: test_parenthesis;
                   "test x1" >:: test_x1;
                   "test_x1_implies_x1" >:: test_x1_implies_x1;
                 ]

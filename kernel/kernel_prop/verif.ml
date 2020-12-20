@@ -10,14 +10,14 @@ type kernel_proof =
     demonstration : kernel_proof_term  list ;
   }
 
-let kernel_verif f proof th =
+let kernel_verif ?(theory=[]) ~formula:f ~proof =
   (*verify formula is at the end of the proof*) 
   let rev_proof = List.rev proof
   in
   let formula_stack = ref []
   in
   let formula_from_proof_term = function
-    | Known i -> List.nth th i
+    | Known i -> List.nth theory i
     | Ax (i,subst) -> 
       let axiom = List.nth (!Prop.Axioms_prop.axioms_prop) i 
       in
