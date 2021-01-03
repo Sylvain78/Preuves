@@ -1,7 +1,3 @@
--- get rid of ref in formula_from_string
--- Implement verification in 2 passes : 
-	* compile proof (list of formula) to proof AST (list of proof_term)
-	* verification of AST (apply all proof terms to get the desired formula on top of stack)
 -- Better separation of work between verif/kernel_verif
 -- Better loading/saving of session
 -- Adding more units test to prop

@@ -1,4 +1,6 @@
 open Prop.Formula_prop
+open Prop.Formula_tooling
+
 type kernel_proof_term =
   | Ax of int * (int * formula_prop) list (*instantce of axiom i, with list of simulatenous substitution X_j => F_j*)
   | Known of int (*formula already known in the theory*)

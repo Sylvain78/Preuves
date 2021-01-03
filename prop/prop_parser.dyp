@@ -133,8 +133,6 @@ save:
                  | (_,_)::(_,_)::_ -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^") : more than one interpretation"))
                  |   _   -> raise (Failure ("[Prop] Parser.formula_from_string("^ s ^")"))
 
-let () = Formula_prop.formula_from_string := formula_from_string
-
 let notation_from_string s =
   let pp = match !parser with
     | None -> let pp = pp() in parser := Some pp; pp

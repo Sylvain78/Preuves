@@ -1,4 +1,5 @@
 open Prop.Formula_prop
+open Prop.Formula_tooling
 open Prop.Kernel_theorem_prop
 open Verif
 
