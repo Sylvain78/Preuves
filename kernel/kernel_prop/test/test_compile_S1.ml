@@ -13,6 +13,7 @@ let tout = neg (a=>.a)
 and a_ou_b = (a||.b)
 and a_entraine_c = (a=>.c)
 and b_entraine_c = (b=>.c)
+let diamond =  (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)))
 let demo = 
   let taut x =
     [
@@ -497,7 +498,7 @@ let demo =
             (*a_entraine_c=>.(b_entraine_c=>.c);
               (a_entraine_c=>.(b_entraine_c=>.c))=>. (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));*)
 
-            (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));
+           diamond;
           ];;
 let demo_S1 = 
   try 

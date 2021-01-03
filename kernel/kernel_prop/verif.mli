@@ -15,5 +15,5 @@ val kernel_verif :
   ?theory:Prop.Formula_prop.formula_prop list ->
   formula:Prop.Formula_prop.formula_prop ->
   proof:kernel_proof_term list ->
+  unit ->
   (unit, string) result
-

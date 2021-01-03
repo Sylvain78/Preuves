@@ -30,6 +30,7 @@ open Proof_prop
 
 #install_printer printer_formula_prop;;
 #use "prop/test/test_S1.ml";;
+#use "kernel/kernel_prop/test/test_compile_S1.ml";;
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
