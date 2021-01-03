@@ -173,10 +173,7 @@ and eval s channels =
       if session.mode = Session.Prop (*TODO remplacer par un match sur mode*)
       then
         begin
-          let verif_function =
-            match session.speed with
-            | Paranoid ->Prop.Proof_prop.prop_proof_kernel_verif 
-            | Fast -> Prop.Proof_prop.prop_proof_verif
+          let verif_function = Prop.Proof_prop.prop_proof_verif
           in
           let verif =  (verif_function ~hyp:(List.map Prop.Proof_prop.formula_from_string premisses) 
                           (Prop.Proof_prop.formula_from_string conclusion) 

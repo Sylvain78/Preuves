@@ -1,10 +1,7 @@
-
---remove kernel_verif : it is clear that expansing definition deep to the kernel level will lead to untractable and too lengthy terms
 -- Better separation of work between verif/kernel_verif
 -- Better loading/saving of session
 -- Adding more units test to prop
 --Finish the first_order layer once prop is finished
---Take account for paranoid verification
 --Clean the session to be able to marshal them
 
 --Notations and substitutions : when substituting within a notation, 

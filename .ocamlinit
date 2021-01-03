@@ -1,3 +1,5 @@
+#use "topfind";;
+#require "ounit2";;
 #directory "/boot/home/.opam/4.11.1/lib/landmarks";;
 #load "landmark.cma"
 
@@ -10,12 +12,14 @@
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/byte";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/native";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/native";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
+#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/.kernel_prop.objs/byte";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/byte";;
 #directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/native";;
 #load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/util.cma";;
 #load "dyp.cma";;
 #load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/prop.cma";;
+#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/kernel_prop.cma";;
 (*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/first_order.cma";;*)
 (*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/server.cma";;*)
 
@@ -26,6 +30,7 @@ open Proof_prop
 
 #install_printer printer_formula_prop;;
 #use "prop/test/test_S1.ml";;
+#use "kernel/kernel_prop/test/test_compile_S1.ml";;
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
@@ -36,6 +41,40 @@ let tout = neg (a=>.a)
 and a_ou_b = (a||.b)
 and a_entraine_c = (a=>.c)
 and b_entraine_c = (b=>.c)
+
+let f() = prop_proof_verif ~hyp:[]
+    (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}")
+    ~proof:(List.map formula_from_string [
+          "((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})) \\implies ((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies (((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A}))";
+          "(((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})";
+          "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}";
+        ])
+
+let g() = prop_proof_verif ~hyp:[]
+(formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}")
+~proof:(List.map formula_from_string [
+		"((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
+		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}))";
+		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})) => ((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => (((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A}))";
+		"(((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
+		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
+		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})";
+		"(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}";
+])
+
+(*TODO : decomment
 let demo = 
   let tout = neg (a=>.a)
   and a_ou_b = (a||.b)
@@ -433,43 +472,10 @@ let demo =
 
     (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));
   ]
-
-let f() = prop_proof_verif ~hyp:[]
-    (formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}")
-    ~proof:(List.map formula_from_string [
-          "((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})) \\implies ((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-          "((\\lnot \\mathbb{A}) \\implies ((\\lnot \\mathbb{A}) \\implies \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies (((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A}))";
-          "(((\\lnot \\mathbb{A}) \\implies (\\lnot \\mathbb{A})) \\implies ((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-          "((\\lnot \\mathbb{A}) \\implies (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) \\implies ((\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A})";
-          "(\\mathbb{A} \\lor \\mathbb{A}) \\implies \\mathbb{A}";
-        ])
-
-let g() = prop_proof_verif ~hyp:[]
-(formula_from_string "(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}")
-~proof:(List.map formula_from_string [
-		"((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))";
-		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}))";
-		"((\\lnot \\mathbb{A}) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})) => ((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-		"((\\lnot \\mathbb{A}) => ((\\lnot \\mathbb{A}) => \\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => (((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A}))";
-		"(((\\lnot \\mathbb{A}) => (\\lnot \\mathbb{A})) => ((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))))";
-		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A})))";
-		"((\\lnot \\mathbb{A}) => (\\lnot (\\mathbb{A} \\lor \\mathbb{A}))) => ((\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A})";
-		"(\\mathbb{A} \\lor \\mathbb{A}) => \\mathbb{A}";
-])
-
-
 let verif_ou_diamant =
   (prop_proof_kernel_verif ~hyp:[] (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c)))
      ~proof:demo);;
+*)
 (*#cd "_build/default/first_order";; 
 #load "first_order.cma"
 #cd "test"
@@ -487,3 +493,7 @@ Hashtbl.find zf_dehornoy.relations (of_string "\\subset");;
 #load "test_ensembles.cmo"
 open Test_ensembles
 *)
+open Kernel_prop;;
+open Compile;;
+(compile_demonstration ~demo:[PImpl (PVar 3, PImpl(PVar 4, PVar 3))] ~theory:[]);;
+
