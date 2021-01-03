@@ -11,7 +11,7 @@ let a6 = Prop_parser.formula_from_string "X_1 \\implies (X_2 \\implies (X_1 \\la
 let a7 = Prop_parser.formula_from_string "(X_1 \\land X_2) \\implies X_1";;
 let a8 = Prop_parser.formula_from_string "(X_1 \\land X_2) \\implies X_2";;
 
-let a9 = Prop_parser.formula_from_string "X_1 \\implies (X_1 \\lor X_2)";;
+let a9  = Prop_parser.formula_from_string "X_1 \\implies (X_1 \\lor X_2)";;
 let a10 = Prop_parser.formula_from_string "X_2 \\implies (X_1 \\lor X_2)";;
 let a11 = Prop_parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_2) \\implies X_2)";;
 
