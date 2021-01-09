@@ -271,8 +271,6 @@ $(\mathbf{A} \lor \mathbf{B}) => (\mathbf{B} => (\mathbf{B} \lor \mathbf{A}))$
 $(\mathbf{A} \lor \mathbf{B}) => (\mathbf{B} \lor \mathbf{A})$
 End
 
-Quit
-
 Save
 binary
 "/tmp/save.bin"
@@ -283,6 +281,49 @@ Premisses
 Conclusion
 $(\mathbf{A} => \mathbf{B}) => ((\mathbf{C} \lor \mathbf{A}) => (\mathbf{C} \lor \mathbf{B}))$
 Demonstration
+but :((a=>b) => ( (c ou a) => (c ou b) ))
+a ou non a
+
+
+b => c ou b
+c ou a => (b => c ou b)
+((c ou a => b) => (c ou a  => c ou b))
+(a=>b) =>((c ou a => b) => (c ou a  => c ou b))
+((a=>b) =>(c ou a => b) )=> ((a=>b )=>(c ou a  => c ou b))
+a=> (((a=>b) =>(c ou a => b) )=> ((a=>b )=>(c ou a  => c ou b)))
+
+
+b => (c ou a =>b)
+(a=>b)=> (b => (c ou a =>b))
+((a=>b)=> b) => ((a=>b) => (c ou a => b))
+
+(a=> ((a=>b)=> b)) => (a=> ((a=>b) => (c ou a => b)))
+
+(a=>b)
+a=> ((a=>b)=>a)
+(a=>b)=>(a=>b)
+( ((a=>b)=>a) => ((a=>b)=>b))
+
+( ((a=>b)=>a) => ((a=>b)=>b)) => (a=>( ((a=>b)=>a) => ((a=>b)=>b)))
+(a=>( ((a=>b)=>a) => ((a=>b)=>b)))
+(a=> ((a=>b)=>a))=> (a=> ((a=>b)=>b))
+
+a=> ((a=>b)=> b)) 
+
+
+(a=> ((a=>b) =>(c ou a => b) )) 
+(a=> ((a=>b) =>(c ou a => b) ))=> (a=> ((a=>b )=>(c ou a  => c ou b)))
+
+ (a => ((a=>b) => ( (c ou a) => (c ou b) )))  
+
+ 2 (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )) ?
+ 
+a ou non a => (a => ((a=>b) => ( (c ou a) => (c ou b) ))) => (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )))=> ((a=>b) => ( (c ou a) => (c ou b) ))
+ (a => ((a=>b) => ( (c ou a) => (c ou b) ))) => (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )))=> ((a=>b) => ( (c ou a) => (c ou b) ))
+ (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )))=> ((a=>b) => ( (c ou a) => (c ou b) ))
+ ((a=>b) => ( (c ou a) => (c ou b) ))
+ End
+ 
 $(a=>b) => (coua => coub)$
 
 *coua => ((c => coub) => ((a => coub) => coub))
