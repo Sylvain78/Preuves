@@ -2,7 +2,7 @@ type save = Text | Binary
 type mode = Prop | First_order
 type status = Unverified | Verified | False
 type speed = Fast | Paranoid
-module type P = module type of Prop.Proof_prop
+module type P = module type of Prop.Verif
 module type F = module type of First_order.Formula
 
 type 'formula session =

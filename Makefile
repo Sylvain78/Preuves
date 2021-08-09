@@ -24,6 +24,7 @@ parser:
 	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order  first_order_parser.${EXT}
 
 build: parser
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop formula_tooling.${EXT}
 	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop proof_prop.${EXT}
 	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order theory.${EXT}
 	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles ensembles.${EXT}

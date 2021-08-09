@@ -16,7 +16,6 @@
  (name proof_server)
  (modes byte exe)
  (modules (:standard))
- (libraries str first_order util landmarks)
- (preprocess (pps landmarks.ppx --auto))
+ (libraries str first_order util)
 
 )

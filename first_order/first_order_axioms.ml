@@ -1,7 +1,7 @@
 open Signature 
-open Prop.Proof_prop
+open Prop.Formula_prop
+open Prop.Verif
 open First_order_parser
-open Prop__Kernel_theorem_prop
 
 module Axioms (Sig:SIGNATURE)=
 struct
@@ -50,13 +50,13 @@ struct
     in
     List.exists (fun a ->
         let is_instance = 
-          try (instance_aux [] f a.kernel_conclusion_prop) <> []
+          try (instance_aux [] f a.conclusion_prop) <> []
           with Failed_Unification _ -> false 
         in
         if (is_instance)
         then
           begin
-            print_string a.kernel_name_theorem_prop;
+            print_string a.name_theorem_prop;
             print_string " : ";printer_first_order_formula Format.std_formatter f;Format.print_newline();
             true;
           end

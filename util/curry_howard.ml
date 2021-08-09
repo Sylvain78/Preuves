@@ -51,3 +51,18 @@ let but = conversion c;;
 
 let c7 = LAbs(LV "a->c", LAbs(LV "a",LAbs(LV "b", LApp(LV "a->c", LV "a"))));;
 let but = conversion c7;;
+
+
+type sk =
+| V of string 
+| K 
+| S 
+| App of sk*sk
+
+
+let k a b = App(App(K,a), b)
+
+let s a b c = App(App(App(S,a),b),c)
+let i  = (s k k) 
+let but a aentb = s(k(s i))k a aentb
+

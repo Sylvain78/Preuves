@@ -314,9 +314,29 @@ a=> ((a=>b)=> b))
 (a=> ((a=>b) =>(c ou a => b) )) 
 (a=> ((a=>b) =>(c ou a => b) ))=> (a=> ((a=>b )=>(c ou a  => c ou b)))
 
- (a => ((a=>b) => ( (c ou a) => (c ou b) )))  
+1 (a => ((a=>b) => ( (c ou a) => (c ou b) )))  
 
- 2 (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )) ?
+
+A *nona => (a ou c => c)
+B *aouc => coua
+C *nona => (aouc=>coua)
+D (nona => aouc)=>(nona => c)
+E (coua=>aouc) => (aouc=>c) => (coua=>c)
+F (aouc=>c) => (coua=>c)
+G nona => ((aouc=>c) => (coua=>c))
+H (nona=> (aouc=>c))=> (nona => (coua=>c))
+I (nona => (coua=>c))
+
+J *c => coub
+K coua=>(c=>coub)
+L (coua=>c)=>(coua=>coub)
+M I=>(L=>(nona=>coua=>coub))
+N (nona=>coua=>coub)
+*verif_rajout_hypothese*
+N=> (nona=> ((a=>b)=>(coua=>coub)))
+(nona=> ((a=>b)=>(coua=>coub)))
+
+2 (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )) ?
  
 a ou non a => (a => ((a=>b) => ( (c ou a) => (c ou b) ))) => (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )))=> ((a=>b) => ( (c ou a) => (c ou b) ))
  (a => ((a=>b) => ( (c ou a) => (c ou b) ))) => (non a =>  ((a=>b) => ( (c ou a) => (c ou b) )))=> ((a=>b) => ( (c ou a) => (c ou b) ))

@@ -1,0 +1,2 @@
+set follow_fork_mode child
+br @ Dune__exe__Proof_server 50

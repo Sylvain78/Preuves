@@ -3,7 +3,7 @@
  **)
 open UnixLabels
 open Prop
-open Prop__Kernel_theorem_prop
+open Prop.Theorem_prop
 open Prop__Kind_prop
 open Protocol
 open Protocol_commands
@@ -67,7 +67,7 @@ let save_session mode file=
        * Prop.Prop_parser.save_parser ("\""^base^"_parser"^ext^"\"");
       *)
       Marshal.to_channel oc 
-        (session: Prop.Kernel_theorem_prop.kernel_theorem_prop Session.session) 
+        (session: Prop.Theorem_prop.theorem_prop Session.session) 
         []
   end;
   close_out oc
@@ -80,7 +80,7 @@ let rec load_session mode file channels =
     | Session.Text -> 
       repl {io_in=ic ; io_out = channels.io_out ; io_fd = channels.io_fd} 
     | Session.Binary ->
-      let (session_loaded : Prop.Kernel_theorem_prop.kernel_theorem_prop Session.session) =  (Marshal.from_channel ic) 
+      let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) =  (Marshal.from_channel ic) 
       in
       List.iter print_string session_loaded.history;
       session.mode <- session_loaded.mode;
@@ -159,12 +159,17 @@ and eval s channels =
       if (session.mode = Session.Prop) 
       then
         begin
-          if (List.exists (fun {kernel_name_theorem_prop; _} -> name=kernel_name_theorem_prop) session.axioms)
+          if (List.exists (fun {name_theorem_prop; _} -> name=name_theorem_prop) session.axioms)
           then
             Answer ("Axiom " ^ name ^ " already defined")  
           else 
             begin
-              session.axioms <- {kernel_kind_prop=Axiom;kernel_proof_prop=[];kernel_name_theorem_prop = name;kernel_conclusion_prop=Prop.Prop_parser.formula_from_string formula} :: session.axioms;
+              session.axioms <- { kind_prop=Axiom;
+                                  proof_prop=[];
+                                  name_theorem_prop = name;
+                                  conclusion_prop=Prop.Prop_parser.formula_from_string formula
+                                } 
+                                :: session.axioms;
               Ok
             end
         end
@@ -173,11 +178,11 @@ and eval s channels =
       if session.mode = Session.Prop (*TODO remplacer par un match sur mode*)
       then
         begin
-          let verif_function = Prop.Proof_prop.prop_proof_verif
+          let verif_function = Prop.Verif.prop_proof_verif
           in
-          let verif =  (verif_function ~hyp:(List.map Prop.Proof_prop.formula_from_string premisses) 
-                          (Prop.Proof_prop.formula_from_string conclusion) 
-                          ~proof:(List.map (fun s -> Prop.Proof_prop.formula_from_string s) demonstration)) 
+          let verif =  (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses) 
+                          (Prop.Verif.formula_from_string conclusion) 
+                          ~proof:(List.map (fun s -> Prop.Verif.formula_from_string s) demonstration)) 
           in
           (* TODO Add theorem to the list, with its status*)
           if verif then
@@ -194,14 +199,14 @@ and eval s channels =
       if (session.mode = Session.Prop)
       then
         Answer(
-          List.filter  (fun th -> th.kernel_name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
+          List.filter  (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
           |> List.map (fun {
-              kernel_kind_prop;
-              kernel_name_theorem_prop;
-              kernel_conclusion_prop;
+              kind_prop;
+              name_theorem_prop;
+              conclusion_prop;
               _
-            } -> (kind_to_string kernel_kind_prop) ^ " " ^
-                 kernel_name_theorem_prop ^ 
+            } -> (kind_to_string kind_prop) ^ " " ^
+                 name_theorem_prop ^ 
                  ":" ^
                  (*TODO "(" ^ 
                    (String.concat ", " @@ 
@@ -212,7 +217,7 @@ and eval s channels =
                         else "X_{"^ (string_of_int i) ^ "}")
                     parameters_prop)  ^ 
                    ") : " ^*) 
-                 (Prop.Proof_prop.to_string_formula_prop kernel_conclusion_prop)
+                 (Prop.Verif.to_string_formula_prop conclusion_prop)
             )  
           |> String.concat "\n" 
         )
