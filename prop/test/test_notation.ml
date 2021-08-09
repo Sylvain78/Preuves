@@ -1,5 +1,5 @@
 open OUnit2
-open Prop.Proof_prop
+open Prop.Verif
 
 let notation = Prop.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 let f() = prop_proof_verif ~hyp:[]

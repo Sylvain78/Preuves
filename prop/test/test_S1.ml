@@ -1,5 +1,5 @@
-open Prop__Proof_prop
-
+open Prop.Verif
+open Prop.Formula_prop
 
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)

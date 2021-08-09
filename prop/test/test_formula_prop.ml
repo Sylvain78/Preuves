@@ -1,6 +1,6 @@
 open OUnit2
-open Prop
-open Proof_prop
+open Prop.Formula_prop
+open Prop.Verif
 
 let () = ignore (
         notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \" => \" b\nSemantics\na \" \\implies \" b\nEnd";

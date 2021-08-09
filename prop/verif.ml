@@ -1,7 +1,7 @@
 include Axioms_prop
-include Formula_prop
+open Formula_prop
+include Formula_tooling
 include Theorem_prop
-open Formula_tooling
 (*TODO open Substitution_prop*)
 
 include (Prop_parser : sig 

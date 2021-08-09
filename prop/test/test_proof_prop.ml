@@ -1,6 +1,6 @@
 open OUnit2
-open Prop
-open Proof_prop
+open Prop.Formula_prop
+open Prop.Verif
 
 let x1,x2 = PVar 1,PVar 2
 

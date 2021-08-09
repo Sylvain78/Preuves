@@ -1,4 +1,5 @@
-open Prop__Proof_prop
+open Prop.Formula_prop
+open Prop.Verif
 open Kernel_prop.Compile
 open Kernel_prop.Verif
 open OUnit2

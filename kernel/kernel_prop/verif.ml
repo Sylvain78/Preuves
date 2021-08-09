@@ -22,7 +22,7 @@ let kernel_verif ?(theory=[]) ~formula:f ~proof () =
       in
       let  lv,lt = List.split subst
       in
-      Prop.Substitution_prop.simultaneous_substitution_formula_prop (List.map (fun i -> PVar i) lv) lt axiom.kernel_conclusion_prop
+      Prop.Substitution_prop.simultaneous_substitution_formula_prop (List.map (fun i -> PVar i) lv) lt axiom.conclusion_prop
     | Cut(j,k) -> 
       let rev_stack = List.rev !formula_stack
       in

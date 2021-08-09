@@ -1,6 +1,6 @@
 open Prop.Formula_prop
 open Prop.Formula_tooling
-open Prop.Kernel_theorem_prop
+open Prop.Theorem_prop
 open Verif
 
 (*instance of axiom*)
@@ -10,7 +10,7 @@ let is_instance_of_axiom_aux f =
       match l with
         [] -> None
       | ax :: list_axioms' ->
-        try Some (index,instance f ax.kernel_conclusion_prop )
+        try Some (index,instance f ax.conclusion_prop )
         with Failed_Unification _ -> find_aux (index+1) list_axioms'
     in
     find_aux 1 list_axioms
@@ -78,7 +78,7 @@ let compile_demonstration ?(theory=[]) ~demo () =
       in
       match proof_term with
       | Some step -> compile_demo_aux ~demo:demo_tail ~proved:(f::proved)  ~proof:(step :: proof)
-      | None -> raise (Prop.Proof_prop.Invalid_demonstration (f, List.rev (f::proved)))
+      | None -> raise (Prop.Verif.Invalid_demonstration (f, List.rev (f::proved)))
   in
   let theorem, demonstration = compile_demo_aux ~demo:demo ~proved:[] ~proof:[]
   in

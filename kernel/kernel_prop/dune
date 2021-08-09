@@ -6,5 +6,4 @@
  (name kernel_prop)
  (instrumentation (backend bisect_ppx))
   (modules (:standard))
- (libraries util prop landmarks)
- (preprocess (pps landmarks.ppx --auto)))
+ (libraries util prop))

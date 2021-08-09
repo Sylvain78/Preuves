@@ -1,4 +1,5 @@
 type notation_prop_element = Param of string | String of string
+
 type formula_prop =
   | PVar of int
   | PMetaVar of string
@@ -16,6 +17,16 @@ and notation_prop =
   {
     notation_prop_name : string;
     notation_prop_params : notation_prop_element list;
-    notation_prop_notation :  notation_prop_element list;
-    notation_prop_semantique :  notation_prop_element list;
-  }
+    notation_prop_notation : notation_prop_element list;
+    notation_prop_semantique : notation_prop_element list;
+  }  
+(*SKE Example of notation
+  "
+  Notation equiv
+  Params a b
+  a \equiv b 
+  (a \imply b)\\land(b \imply a)
+  End
+  "
+*)
+

@@ -6,10 +6,10 @@
  (name prop)
  (instrumentation (backend bisect_ppx))
   (modules (:standard))
- (libraries util dyp landmarks)
- (preprocess (pps landmarks.ppx --auto)))
+ (libraries util dyp)
+ (modules_without_implementation formula_prop))
 
 (rule
  (targets prop_parser.ml)
  (deps    (:input-file prop_parser.dyp))
- (action  (chdir %{project_root} (run %{bin:dypgen}  --noemit-token-type --no-pp --no-obj-type --no-mli %{input-file}))))
+ (action  (chdir %{project_root} (run %{bin:dypgen} --noemit-token-type --no-pp --no-obj-type --no-mli %{input-file}))))
