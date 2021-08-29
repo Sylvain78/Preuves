@@ -349,7 +349,7 @@ let main () =
              repl io_chan  
            with 
            | End_of_file | Exit -> 
-             begin 
+             begin
                close io_chan.io_fd;
                exit 0 (*child quit the loop*)
              end

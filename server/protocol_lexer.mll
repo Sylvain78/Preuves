@@ -45,11 +45,14 @@ rule token = parse
       try Hashtbl.find keywords id
       with 
       | Not_found -> IDENT(Lexing.lexeme lexbuf)
-  }
-      | "\"" { quoted_string lexbuf;
-           QUOTED_STRING ( "\"" ^ (get_stored_string()) ^ "\"")
+    }
+  | "\"" 
+    { 
+      quoted_string lexbuf;
+      QUOTED_STRING ( "\"" ^ (get_stored_string()) ^ "\"")
     } 
-      | "$" { latex (Buffer.create 17) lexbuf; }
+  | "$" { latex (Buffer.create 17) lexbuf; }
+  | "#" [^'\n']* newline { token lexbuf }
 and latex buf = parse
       | '$' { print_endline ("lexing formula : " ^ (Buffer.contents buf)); FORMULA (Buffer.contents buf)}
       | "\\$" { Buffer.add_char buf '$' ; latex buf lexbuf }
