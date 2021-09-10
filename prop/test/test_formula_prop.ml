@@ -749,8 +749,13 @@ let test_to_string_formula_por_pand _ =
   in assert_equal s "(X_1 \\lor X_2) \\land X_3"
 
 let test_to_string_formula_impl _ = 
-  let s = to_string_formula_prop  (formula_from_string "X_1  \\implies  X_2")
+  let s = to_string_formula_prop  (formula_from_string "X_1 \\implies X_2")
   in assert_equal s "X_1 \\implies X_2"
+
+let test_to_string_formula_not_impl _ = 
+  let s = to_string_formula_prop  (formula_from_string "(\\lnot X_1) \\implies (\\lnot X_2)")
+  in 
+  assert_equal ~printer:(fun s -> s) "(\\lnot X_1) \\implies \\lnot X_2" s
 
 let test_to_string_formula_and_impl _ = 
   let s = to_string_formula_prop  (formula_from_string "X_3 \\land (X_1  \\implies  X_2)")
@@ -848,14 +853,16 @@ let printer_formula_suite =
     "test_printer_formula_pand_por">:: test_printer_formula_pand_por;
     "test_printer_formula_por_pand">::test_printer_formula_por_pand;
     "test_printer_formula_impl">::test_printer_formula_impl;
-    " test_printer_formula_impl_par">::test_printer_formula_impl_par;
+    "test_printer_formula_impl_par">::test_printer_formula_impl_par;
     "test_printer_formula_and_impl">::test_printer_formula_and_impl;
     (*"test_printer_formula_PAppl_fail">::test_printer_formula_pappl_fail;*)
   ]
 
 let to_string_formula_suite =
   "to_string_formula" >:::
-  [ "test to_string_formula PVar">:: test_to_string_formula_pvar;
+  [ 
+    "test_to_string_formula_not_impl">::test_to_string_formula_not_impl;
+    "test to_string_formula PVar">:: test_to_string_formula_pvar;
     "test to_string_formula PVar X_{11}">:: test_to_string_formula_pvar_11;
     "test to_string_formula PMetaVar ">:: test_to_string_formula_pvar_metavar;
     "test to_string_formula PNeg">:: test_to_string_formula_pneg;
