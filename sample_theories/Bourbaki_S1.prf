@@ -1,0 +1,23 @@
+Prop
+
+Theorem
+S1
+Param
+$\mathbf{A}$
+Premisses
+Conclusion
+$(\mathbf{A} \lor \mathbf{A}) => \mathbf{A}$
+Demonstration
+$((\mathbf{A} \lor \mathbf{A}) => \mathbf{A}) => ((\lnot \mathbf{A}) => \lnot (\mathbf{A} \lor \mathbf{A}))$
+$((\lnot \mathbf{A}) => ((\mathbf{A} \lor \mathbf{A}) => \mathbf{A}))$
+$((\lnot \mathbf{A}) => ((\mathbf{A} \lor \mathbf{A}) => \mathbf{A})) => ((((\mathbf{A} \lor \mathbf{A}) => \mathbf{A}) => ((\lnot \mathbf{A}) => \lnot (\mathbf{A} \lor \mathbf{A}))) => ((\lnot \mathbf{A}) => ((\lnot \mathbf{A}) => \lnot (\mathbf{A} \lor \mathbf{A}))))$
+$((((\mathbf{A} \lor \mathbf{A}) => \mathbf{A}) => ((\lnot \mathbf{A}) => \lnot (\mathbf{A} \lor \mathbf{A}))) => ((\lnot \mathbf{A}) => ((\lnot \mathbf{A}) => \lnot (\mathbf{A} \lor \mathbf{A}))))$
+$((\lnot \mathbf{A}) => ((\lnot \mathbf{A}) => \lnot (\mathbf{A} \lor \mathbf{A})))$
+$((\lnot \mathbf{A}) => ((\lnot \mathbf{A}) => \lnot (\mathbf{A} \lor \mathbf{A}))) => (((\lnot \mathbf{A}) => (\lnot \mathbf{A})) => ((\lnot \mathbf{A}) => (\lnot (\mathbf{A} \lor \mathbf{A}))))$
+$((\lnot \mathbf{A}) => (\lnot \mathbf{A}))$
+$(((\lnot \mathbf{A}) => (\lnot \mathbf{A})) => ((\lnot \mathbf{A}) => (\lnot (\mathbf{A} \lor \mathbf{A}))))$
+$((\lnot \mathbf{A}) => (\lnot (\mathbf{A} \lor \mathbf{A})))$
+$((\lnot \mathbf{A}) => (\lnot (\mathbf{A} \lor \mathbf{A}))) => ((\mathbf{A} \lor \mathbf{A}) => \mathbf{A})$
+$(\mathbf{A} \lor \mathbf{A}) => \mathbf{A}$
+End
+
