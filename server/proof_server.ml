@@ -59,7 +59,6 @@ let save_session mode file=
     | Session.Text ->
       List.iter (fun s -> Printf.fprintf oc "%s\n\n" s) (List.rev session.history);
     | Session.Binary -> 
-      List.iter (fun s -> print_string s  ) session.history;
       (*TODO one day....
        * let (base,ext) = Filename.remove_extension file, Filename.extension file
        * in
@@ -93,7 +92,7 @@ let rec load_session mode file channels =
   close_in ic
 
 and eval s channels =  
-  print_endline ("eval : " ^ s); 
+(*   print_endline ("eval : " ^ s);  *)
   (*let module M = (val session.prop : Session.P) 
     in 
     print_endline ("number of axioms : "^ (string_of_int @@ List.length @@ !M.axioms_prop));
@@ -149,7 +148,7 @@ and eval s channels =
             Buffer.add_char buf '\n';
             Buffer.add_string buf "End";
             print_newline();
-            print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout;
+(*             print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
             Prop.Prop_parser.notation_from_string (Buffer.contents buf) 
           in
           Answer ("Notation "^notation.Formula_prop.notation_prop_name)
@@ -227,7 +226,7 @@ and eval s channels =
   | Failure s -> Answer s
 
 and repl channels =
-  let command = Buffer.create 1024
+  let command = Buffer.create 8192
   in
   (* 
    * read 
@@ -239,14 +238,14 @@ and repl channels =
   in
   let r = Str.regexp command_pattern
   in  
-  let buffer = BytesLabels.make 1024 '\000'
-  in
   let index_end_of_command = ref 0
   in
   while true 
   do 
     (* read *)
-    let nb_read = read channels.io_fd  ~buf:buffer ~pos:0 ~len:1024
+    let buffer = BytesLabels.make 8192 '\000'
+    in
+    let nb_read = read channels.io_fd  ~buf:buffer ~pos:0 ~len:8192
     in
     if nb_read=0 then raise End_of_file;
     Buffer.add_subbytes command buffer 0 nb_read;
@@ -264,7 +263,7 @@ and repl channels =
       let com = Str.string_before !s !index_end_of_command
       in
       session.history <- com :: session.history;
-      print_string  @@ String.concat "\n" @@ List.rev @@  session.history;
+(*       print_string  @@ String.concat "\n" @@ List.rev @@  session.history; *)
       let command_next = Str.string_after !s (!index_end_of_command + (String.length command_pattern))
       in
       Buffer.clear command;
