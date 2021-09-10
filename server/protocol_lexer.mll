@@ -54,11 +54,13 @@ rule token = parse
   | "$" { latex (Buffer.create 17) lexbuf; }
   | "#" [^'\n']* newline { token lexbuf }
 and latex buf = parse
-      | '$' { print_endline ("lexing formula : " ^ (Buffer.contents buf)); FORMULA (Buffer.contents buf)}
+      | '$' { FORMULA (Buffer.contents buf)}
       | "\\$" { Buffer.add_char buf '$' ; latex buf lexbuf }
       | _ as c { Buffer.add_char buf c ; latex buf lexbuf }
 and quoted_string = parse
       | "\"" { () }
       | (_ as c)
-      { store_string_char c;
-      quoted_string lexbuf }
+        { 
+          store_string_char c;
+          quoted_string lexbuf 
+        }
