@@ -1,34 +1,34 @@
 #use "topfind";;
 #require "ounit2";;
-#directory "/boot/home/.opam/4.11.1/lib/landmarks";;
-#load "landmark.cma"
-
+#require "dyp"
 #load "unix.cma"
 #load "str.cma"
-#directory "/boot/home/.opam/4.11.1/lib/dyp";;
 
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/.first_order.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/.first_order.objs/native";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/native";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/.kernel_prop.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/byte";;
-#directory "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/native";;
-#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/util/util.cma";;
-#load "dyp.cma";;
-#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/prop/prop.cma";;
-#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/kernel_prop.cma";;
-(*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/first_order/first_order.cma";;*)
-(*#load "/Data/Data2/PROJECTS/Student/Preuves/_build/default/server/server.cma";;*)
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/first_order/.first_order.objs/byte";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/first_order/.first_order.objs/native";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/byte";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/prop/.prop.objs/native";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/server/.server.objs/byte";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/.kernel_prop.objs/byte";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/byte";;
+#directory "/Data2/PROJECTS/Student/Preuves/_build/default/util/.util.objs/native";;
+#load "/Data2/PROJECTS/Student/Preuves/_build/default/util/util.cma";;
+#load "/Data2/PROJECTS/Student/Preuves/_build/default/prop/prop.cma";;
+#load "/Data2/PROJECTS/Student/Preuves/_build/default/kernel/kernel_prop/kernel_prop.cma";;
+(*#load "/Data2/PROJECTS/Student/Preuves/_build/default/first_order/first_order.cma";;*)
+(*#load "/Data2/PROJECTS/Student/Preuves/_build/default/server/server.cma";;*)
 
 open Prop
 open Formula_prop
+open Formula_tooling
 open Prop_parser
 open Proof_prop
 
-#install_printer printer_formula_prop;;
+(*#install_printer printer_formula_prop;;*)
+let f = PImpl(PNeg (PVar 1), PVar 2)
+let test() = to_string_formula_prop f;;
+
 #use "prop/test/test_S1.ml";;
 #use "kernel/kernel_prop/test/test_compile_S1.ml";;
 let neg p = PNeg p
