@@ -6,8 +6,7 @@
  (name prop)
  (instrumentation (backend bisect_ppx))
   (modules (:standard))
- (libraries util dyp)
- (modules_without_implementation formula_prop))
+ (libraries util dyp))
 
 (rule
  (targets prop_parser.ml)
