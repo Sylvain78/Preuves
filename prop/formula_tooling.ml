@@ -50,10 +50,10 @@ and get_semantique ({apply_notation_prop; apply_notation_prop_params}:apply_nota
 *)
 and printer_formula_prop ff f =
   let rec print_bin seq op f g =
-    printer_formula_prop_aux ff seq f;
+    printer_formula_prop_aux ~pos:1 ff seq f;
     Format.fprintf ff "%s" (" "^op^" ");
-    printer_formula_prop_aux ff seq g
-  and printer_formula_prop_aux ff seq =
+    printer_formula_prop_aux ~pos:2 ff seq g
+  and printer_formula_prop_aux ?(pos=1) ff seq =
     let print_par f =
       Format.fprintf ff "(";
       f();
@@ -62,7 +62,14 @@ and printer_formula_prop ff f =
     function
     | PVar i -> Format.fprintf ff (if (0<=i && i<10) then "X_%d" else "X_{%d}") i
     | PMetaVar s -> Format.fprintf ff "\\mathbf{%s}" s
-    | PNeg g -> Format.fprintf ff "\\lnot "; printer_formula_prop_aux ff "neg" g
+    | PNeg g -> 
+      if (pos=1 && seq="impl") 
+      then
+         print_par (fun ()  -> Format.fprintf ff "\\lnot "; printer_formula_prop_aux ff "neg" g)
+      else 
+        begin
+          Format.fprintf ff "\\lnot "; printer_formula_prop_aux ff "neg" g
+        end
     | PAnd(f, g) ->
       if (seq = "and" ||  seq ="init")
       then
@@ -75,11 +82,12 @@ and printer_formula_prop ff f =
         print_bin "or" "\\lor" f g
       else
         print_par (fun () -> print_bin "or" "\\lor" f g)
-    | PImpl(f, g) -> if (seq ="init")
+    | PImpl(f, g) -> 
+      if (seq ="init")
       then
-        print_bin "impl" "\\implies" f g
+                print_bin "impl" "\\implies" f g
       else
-        print_par (fun () -> print_bin "impl" "\\implies" f g)
+          print_par (fun () -> print_bin "impl" "\\implies" f g)
     | (PApply_notation 
          {
            apply_notation_prop         = _  as n;
@@ -100,13 +108,14 @@ and printer_formula_prop ff f =
       in 
       let notation_with_params_replaced = List.map (replace map_param_val ) n.notation_prop_notation
       in
-      if (seq = "notation" || seq = "init") then 
-        begin
-          Format.fprintf ff "%s" (List.fold_left  (fun s t -> s ^ t) "" notation_with_params_replaced)
-        end
-      else print_par (fun () -> printer_formula_prop_aux ff "notation" f)
+      if (seq = "notation" || seq = "init") 
+      then 
+        Format.fprintf ff "%s" (List.fold_left  (fun s t -> s ^ t) "" notation_with_params_replaced)
+      else 
+        print_par (fun () -> printer_formula_prop_aux ff "notation" f)
   in
   printer_formula_prop_aux ff "init" f
+
 and to_string_formula_prop f =
   let b = Buffer.create 13
   in
