@@ -104,6 +104,7 @@ and eval s channels =
     | Quit -> raise Exit
     | Prop ->  
       session.mode<-Session.Prop;
+      session.axioms <- !Axioms_prop.axioms_prop;
       Ok
     | First_order -> 
       session.mode<-Session.First_order;
@@ -173,19 +174,32 @@ and eval s channels =
             end
         end
       else Answer("Axiom for first order unimplemented")
-    | Theorem {name; params=_; premisses; conclusion; demonstration; status=_} ->
+    | Theorem ({name; params=_; premisses; conclusion; demonstration; status=_} as t) ->
       if session.mode = Session.Prop (*TODO remplacer par un match sur mode*)
       then
         begin
           let verif_function = Prop.Verif.prop_proof_verif
           in
+          let proof =(List.map (fun s -> Prop.Verif.formula_from_string s) demonstration)
+          and conclusion = Prop.Verif.formula_from_string conclusion
+          in
           let verif =  (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses) 
-                          (Prop.Verif.formula_from_string conclusion) 
-                          ~proof:(List.map (fun s -> Prop.Verif.formula_from_string s) demonstration)) 
+                          conclusion 
+                          ~proof:proof) 
           in
           (* TODO Add theorem to the list, with its status*)
           if verif then
-            Answer ("Theorem " ^ name ^ " verified.")
+            begin
+              session.theorems <- 
+                 {
+                    kind_prop = Kind_prop.Theorem;
+                    name_theorem_prop = t.name;
+                    proof_prop = proof;
+                    conclusion_prop = conclusion;
+                 } 
+                 :: session.theorems;
+               Answer ("Theorem " ^ name ^ " verified.")
+            end
           else
             Answer ("Theorem " ^ name ^ " not verified.")
         end
@@ -198,7 +212,7 @@ and eval s channels =
       if (session.mode = Session.Prop)
       then
         Answer(
-          List.filter  (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
+          List.filter (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
           |> List.map (fun {
               kind_prop;
               name_theorem_prop;
@@ -245,8 +259,13 @@ and repl channels =
     (* read *)
     let buffer = BytesLabels.make 8192 '\000'
     in
+    print_endline "avant read" ;
     let nb_read = read channels.io_fd  ~buf:buffer ~pos:0 ~len:8192
     in
+    print_endline "apres read" ;
+    print_endline @@ string_of_int @@ nb_read;
+    print_string (Bytes.to_string buffer);
+    print_newline();
     if nb_read=0 then raise End_of_file;
     Buffer.add_subbytes command buffer 0 nb_read;
     let s = ref ""
