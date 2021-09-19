@@ -43,7 +43,7 @@ let specs =
 
 let session =
   {
-    mode = Session.Prop ; 
+    mode = { order = Session.Prop; speed = Fast; evaluation = Compile }; 
     name = "Init";
     speed = Session.Paranoid;
     history = [] ;
@@ -103,14 +103,17 @@ and eval s channels =
     match command with 
     | Quit -> raise Exit
     | Prop ->  
-      session.mode<-Session.Prop;
+      session.mode.order<-Session.Prop;
       session.axioms <- !Axioms_prop.axioms_prop;
       Ok
     | First_order -> 
-      session.mode<-Session.First_order;
+      session.mode.order<-Session.First_order;
       Ok
     | Fast ->
-      session.speed<- Session.Fast;
+      session.mode.speed<- Session.Fast;
+      Ok
+    | Compile ->
+      session.mode.evaluation <- Session.Compile;
       Ok
     | History ->
       Answer (String.concat "\n" @@ List.rev @@ session.history)
@@ -126,7 +129,7 @@ and eval s channels =
       end
     | Notation n ->
       begin
-        match session.mode with
+        match session.mode.order with
         | Prop ->
           let notation = 
             let buf = Buffer.create 13
@@ -156,7 +159,7 @@ and eval s channels =
         | First_order -> Answer "Notation first_order : unimplemented"
       end
     | Axiom { name ; formula } -> 
-      if (session.mode = Session.Prop) 
+      if (session.mode.order = Session.Prop) 
       then
         begin
           if (List.exists (fun {name_theorem_prop; _} -> name=name_theorem_prop) session.axioms)
@@ -175,7 +178,7 @@ and eval s channels =
         end
       else Answer("Axiom for first order unimplemented")
     | Theorem ({name; params=_; premisses; conclusion; demonstration; status=_} as t) ->
-      if session.mode = Session.Prop (*TODO remplacer par un match sur mode*)
+      if session.mode.order = Session.Prop (*TODO remplacer par un match sur mode*)
       then
         begin
           let verif_function = Prop.Verif.prop_proof_verif
@@ -203,13 +206,13 @@ and eval s channels =
           else
             Answer ("Theorem " ^ name ^ " not verified.")
         end
-      else if session.mode = Session.First_order
+      else if session.mode.order = Session.First_order
       then 
         failwith "TheoremFirst_order"
       else
         failwith "session mode not Prop neither First_order"
     | Show theorem_name ->
-      if (session.mode = Session.Prop)
+      if (session.mode.order = Session.Prop)
       then
         Answer(
           List.filter (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)

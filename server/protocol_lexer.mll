@@ -5,6 +5,7 @@ let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v)
 [ 
       ("Prop",PROP) ;
       ("Fast",FAST);
+      ("Compile", COMPILE);
       ("Notation",NOTATION) ; 
       ("History",HISTORY) ; 
       ("Show",SHOW) ; 

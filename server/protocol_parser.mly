@@ -5,6 +5,7 @@
 %token PROP
 %token FIRST_ORDER
 %token FAST
+%token COMPILE
 %token NOTATION
 %token PARAM
 %token SYNTAX
@@ -73,7 +74,9 @@ mode:
 | PROP { Prop }
 | FIRST_ORDER { First_order }
 | FAST { Fast}
+| COMPILE { Compile }
 ;
+
 ident_list:
 |  {[]}
 | IDENT ident_list { $1 :: $2 }
