@@ -2,7 +2,9 @@ type notation_element = Param of string | String of string
 type command =
   | Prop
   | Fast
+  | Paranoid
   | Compile
+  | Interpreted
   | Save of Session.save * string
   | Load of Session.save * string
   | First_order

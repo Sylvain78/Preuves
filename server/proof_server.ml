@@ -181,7 +181,18 @@ and eval s channels =
       if session.mode.order = Session.Prop (*TODO remplacer par un match sur mode*)
       then
         begin
-          let verif_function = Prop.Verif.prop_proof_verif
+          let verif_function = 
+            if session.mode.evaluation = Session.Compile 
+            then
+              Prop.Verif.prop_proof_verif
+            else
+              fun ~hyp _  ~proof-> 
+                let compiled_demo = Kernel_prop.Compile.compile_demonstration ~theory:hyp ~demo:proof ()
+                in
+                match Kernel_prop.Verif.kernel_verif ~theory:hyp ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
+                with 
+                | Ok _ -> true
+                | Error _ -> false
           in
           let proof =(List.map (fun s -> Prop.Verif.formula_from_string s) demonstration)
           and conclusion = Prop.Verif.formula_from_string conclusion
