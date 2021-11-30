@@ -4,8 +4,10 @@
 %token NEWLINE
 %token PROP
 %token FIRST_ORDER
-%token FAST
-%token COMPILE
+%token KEEP_NOTATIONS
+%token EXPAND_NOTATIONS
+%token INTERPRETED
+%token COMPILED
 %token NOTATION
 %token PARAM
 %token SYNTAX
@@ -73,8 +75,10 @@ theorem:
 mode:
 | PROP { Prop }
 | FIRST_ORDER { First_order }
-| FAST { Fast}
-| COMPILE { Compile }
+| KEEP_NOTATIONS { Keep_notations}
+| EXPAND_NOTATIONS { Expand_notations }
+| COMPILED { Compiled }
+| INTERPRETED  { Interpreted  }
 ;
 
 ident_list:

@@ -16,6 +16,6 @@
  (name proof_server)
  (modes byte exe)
  (modules (:standard))
- (libraries str first_order util)
+ (libraries str first_order util kernel_prop)
 
 )

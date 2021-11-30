@@ -1,7 +1,7 @@
 type save = Text | Binary
 type order = Prop | First_order
-type speed = Fast | Paranoid (* expansion of notation *)
-type evaluation = Compile | Interpreted (* Compilation of idemonstration, or verification line by line*)
+type speed = Keep_notations | Expand_notations (* expansion of notation *)
+type evaluation = Compiled | Interpreted (* Compilation of demonstration, or verification line by line*)
 type mode = { mutable order : order; mutable speed : speed; mutable evaluation : evaluation }
 type status = Unverified | Verified | False
 module type P = module type of Prop.Verif

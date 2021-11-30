@@ -43,9 +43,9 @@ let specs =
 
 let session =
   {
-    mode = { order = Session.Prop; speed = Fast; evaluation = Compile }; 
+    mode = { order = Session.Prop; speed = Keep_notations; evaluation = Compiled }; 
     name = "Init";
-    speed = Session.Paranoid;
+    speed = Session.Expand_notations;
     history = [] ;
     axioms = [];
     theorems = [];
@@ -109,11 +109,17 @@ and eval s channels =
     | First_order -> 
       session.mode.order<-Session.First_order;
       Ok
-    | Fast ->
-      session.mode.speed<- Session.Fast;
+    | Keep_notations ->
+      session.mode.speed<- Session.Keep_notations;
       Ok
-    | Compile ->
-      session.mode.evaluation <- Session.Compile;
+    | Expand_notations ->
+      session.mode.speed<- Session.Expand_notations;
+      Ok
+    | Compiled ->
+      session.mode.evaluation <- Session.Compiled;
+      Ok
+    | Interpreted ->
+      session.mode.evaluation <- Session.Interpreted;
       Ok
     | History ->
       Answer (String.concat "\n" @@ List.rev @@ session.history)
@@ -182,7 +188,7 @@ and eval s channels =
       then
         begin
           let verif_function = 
-            if session.mode.evaluation = Session.Compile 
+            if session.mode.evaluation = Session.Interpreted 
             then
               Prop.Verif.prop_proof_verif
             else

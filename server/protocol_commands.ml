@@ -1,9 +1,9 @@
 type notation_element = Param of string | String of string
 type command =
   | Prop
-  | Fast
-  | Paranoid
-  | Compile
+  | Keep_notations
+  | Expand_notations
+  | Compiled
   | Interpreted
   | Save of Session.save * string
   | Load of Session.save * string
