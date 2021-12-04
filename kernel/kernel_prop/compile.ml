@@ -70,7 +70,8 @@ let is_cut_aux demo f =
   | Not_found -> None
 
 let compile_demonstration ?(theory=[]) ~demo () =
-  let rec compile_demo_aux ~demo ~proof ~proved =
+    print_endline "compile_demonstration";
+    let rec compile_demo_aux ~demo ~proof ~proved =
     match demo with
     | [] ->List.hd proved, proof
     | f :: demo_tail ->
