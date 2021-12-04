@@ -4,10 +4,10 @@ open Formula_prop
  let string_without_quote s = ( String.sub s 1 (String.length s - 2))
 
 (*keep all interpretations*)
- let dyp_merge_Obj_expr l = match l with
+(* let dyp_merge_Obj_expr l = match l with
    | (_,gd,ld)::_ -> List.map (fun (o,_,_) -> o) l, gd, ld
    | [] -> assert false
-
+*)
 }
 
 %start expr1
