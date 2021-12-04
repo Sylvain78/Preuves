@@ -1,5 +1,6 @@
 type notation_element = Param of string | String of string
 type command =
+  | Verbose of int
   | Prop
   | Keep_notations
   | Expand_notations

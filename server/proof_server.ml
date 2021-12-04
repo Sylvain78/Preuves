@@ -43,7 +43,7 @@ let specs =
 
 let session =
   {
-    mode = { order = Session.Prop; speed = Keep_notations; evaluation = Compiled }; 
+    mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Compiled }; 
     name = "Init";
     speed = Session.Expand_notations;
     history = [] ;
@@ -92,7 +92,7 @@ let rec load_session mode file channels =
   close_in ic
 
 and eval s channels =  
-(*   print_endline ("eval : " ^ s);  *)
+  (*   print_endline ("eval : " ^ s);  *)
   (*let module M = (val session.prop : Session.P) 
     in 
     print_endline ("number of axioms : "^ (string_of_int @@ List.length @@ !M.axioms_prop));
@@ -102,6 +102,9 @@ and eval s channels =
     in
     match command with 
     | Quit -> raise Exit
+    | Verbose level ->
+      session.mode.verbose_level <- level;
+      Ok
     | Prop ->  
       session.mode.order<-Session.Prop;
       session.axioms <- !Axioms_prop.axioms_prop;
@@ -158,7 +161,7 @@ and eval s channels =
             Buffer.add_char buf '\n';
             Buffer.add_string buf "End";
             print_newline();
-(*             print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
+            (*             print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
             Prop.Prop_parser.notation_from_string (Buffer.contents buf) 
           in
           Answer ("Notation "^notation.Formula_prop.notation_prop_name)
@@ -188,10 +191,10 @@ and eval s channels =
       then
         begin
           let verif_function = 
-            if session.mode.evaluation = Session.Interpreted 
-            then
+            match  session.mode.evaluation with
+            |  Session.Interpreted ->
               Prop.Verif.prop_proof_verif
-            else
+            |  Session.Compiled ->
               fun ~hyp _  ~proof-> 
                 let compiled_demo = Kernel_prop.Compile.compile_demonstration ~theory:hyp ~demo:proof ()
                 in
@@ -211,14 +214,14 @@ and eval s channels =
           if verif then
             begin
               session.theorems <- 
-                 {
-                    kind_prop = Kind_prop.Theorem;
-                    name_theorem_prop = t.name;
-                    proof_prop = proof;
-                    conclusion_prop = conclusion;
-                 } 
-                 :: session.theorems;
-               Answer ("Theorem " ^ name ^ " verified.")
+                {
+                  kind_prop = Kind_prop.Theorem;
+                  name_theorem_prop = t.name;
+                  proof_prop = proof;
+                  conclusion_prop = conclusion;
+                } 
+                :: session.theorems;
+              Answer ("Theorem " ^ name ^ " verified.")
             end
           else
             Answer ("Theorem " ^ name ^ " not verified.")
@@ -302,7 +305,7 @@ and repl channels =
       let com = Str.string_before !s !index_end_of_command
       in
       session.history <- com :: session.history;
-(*       print_string  @@ String.concat "\n" @@ List.rev @@  session.history; *)
+      (*       print_string  @@ String.concat "\n" @@ List.rev @@  session.history; *)
       let command_next = Str.string_after !s (!index_end_of_command + (String.length command_pattern))
       in
       Buffer.clear command;

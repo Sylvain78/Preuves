@@ -56,6 +56,7 @@ rule token = parse
     } 
   | "$" { latex (Buffer.create 17) lexbuf; }
   | "#" [^'\n']* newline { token lexbuf }
+  | digit+ { NUMBER(int_of_string (Lexing.lexeme lexbuf)) }
 and latex buf = parse
       | '$' { FORMULA (Buffer.contents buf)}
       | "\\$" { Buffer.add_char buf '$' ; latex buf lexbuf }

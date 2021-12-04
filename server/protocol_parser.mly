@@ -24,8 +24,10 @@
 %token TEXT
 %token HISTORY
 %token SHOW
+%token VERBOSE
 %token QUIT
 
+%token<int> NUMBER
 %token<string> IDENT
 %token<string> QUOTED_STRING
 %token<string> STRING
@@ -73,6 +75,7 @@ theorem:
 ;
 
 mode:
+| VERBOSE NUMBER { Verbose $2 }
 | PROP { Prop }
 | FIRST_ORDER { First_order }
 | KEEP_NOTATIONS { Keep_notations}
