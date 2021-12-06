@@ -73,10 +73,10 @@ let rec verif ~hypotheses ~proved ~to_prove =
       (*Formula is an hypothesis*)
       List.mem f_i hypotheses 
       (*Formula already present *)
-      || List.mem f_i proved 
+      || List.mem f_i proved
       (*Formula is an instance of a theorem or axiom *)
       || (List.exists (fun a -> try ignore(instance f_i a.conclusion_prop);true with _ -> false) 
-            (!theorems_prop @ !axioms_prop)) 
+          (!theorems_prop @ !axioms_prop)) 
       (*cut*)
       || (cut f_i proved) 
       || begin
@@ -85,13 +85,13 @@ let rec verif ~hypotheses ~proved ~to_prove =
         (*application of notations*)
         | f::_ -> equiv_notation f_i f
       end
-    )
+)
     then 
       verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
     else 
       ((*SKE TODO Printexc.print_backtrace stderr ;*)
-      (*Formula_tooling.printer_formula_prop Format.err_formatter f_i;Format.print_flush();*) 
-      raise (Invalid_demonstration (f_i,List.rev (f_i::proved))))
+        (*Formula_tooling.printer_formula_prop Format.err_formatter f_i;Format.print_flush();*) 
+            raise (Invalid_demonstration (f_i,List.rev (f_i::proved))))
 
 let prop_proof_verif ~hyp:hypotheses f ~proof:proof =
   (* f is at the end of the proof *)

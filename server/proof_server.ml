@@ -401,5 +401,28 @@ let main () =
      close_sock_listen();
    with x -> Printexc.print_backtrace Stdlib.stdout ; close_sock_listen(); raise x)
 
+(*logging*)
+let stamp_tag : Mtime.span Logs.Tag.def =
+  Logs.Tag.def "stamp" ~doc:"Relative monotonic time stamp" Mtime.Span.pp
+let stamp c = Logs.Tag.(empty |> add stamp_tag (Mtime_clock.count c))
+let reporter ppf =
+  let report _  level ~over k msgf =
+    let k _ = over (); k () in
+    let with_stamp h tags k ppf fmt =
+      let stamp = match tags with
+        | None -> None
+        | Some tags -> Logs.Tag.find stamp_tag tags
+      in
+      let dt = match stamp with None -> 0. | Some s -> Mtime.Span.to_us s in
+      Format.kfprintf k ppf ("%a[%+04.0fµs] @[" ^^ fmt ^^ "@]@.")
+        Logs.pp_header (level, h) dt
+    in
+    msgf @@ fun ?header ?tags fmt -> with_stamp header tags k ppf fmt
+  in
+  { Logs.report = report }
 
-let _ = main()
+(**main**)
+let _ =
+  Logs.set_reporter (reporter (Format.std_formatter));
+  Logs.set_level (Some Logs.Info);
+  main()
