@@ -16,6 +16,5 @@
  (name proof_server)
  (modes byte exe)
  (modules (:standard))
- (libraries str logs mtime mtime.clock mtime.clock.os first_order util kernel_prop)
-
+ (libraries str first_order util kernel_prop)
 )
