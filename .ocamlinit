@@ -30,6 +30,7 @@ let f = PImpl(PNeg (PVar 1), PVar 2)
 let test() = to_string_formula_prop f;;
 
 #use "prop/test/test_S1.ml";;
+#trace Prop.Formula_tooling.instance;;
 #use "kernel/kernel_prop/test/test_compile_S1.ml";;
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
