@@ -33,12 +33,12 @@ let print_version_string () =
 
 let specs =
   [
-    "-socket", Arg.String (fun x -> socket_name := Some x),
+    "-socket", Stdlib.Arg.String (fun x -> socket_name := Some x),
     " <socket>  Set socket name to <socket> : filename, host:port, ip:port";
-    "-max_session", Arg.Int (fun x -> max_session := Some x), " maximum number of sessions accepted by the server before shutdown";
-    "-v",  Arg.Unit print_version_string, " Print version and exit";
-    "-version",  Arg.Unit print_version_string, " Print version and exit";
-    "-vnum",  Arg.Unit print_version_num, " Print version number and exit";
+    "-max_session", Stdlib.Arg.Int (fun x -> max_session := Some x), " maximum number of sessions accepted by the server before shutdown";
+    "-v",  Stdlib.Arg.Unit print_version_string, " Print version and exit";
+    "-version",  Stdlib.Arg.Unit print_version_string, " Print version and exit";
+    "-vnum",  Stdlib.Arg.Unit print_version_num, " Print version number and exit";
   ]
 
 let session =
@@ -266,11 +266,11 @@ and repl channels =
   let command = Buffer.create 8192
   in
   (* 
-   * read 
- * eval 
- * print 
- * loop
- *)
+   * read
+   * eval
+   * print
+   * loop
+   *)
   let command_pattern = "\n\n"
   in
   let r = Str.regexp command_pattern
@@ -280,6 +280,7 @@ and repl channels =
   while true 
   do 
     (* read *)
+    Logs.info (fun m -> m "Read." ?header:None);
     let buffer = BytesLabels.make 8192 '\000'
     in
     print_endline "avant read" ;
@@ -327,7 +328,7 @@ and repl channels =
   done
 
 let main () = 
-  Arg.parse specs ignore usage;
+  Stdlib.Arg.parse specs ignore usage;
   let address = match !socket_name with 
       Some x -> x
     | None -> 
@@ -401,28 +402,7 @@ let main () =
      close_sock_listen();
    with x -> Printexc.print_backtrace Stdlib.stdout ; close_sock_listen(); raise x)
 
-(*logging*)
-let stamp_tag : Mtime.span Logs.Tag.def =
-  Logs.Tag.def "stamp" ~doc:"Relative monotonic time stamp" Mtime.Span.pp
-let stamp c = Logs.Tag.(empty |> add stamp_tag (Mtime_clock.count c))
-let reporter ppf =
-  let report _  level ~over k msgf =
-    let k _ = over (); k () in
-    let with_stamp h tags k ppf fmt =
-      let stamp = match tags with
-        | None -> None
-        | Some tags -> Logs.Tag.find stamp_tag tags
-      in
-      let dt = match stamp with None -> 0. | Some s -> Mtime.Span.to_us s in
-      Format.kfprintf k ppf ("%a[%+04.0fµs] @[" ^^ fmt ^^ "@]@.")
-        Logs.pp_header (level, h) dt
-    in
-    msgf @@ fun ?header ?tags fmt -> with_stamp header tags k ppf fmt
-  in
-  { Logs.report = report }
 
 (**main**)
 let _ =
-  Logs.set_reporter (reporter (Format.std_formatter));
-  Logs.set_level (Some Logs.Info);
   main()
