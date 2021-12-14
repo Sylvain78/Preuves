@@ -26,6 +26,11 @@ let is_instance_of_axiom_aux f =
               | _ -> raise Not_found)
             subst
         in
+        Fmt_tty.setup_std_outputs ();
+        let pp i =
+          Fmt.pr "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Ax" Fmt.(parens int) i;
+        in
+        pp i;
         Some(Ax(i,subst'))
       with
       | Not_found -> None

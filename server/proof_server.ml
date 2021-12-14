@@ -280,7 +280,6 @@ and repl channels =
   while true 
   do 
     (* read *)
-    Logs.info (fun m -> m "Read." ?header:None);
     let buffer = BytesLabels.make 8192 '\000'
     in
     print_endline "avant read" ;
