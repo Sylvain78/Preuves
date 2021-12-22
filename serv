@@ -1,2 +1,2 @@
 #!/bin/sh
-_build/default/server/proof_server.exe -socket localhost:5757
+_build/default/server/proof_server.exe --socket localhost:5757

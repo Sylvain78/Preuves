@@ -1,1 +1,1 @@
-cat theories/Bourbaki_Options.prf theories/Bourbaki_Notations.prf theories/Bourbaki_S1.prf | nc localhost 5757
+cat theories/Bourbaki_Options.prf theories/Bourbaki_Notations.prf theories/Bourbaki_Logic.prf | nc localhost 5757

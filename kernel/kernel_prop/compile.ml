@@ -70,7 +70,9 @@ let is_cut_aux demo f =
   in
   try
     let (li, ri) = find_cut f demo
-    in Some(Cut(li,ri))
+    in 
+    Fmt.pr "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Cut" Fmt.(parens (pair ~sep:Fmt.comma int int)) (li,ri);
+      Some(Cut(li,ri))
   with
   | Not_found -> None
 
@@ -80,10 +82,10 @@ let compile_demonstration ?(theory=[]) ~demo () =
     match demo with
     | [] ->List.hd proved, proof
     | f :: demo_tail ->
-      let  proof_term = List.find_map (fun func -> func f) [is_instance_of_axiom_aux ; is_known_theorem_aux theory; is_cut_aux (List.rev proved) ]
+      let  proof_term = List.find_map (fun func -> func (expand_all_notations f)) [is_instance_of_axiom_aux ; is_known_theorem_aux theory; is_cut_aux (List.rev proved) ]
       in
       match proof_term with
-      | Some step -> compile_demo_aux ~demo:demo_tail ~proved:(f::proved)  ~proof:(step :: proof)
+      | Some step -> pp_formula Fmt.stdout f;compile_demo_aux ~demo:demo_tail ~proved:(f::proved)  ~proof:(step :: proof)
       | None -> raise (Prop.Verif.Invalid_demonstration (f, List.rev (f::proved)))
   in
   let theorem, demonstration = compile_demo_aux ~demo:demo ~proved:[] ~proof:[]

@@ -125,3 +125,93 @@ and to_string_formula_prop f =
   Format.pp_print_flush ff ();
   Buffer.contents b
 
+
+let rec expand_all_notations = function
+  | PVar _ 
+  | PMetaVar _ as f -> f
+  | PNeg f -> PNeg (expand_all_notations f)
+  | PAnd (f,g) -> PAnd (expand_all_notations f, expand_all_notations g)
+  | POr (f,g) -> POr (expand_all_notations f, expand_all_notations g)
+  | PImpl (f,g) -> PImpl (expand_all_notations f, expand_all_notations g)
+  | PApply_notation (_ as n)-> expand_all_notations (get_semantique n)
+
+type formula_formatter = formula_prop Fmt.t 
+let (pp_formula: formula_formatter) = fun  out -> 
+  let  print_par f =
+    Fmt.pf out "(";
+    f();
+    Fmt.pf out ")";
+  in
+  let rec print_bin out seq op f g =
+    pp_aux out ~pos:1 seq f;
+    Fmt.string out (" "^op^" ");
+    pp_aux out ~pos:2 seq g
+  and pp_aux out ?(pos=1) seq = function
+    | PVar i -> 
+      if (0<=i && i<10) 
+      then 
+        begin
+          Fmt.(pf out "X_%a" int i)
+        end
+      else 
+        begin
+          Fmt.string out "X_{";
+          Fmt.int out i;
+          Fmt.string out "}"
+        end
+    | PMetaVar s -> Fmt.pf out "\\mathbf{%s}" s
+    | PNeg g -> 
+      if (pos=1 && seq="impl") 
+      then
+        print_par (fun ()  -> Fmt.pf out "\\lnot "; pp_aux out "neg" g)
+      else 
+        begin
+          Fmt.pf out "\\lnot "; pp_aux out "neg" g
+        end
+    | PAnd(f, g) ->
+      if (seq = "and" ||  seq ="init")
+      then
+        print_bin out "and" "\\land" f g
+      else
+        print_par (fun () -> print_bin out "and" "\\land" f g)
+    | POr(f, g) ->
+      if (seq = "or" || seq ="init")
+      then
+        print_bin out "or" "\\lor" f g
+      else
+        print_par (fun () -> print_bin out "or" "\\lor" f g)
+    | PImpl(f, g) -> 
+      if (seq ="init")
+      then
+        print_bin out "impl" "\\implies" f g
+      else
+        print_par (fun () -> print_bin out "impl" "\\implies" f g)
+    | (PApply_notation 
+         {
+           apply_notation_prop         = _  as n;
+           apply_notation_prop_params  = _ as list_params  
+         }) as f -> 
+      let  replace  m = function 
+        | Param a  -> begin
+            try  
+              match List.assoc (Param a) m
+              with 
+              | PVar _ | PMetaVar _ as v ->  to_string_formula_prop v
+              | f      -> "(" ^ (to_string_formula_prop f) ^ ")"
+            with Not_found -> failwith "apply_notations"
+          end
+        | String s  -> s 
+      in
+      let map_param_val = List.combine n.notation_prop_params list_params
+      in 
+      let notation_with_params_replaced = List.map (replace map_param_val ) n.notation_prop_notation
+      in
+      if (seq = "notation" || seq = "init") 
+      then 
+        Fmt.pf out "%s" (List.fold_left  (fun s t -> s ^ t) "" notation_with_params_replaced)
+      else 
+        print_par (fun () -> pp_aux out "notation" f)
+  in
+  function f -> Fmt.pr "%a@." (fun ff f -> pp_aux ff "init" f) f
+
+let _ = pp_formula Fmt.stdout (PVar 1)

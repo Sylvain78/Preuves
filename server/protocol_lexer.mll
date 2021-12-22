@@ -44,7 +44,7 @@ rule token = parse
   | [' ' '\t']     { token lexbuf } 
   | newline { NEWLINE }
   | ident as id 
-    { 
+    {
       try Hashtbl.find keywords id
       with 
       | Not_found -> IDENT(Lexing.lexeme lexbuf)

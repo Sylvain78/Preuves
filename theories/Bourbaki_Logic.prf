@@ -1,0 +1,45 @@
+# Bourbaki logic
+Theorem
+C8
+Param
+$\mathbf{A}$
+Premisses
+Conclusion
+$\mathbf{A} \implies \mathbf{A}$
+Demonstration
+$(\mathbf{A} \implies ((\mathbf{A} \implies \mathbf{A}) \implies \mathbf{A})) \implies (( \mathbf{A} \implies (\mathbf{A} \implies \mathbf{A})) \implies (\mathbf{A} \implies \mathbf{A}))$
+$\mathbf{A} \implies ((\mathbf{A} \implies \mathbf{A}) \implies \mathbf{A})$
+$(\mathbf{A} \implies (\mathbf{A} \implies \mathbf{A})) \implies (\mathbf{A} \implies \mathbf{A})$
+$\mathbf{A} \implies (\mathbf{A} \implies \mathbf{A})$
+$\mathbf{A} \implies \mathbf{A}$
+End
+
+Theorem
+C6
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+$\mathbf{C}$
+Premisses
+Conclusion
+$((\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C})))$
+Demonstration
+$(\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C})) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C}))$
+$((\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C})) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C}))) \implies ((\mathbf{B} \implies \mathbf{C}) \implies ((\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C})) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C}))))$
+$((\mathbf{B} \implies \mathbf{C}) \implies ((\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C})) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C}))))$
+$((\mathbf{B} \implies \mathbf{C}) \implies ((\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C})) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C})))) \implies (((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C}))) \implies ((\mathbf{B} \implies \mathbf{C}) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C}))))$
+$(((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C}))) \implies ((\mathbf{B} \implies \mathbf{C}) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C}))))$
+$((\mathbf{B} \implies \mathbf{C}) \implies  (\mathbf{A} \implies (\mathbf{B} \implies \mathbf{C})))$
+$((\mathbf{B} \implies \mathbf{C}) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C})))$
+$((\mathbf{B} \implies \mathbf{C}) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C}))) \implies (((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B})) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C})))$
+$(((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B})) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C})))$
+$(((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B})) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C}))) \implies ((\mathbf{A} \implies \mathbf{B}) \implies (((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B})) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C}))))$
+$((\mathbf{A} \implies \mathbf{B}) \implies (((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B})) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C}))))$
+#    (*k*)
+$((\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B})))$
+#    (*s*)
+$((\mathbf{A} \implies \mathbf{B}) \implies (((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B})) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C})))) \implies (((\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B}))) \implies ((\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C}))))$
+$((\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{B}))) \implies ((\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C})))$
+$((\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C})))$
+End
+

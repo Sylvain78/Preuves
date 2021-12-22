@@ -6,7 +6,7 @@
  (name prop)
  (instrumentation (backend bisect_ppx))
   (modules (:standard))
- (libraries util dyp))
+ (libraries fmt util dyp))
 
 (rule
  (targets prop_parser.ml)
