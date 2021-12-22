@@ -213,5 +213,3 @@ let (pp_formula: formula_formatter) = fun  out ->
         print_par (fun () -> pp_aux out "notation" f)
   in
   function f -> Fmt.pr "%a@." (fun ff f -> pp_aux ff "init" f) f
-
-let _ = pp_formula Fmt.stdout (PVar 1)

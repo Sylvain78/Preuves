@@ -13,7 +13,7 @@ open Util__Unix_tools
 
 module type SESSION = module type of Session
 
-let socket_name = 
+let socket_name =
   ref None
 let max_session =
   ref None
@@ -48,13 +48,9 @@ let pp_header ppf (level, header) =
     | Logs.Warning -> Logs_fmt.warn_style
     | Logs.Error -> Logs_fmt.err_style
     | Logs.Info -> Logs_fmt.info_style
-
   in
-
-  let level = Logs.level_to_string (Some level) 
-
+  let level = Logs.level_to_string (Some level)
   in
-
   Fmt.pf ppf "[%a][%a]"
     (Fmt.styled level_style Fmt.string)
     level (Fmt.option Fmt.string)
@@ -69,24 +65,31 @@ let reporter ppf =
     let with_src_and_stamp h _ k fmt =
       let dt = Mtime.Span.to_us (Mtime_clock.elapsed ())
       in
-
       Fmt.kpf k ppf
         ("%s %a %a: @[" ^^ fmt ^^ "@]@.")
-        (pad 10 (Fmt.str "%+04.0fus" dt))
+        (pad 8 (if (dt <1_000.) 
+                 then Fmt.str "%#4.0fµs" dt 
+                 else if (dt/.1_000. <1_000.)
+                 then Fmt.str "%#4.0fms" (dt/.1_000.) 
+                 else Fmt.str "%#4.0fs" (dt/.1_000_000.)))
         pp_header (level, h)
-        Fmt.(styled `Magenta string)
-        (pad 10 @@ Logs.Src.name src)
-    in
-
-    msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
-  in
-  { Logs.report }
+  Fmt.(styled `Magenta string)
+  (pad 10 @@ Logs.Src.name src)
+in
+msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
+in
+{ Logs.report }
 
 let setup_logs style_renderer level =
   Fmt_tty.setup_std_outputs ?style_renderer () ;
   Logs.set_level level ;
   Logs.set_reporter (reporter Fmt.stderr) ;
-  let quiet = match level with Some _ -> false | None -> true in
+  let quiet =
+    match level
+    with
+    | Some _ -> false
+    | None -> true
+  in
   quiet
 
 let setup_logs =
@@ -104,7 +107,7 @@ let specs =
 
 let session =
   {
-    mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Compiled }; 
+    mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Compiled };
     name = "Init";
     speed = Session.Expand_notations;
     history = [] ;
@@ -112,16 +115,16 @@ let session =
     theorems = [];
   }
 
-let save_session mode file= 
+let save_session mode file=
   let oc = open_out file
 
   in
 
   begin
-    match mode with 
+    match mode with
     | Session.Text ->
       List.iter (fun s -> Printf.fprintf oc "%s\n\n" s) (List.rev session.history);
-    | Session.Binary -> 
+    | Session.Binary ->
       (*TODO one day....
        * let (base,ext) = Filename.remove_extension file, Filename.extension file
        *
@@ -130,23 +133,23 @@ let save_session mode file=
        * print_endline ("Save parser to : "^"\""^base^"_parser"^ext^"\"");
        * Prop.Prop_parser.save_parser ("\""^base^"_parser"^ext^"\"");
       *)
-      Marshal.to_channel oc 
-        (session: Prop.Theorem_prop.theorem_prop Session.session) 
+      Marshal.to_channel oc
+        (session: Prop.Theorem_prop.theorem_prop Session.session)
         []
   end;
   close_out oc
 
-let rec load_session mode file channels = 
+let rec load_session mode file channels =
   let ic = open_in file
 
   in
 
   begin
-    match mode with 
-    | Session.Text -> 
-      repl {io_in=ic ; io_out = channels.io_out ; io_fd = channels.io_fd} 
+    match mode with
+    | Session.Text ->
+      repl {io_in=ic ; io_out = channels.io_out ; io_fd = channels.io_fd}
     | Session.Binary ->
-      let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic) 
+      let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic)
 
       in
 
@@ -160,10 +163,10 @@ let rec load_session mode file channels =
   end;
   close_in ic
 
-and eval s channels = 
+and eval s channels =
   (* print_endline ("eval : " ^ s); *)
-  (*let module M = (val session.prop : Session.P) 
-    in 
+  (*let module M = (val session.prop : Session.P)
+    in
     print_endline ("number of axioms : "^ (string_of_int @@ List.length @@ !M.axioms_prop));
   *)
   try
@@ -171,21 +174,21 @@ and eval s channels =
 
     in
 
-    match command with 
+    match command with
     | Quit -> raise Exit
     | Verbose level ->
       session.mode.verbose_level <- level;
       Ok
-    | Prop -> 
-      let c = Mtime_clock.counter () 
+    | Prop ->
+      let c = Mtime_clock.counter ()
 
       in
 
-      Logs.info (fun m -> m "Prop" ~tags:(stamp c));
+      Logs.info(fun m -> m "Prop" ~tags:(stamp c));
       session.mode.order<-Session.Prop;
       session.axioms <- !Axioms_prop.axioms_prop;
       Ok
-    | First_order -> 
+    | First_order ->
       session.mode.order<-Session.First_order;
       Ok
     | Keep_notations ->
@@ -202,9 +205,9 @@ and eval s channels =
       Ok
     | History ->
       Answer (String.concat "\n" @@ List.rev @@ session.history)
-    | Save (mode,file) -> 
+    | Save (mode,file) ->
       begin
-        save_session mode file; 
+        save_session mode file;
         Answer ("Saved to file "^file)
       end
     | Load (mode,file) ->
@@ -216,9 +219,9 @@ and eval s channels =
       begin
         match session.mode.order with
         | Prop ->
-          let notation = 
+          let notation =
             let buf = Buffer.create 13
-            in 
+            in
             Buffer.add_string buf "Notation";
             Buffer.add_char buf '\n';
             Buffer.add_string buf n.name;
@@ -238,27 +241,27 @@ and eval s channels =
             Buffer.add_string buf "End";
             print_newline();
             (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
-            Prop.Prop_parser.notation_from_string (Buffer.contents buf) 
+            Prop.Prop_parser.notation_from_string (Buffer.contents buf)
 
           in
 
           Answer ("Notation "^notation.Formula_prop.notation_prop_name)
         | First_order -> Answer "Notation first_order : unimplemented"
       end
-    | Axiom { name ; formula } -> 
-      if (session.mode.order = Session.Prop) 
+    | Axiom { name ; formula } ->
+      if (session.mode.order = Session.Prop)
       then
         begin
           if (List.exists (fun {name_theorem_prop; _} -> name=name_theorem_prop) session.axioms)
           then
-            Answer ("Axiom " ^ name ^ " already defined") 
-          else 
+            Answer ("Axiom " ^ name ^ " already defined")
+          else
             begin
               session.axioms <- { kind_prop=Axiom;
                                   proof_prop=[];
                                   name_theorem_prop = name;
                                   conclusion_prop=Prop.Prop_parser.formula_from_string formula
-                                } 
+                                }
                                 :: session.axioms;
               Ok
             end
@@ -266,22 +269,22 @@ and eval s channels =
       else Answer("Axiom for first order unimplemented")
     | Theorem ({name; params=_; premisses; conclusion; demonstration; status=_} as t) ->
       begin
-        match session.mode.order 
-        with 
+        match session.mode.order
+        with
         | Session.Prop ->
           begin
-            let verif_function = 
+            let verif_function =
               match session.mode.evaluation with
               | Session.Interpreted ->
                 Prop.Verif.prop_proof_verif
               | Session.Compiled ->
-                fun ~hyp _ ~proof-> 
+                fun ~hyp _ ~proof->
                   let compiled_demo = Kernel_prop.Compile.compile_demonstration ~theory:hyp ~demo:proof ()
 
                   in
 
                   match Kernel_prop.Verif.kernel_verif ~theory:hyp ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
-                  with 
+                  with
                   | Ok _ -> true
                   | Error _ -> false
 
@@ -292,21 +295,21 @@ and eval s channels =
 
             in
 
-            let verif = (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses) 
-                           conclusion 
-                           ~proof:proof) 
+            let verif = (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses)
+                           conclusion
+                           ~proof:proof)
 
             in
 
             if verif then
               begin
-                session.theorems <- 
+                session.theorems <-
                   {
                     kind_prop = Kind_prop.Theorem;
                     name_theorem_prop = t.name;
                     proof_prop = proof;
                     conclusion_prop = conclusion;
-                  } 
+                  }
                   :: session.theorems;
                 Answer ("Theorem " ^ name ^ " verified.")
               end
@@ -327,24 +330,24 @@ and eval s channels =
               conclusion_prop;
               _
             } -> (kind_to_string kind_prop) ^ " " ^
-                 name_theorem_prop ^ 
+                 name_theorem_prop ^
                  ":" ^
-                 (*TODO "(" ^ 
-                   (String.concat ", " @@ 
-                   List.map (function 
-                   | `PMetaVar s -> s 
-                   | `PVar i -> if i>0 && i<10 
-                   then "X_"^ (string_of_int i) 
+                 (*TODO "(" ^
+                   (String.concat ", " @@
+                   List.map (function
+                   | `PMetaVar s -> s
+                   | `PVar i -> if i>0 && i<10
+                   then "X_"^ (string_of_int i)
                    else "X_{"^ (string_of_int i) ^ "}")
-                   parameters_prop) ^ 
-                   ") : " ^*) 
+                   parameters_prop) ^
+                   ") : " ^*)
                  (Prop.Verif.to_string_formula_prop conclusion_prop)
-            ) 
-          |> String.concat "\n" 
+            )
+          |> String.concat "\n"
         )
-      else 
+      else
         failwith "session mode not Prop "
-  with 
+  with
   | Failure s -> Answer s
 
 and repl channels =
@@ -352,7 +355,7 @@ and repl channels =
 
   in
 
-  (* 
+  (*
 * read
 * eval
 * print
@@ -363,13 +366,13 @@ and repl channels =
   in
 
   let r = Str.regexp command_pattern
-  in 
+  in
   let index_end_of_command = ref 0
 
   in
 
-  while true 
-  do 
+  while true
+  do
     (* read *)
     let buffer = BytesLabels.make 8192 '\000'
 
@@ -390,10 +393,10 @@ and repl channels =
 
     in
 
-    while 
+    while
       s := (Buffer.contents command);
-      let test = 
-        try 
+      let test =
+        try
           index_end_of_command := (Str.search_forward r !s 0);true
         with Not_found -> false
 
@@ -417,7 +420,7 @@ and repl channels =
       (*channels needed to cause repl in case of executing a text file (load text)*)
       let answer = eval com channels
 
-      in 
+      in
       (* print *)
       begin
         match answer with
@@ -429,14 +432,14 @@ and repl channels =
     done
   done
 
-let main _ (*quiet*) socket_val = 
+let main _ (*quiet*) socket_val =
   socket_name := Some socket_val;
-  let address = match !socket_name with 
+  let address = match !socket_name with
       Some x -> x
-    | None -> 
+    | None ->
       match Sys.os_type with
         "Win32" ->
-        (Unix.string_of_inet_addr Unix.inet_addr_loopback)^ ":"^ (string_of_int (10000 + ((Unix.getpid ()) mod 10000)))
+        (Unix.string_of_inet_addr Unix.inet_addr_loopback)^ ":"^ (string_of_int (1_0000 + ((Unix.getpid ()) mod 1_0000)))
       | _ -> Filename.concat (Filename.get_temp_dir_name ())
                ("student_socket" ^ (string_of_int (Unix.getpid ())))
   in
@@ -459,65 +462,71 @@ let main _ (*quiet*) socket_val =
   (try
      setsockopt sock_listen SO_REUSEADDR true;
      bind sock_listen ~addr:socket_address;
-
-     if socket_domain = PF_INET then 
+     if socket_domain = PF_INET then
        begin
          match getsockname sock_listen
-         with 
-         | ADDR_INET(_,port) -> print_int port;print_newline()
+         with
+         | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
          | _ -> ()
        end;
-
      listen sock_listen ~max:3;
-     while (match !max_session 
-            with 
-            | None -> true 
+     while (match !max_session
+            with
+            | None -> true
             | Some n -> Format.printf "max_sessions = %d\n" n; flush Stdlib.stdout;n > 0)
      do
        let (sock, _) = accept sock_listen
        in
        begin
          match !max_session
-         with 
-         | Some n -> max_session:= Some (n-1) 
+         with
+         | Some n -> max_session:= Some (n-1)
          | None -> ()
-       end; 
-
+       end;
        let pid = fork()
        in
-       match pid with 
+       match pid with
        | 0 -> (*child*)
-         let io_chan = io_channel_of_descr sock 
+         let io_chan = io_channel_of_descr sock
          in
-         begin 
-           try 
-             repl io_chan 
-           with 
-           | End_of_file | Exit -> 
+         begin
+           try
+             repl io_chan
+           with
+           | End_of_file | Exit ->
              begin
                close io_chan.io_fd;
                exit 0 (*child quit the loop*)
              end
          end
-       | _ -> (*father*) 
+       | _ -> (*father*)
          ()
      done;
-     close_sock_listen();
-   with x -> Printexc.print_backtrace Stdlib.stdout ; close_sock_listen(); raise x)
+     (close_sock_listen());`Ok 0
+   with 
+   | _ -> begin 
+       Printexc.print_backtrace Stdlib.stderr ; 
+       close_sock_listen(); 
+       `Error (false, Fmt.str "%s." "Erreur")
+     end
+  )
 
-let () = 
+let () =
   let socket =
-    let default = "localhost:5757" 
+    let default = "localhost:5757"
     in
     let info =
-      Cmdliner.Arg.info ["s"; "socket"] 
+      Cmdliner.Arg.info ["s"; "socket"]
         ~docv:"SOCKET"
         ~doc:"socket value : ip:port, hostname:port, fifo file"
 
     in
     Cmdliner.Arg.value (Cmdliner.Arg.opt Cmdliner.Arg.string default info)
-  in 
-  match Cmdliner.Term.eval Cmdliner.(Term.(const main $ setup_logs $ socket), Cmdliner.Term.info "main")
-  with 
-  | `Ok _ -> ()
-  | _ -> prerr_string usage
+  in
+  let command =
+    let doc ="Launch the proof server"
+    in
+    Cmdliner.Term.(ret (const main $ setup_logs $ socket), info "main" ~doc)
+  in
+  Cmdliner.Term.(exit @@ eval command)
+

@@ -1,5 +1,5 @@
 --Add logs and formatting in pretty boxes.
--- Better separation of work between verif/kernel_verif
+--remove old specs/usage in proof_server.ml
 -- Better loading/saving of session
 -- Adding more units test to prop
 --Finish the first_order layer once prop is finished
