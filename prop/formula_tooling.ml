@@ -5,15 +5,28 @@ exception Failed_Unification of formula_prop * formula_prop
 
 (**	@param l list of PVariables of g already instanciated in f *)
 let rec instance f g =
-  let rec instance_aux2 l f g  = match f, g 
+  let rec instance_aux2 l f g  = 
+    match f, g 
     with
     | _, (PVar _ as g) -> begin
         try
           let (_, t) = List.find (fun (v1, _) -> v1 = g) l
           in
           if (t = f) then l
-          else raise (Failed_Unification(f, g))
-        with Not_found -> (g, f)::l (*g=Xi bound to f*)
+          else begin
+            print_string "XXXX\n";
+            printer_formula_prop Fmt.stdout t;
+            raise (Failed_Unification(f, g))
+          end
+        with Not_found -> 
+          begin
+            print_string "\nYYY\n";
+            printer_formula_prop Fmt.stdout f;
+            print_string "\nYYY\n";
+            printer_formula_prop Fmt.stdout g;
+            flush Stdlib.stdout;
+            (g, f)::l (*g=Xi bound to f*)
+          end
       end
     | PNeg f1 , PNeg g1 -> instance_aux2 l f1 g1
     | PAnd(f1, f2) , PAnd(g1, g2) 
@@ -212,6 +225,4 @@ let (pp_formula: formula_formatter) = fun  out ->
       else 
         print_par (fun () -> pp_aux out "notation" f)
   in
-  function f -> Fmt.pr "%a@." (fun ff f -> pp_aux ff "init" f) f
-
-let _ = pp_formula Fmt.stdout (PVar 1)
+  function f -> Fmt.pf out "%a" (fun ff f -> pp_aux ff "init" f) f

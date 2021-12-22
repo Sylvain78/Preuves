@@ -4,7 +4,7 @@ open Prop.Formula_prop
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
-(*let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;*)
+(*let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\implies\" \"(\"b\")\"\nEnd";;*)
 let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 let a,b=x1,x2
 let tout = neg (a=>.a)
@@ -13,6 +13,55 @@ and b_ou_a = ( b||.a)
 let c = b_ou_a
 let a_entraine_c = (a=>.c)
 and b_entraine_c = (b=>.c)
+
+
+(* |   F \\implies  F *)
+let verif_C8 =
+  let demo = [
+    (a =>. ((a =>. a) =>. a)) =>. (( a =>. (a =>. a)) =>. (a =>. a));
+    a =>. ((a =>. a) =>. a);
+    (a =>. (a =>. a)) =>. (a =>. a);
+    a =>. (a =>. a);
+    a =>. a;
+  ]
+  in
+  if (prop_proof_verif ~hyp:[] (a=>. a) ~proof:(List.map (fun s -> s) demo))
+  then 
+    theorems_prop := {
+      kind_prop = Theorem;
+      name_theorem_prop="[Bourbaki]C8";
+      proof_prop = demo;
+      conclusion_prop=formula_from_string "X_1 \\implies X_1";
+    }::!theorems_prop;;
+
+(* |   F ou F  \\implies  F *)
+let demo = (List.map (fun s -> (formula_from_string s)) [
+    "((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))";
+    "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))";
+    "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))  \\implies  ((((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A})))  \\implies  ((\\lnot \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))))";
+    "((((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A})))  \\implies  ((\\lnot \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))))";
+    "((\\lnot \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A})))";
+    "((\\lnot \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A})))  \\implies   (((\\lnot \\mathbf{A})  \\implies  (\\lnot \\mathbf{A}))  \\implies  ((\\lnot \\mathbf{A})  \\implies  (\\lnot (\\mathbf{A}\\lor\\mathbf{A}))))";
+    "((\\lnot \\mathbf{A})  \\implies  (\\lnot \\mathbf{A}))";
+    "(((\\lnot \\mathbf{A})  \\implies  (\\lnot \\mathbf{A}))  \\implies  ((\\lnot \\mathbf{A})  \\implies  (\\lnot (\\mathbf{A}\\lor\\mathbf{A}))))";
+    "((\\lnot \\mathbf{A})  \\implies  (\\lnot (\\mathbf{A}\\lor\\mathbf{A})))";
+    "((\\lnot \\mathbf{A})  \\implies  (\\lnot (\\mathbf{A}\\lor\\mathbf{A})))  \\implies   ((\\mathbf{A}\\lor\\mathbf{A})   \\implies  \\mathbf{A})";
+    "(\\mathbf{A}\\lor \\mathbf{A})  \\implies  \\mathbf{A}";
+  ])
+in
+if prop_proof_verif ~hyp:[] (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
+    ~proof:demo then
+
+  theorems_prop := {
+    kind_prop = Assumed;
+    name_theorem_prop="[Bourbaki]S1";
+    proof_prop = demo;
+    conclusion_prop=formula_from_string "(X_1 \\lor X_1) \\implies X_1";
+  }::!theorems_prop;;
+
+
+
+
 let demo = 
   let x1,x2 = PVar 1, PVar 2
   in
@@ -424,7 +473,7 @@ let demo1 = demo @ [
     (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c))) =>.
     ((a_ou_b =>. a_entraine_c) =>. (a_ou_b =>.(b_entraine_c=>.c)));
     ((a_ou_b =>. a_entraine_c) =>. (a_ou_b =>.(b_entraine_c=>.c)));
-    
+
     a_entraine_c;
     a_entraine_c =>. ( a_ou_b =>. a_entraine_c);
     ( a_ou_b =>. a_entraine_c);

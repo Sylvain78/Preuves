@@ -701,7 +701,11 @@ let test_rajout_hypothese _ = assert_bool "rajout hypothese" (verif_rajout_hypot
 let test_ou_idempotent _ = assert_bool "ou idempotent" (verif_ou_idempotent)
 let test_ou_diamant _ = assert_bool "ou diamant" (verif_ou_diamant)
 
-let test_instance _ = assert_equal [(PVar 1, PVar 1); (PVar 2, PVar 2)] (instance (formula_from_string "X_1 \\land X_2") (formula_from_string "X_1 \\land X_2"))
+let test_instance_1 _ = assert_equal [(PVar 1, PVar 1); (PVar 2, PVar 2)] (instance (formula_from_string "X_1 \\land X_2") (formula_from_string "X_1 \\land X_2"))
+let test_instance_2 _ = assert_equal [] (
+    instance 
+      (formula_from_string "((\\lnot \\mathbf{A})=>((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A}))=>((((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))=>((\\lnot \\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A})))))")
+      (formula_from_string "(X_1=>X_2)=>((X_2=>X_3)=>(X_1=>X_3))"))
 
 (** Tests for to_string *)
 let test_to_string_formula_pvar _ =
@@ -836,8 +840,8 @@ let test_notation _  =
 
 let instance_suite =
   "Instance">:::
-  [ "test_instance">::test_instance 
-  ]
+  [ "test_instance_1">::test_instance_1; 
+    "test_instance_2">::test_instance_2;  ]
 
 
 let printer_formula_suite =

@@ -6,4 +6,4 @@
  (name kernel_prop)
  (instrumentation (backend bisect_ppx))
   (modules (:standard))
- (libraries fmt fmt.tty util prop))
+ (libraries logs fmt fmt.tty util prop))

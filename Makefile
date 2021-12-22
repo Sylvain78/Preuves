@@ -19,92 +19,92 @@ default:
 	@echo "  doc          create documentation"
 
 parser:
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order formula_prop.cmi formula.cmi signature.cmi
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop prop_parser.${EXT}
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order  first_order_parser.${EXT}
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I first_order formula_prop.cmi formula.cmi signature.cmi
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop prop_parser.${EXT}
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order  first_order_parser.${EXT}
 
 build: parser
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop formula_prop.${EXT}
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop formula_tooling.${EXT}
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop proof_prop.${EXT}
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order theory.${EXT}
-	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles ensembles.${EXT}
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg str -pkg dyp -I util -I prop -I first_order -I Ensembles -I protocol -I server proof_server.${EXT}
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I repl test.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop formula_prop.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop formula_tooling.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop proof_prop.${EXT}
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I first_order theory.${EXT}
+	ocamlbuild -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I first_order -I Ensembles ensembles.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg str -pkg dyp -pkg fmt -I util -I prop -I first_order -I Ensembles -I protocol -I server proof_server.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I first_order -I Ensembles -I repl test.${EXT}
 
 
 test: build
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I repl repl.${EXT}
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I repl test.${EXT}
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop_parser.${EXT}  && \
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I first_order -I Ensembles -I repl repl.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I first_order -I Ensembles -I repl test.${EXT}
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I prop/test test_formula_prop_parser.${EXT}  && \
 		rm test_formula_prop_parser.${EXT} && \
 		mv _build/prop/test/test_formula_prop_parser.${EXT} test_formula_prop_parser && \
 		./test_formula_prop_parser
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.${EXT}  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I prop/test test_formula_prop.${EXT}  && \
 		rm test_formula_prop.${EXT} && \
 		mv _build/prop/test/test_formula_prop.${EXT} test_formula_prop && \
 		./test_formula_prop
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_proof_prop.${EXT}  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I prop/test test_proof_prop.${EXT}  && \
 		rm test_proof_prop.${EXT} && \
 		mv _build/prop/test/test_proof_prop.${EXT} test_proof_prop && \
 		./test_proof_prop
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_formula_first_order.${EXT}  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I first_order/test test_formula_first_order.${EXT}  && \
 		rm test_formula_first_order.${EXT} && \
 		mv _build/first_order/test/test_formula_first_order.${EXT} test_formula_first_order && \
 		./test_formula_first_order
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_schemas_first_order.${EXT}  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I first_order/test test_schemas_first_order.${EXT}  && \
 		rm test_schemas_first_order.${EXT} && \
 		mv _build/first_order/test/test_schemas_first_order.${EXT} test_schemas_first_order && \
 		./test_schemas_first_order
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I prop -I Ensembles -I Ensembles/test test_ensembles.${EXT}  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I prop -I Ensembles -I Ensembles/test test_ensembles.${EXT}  && \
 		rm test_ensembles.${EXT} && \
 		mv _build/Ensembles/test/test_ensembles.${EXT} test_ensembles && \
 		./test_ensembles
 
 test_S1.debug:
 		rm -f test_S1.byte && \
-	ocamlbuild -use-ocamlfind -tag 'debug' -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_S1.byte  && \
+	ocamlbuild -use-ocamlfind -tag 'debug' -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I prop/test test_S1.byte  && \
 		mv _build/prop/test/test_S1.byte test_S1 && \
 		ocamldebug -I _build/prop -I _build/prop/test -I _build/util  ./test_S1
 test_prop.debug:
 		rm -f test_formula_prop.byte && \
-	ocamlbuild -use-ocamlfind -tag 'debug' -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.byte  && \
+	ocamlbuild -use-ocamlfind -tag 'debug' -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I prop/test test_formula_prop.byte  && \
 		mv _build/prop/test/test_formula_prop.byte test_formula_prop && \
 		ocamldebug -I _build/prop -I _build/prop/test -I _build/util  ./test_formula_prop
 
 test_first_order_formula.debug:
 	rm -f test_formula_first_order && \
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test -tag 'debug' test_formula_first_order.byte  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I first_order/test -tag 'debug' test_formula_first_order.byte  && \
 		ocamldebug -cd _build/first_order/test  -I _build/first_order -I _build/first_order/test -I _build/util test_formula_first_order.byte
 
 test_first_order_schemas.debug:
 	rm -f test_schemas_first_order && \
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test -tag 'debug' test_schemas_first_order.byte  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I first_order/test -tag 'debug' test_schemas_first_order.byte  && \
 		ocamldebug -cd _build/first_order/test  -I _build/first_order -I _build/first_order/test -I _build/util test_schemas_first_order.byte
 
 test_schema.debug:
-	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_schemas_first_order.d.byte  && \
+	ocamlbuild -use-ocamlfind  -package oUnit -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I first_order/test test_schemas_first_order.d.byte  && \
 		ocamldebug -cd _build/first_order/test  -I _build/first_order -I _build/first_order/test -I _build/util test_schemas_first_order.d.byte
 
 coverage:
 	rm -f bisect*.out
-	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_formula_prop.${EXT}
+	ocamlbuild -use-ocamlfind -pkgs oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I prop/test test_formula_prop.${EXT}
 	rm test_formula_prop.${EXT}
 	mv _build/prop/test/test_formula_prop.${EXT} test_formula_prop_coverage
 	./test_formula_prop_coverage
-	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I prop/test test_proof_prop.${EXT}
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I prop/test test_proof_prop.${EXT}
 	rm test_proof_prop.${EXT}
 	mv _build/prop/test/test_proof_prop.${EXT} test_proof_prop
 	./test_proof_prop
-	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_formula_first_order.${EXT}
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I first_order/test test_formula_first_order.${EXT}
 	rm test_formula_first_order.${EXT}
 	mv _build/first_order/test/test_formula_first_order.${EXT} test_formula_first_order
 	./test_formula_first_order
-	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I first_order -I first_order/test test_schemas_first_order.${EXT}
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I first_order -I first_order/test test_schemas_first_order.${EXT}
 	rm test_schemas_first_order.${EXT}
 	mv _build/first_order/test/test_schemas_first_order.${EXT} test_schemas_first_order
 	./test_schemas_first_order
-	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -I util -I prop -I first_order -I Ensembles -I Ensembles/test test_ensembles.${EXT}
+	ocamlbuild -use-ocamlfind  -package oUnit,bisect_ppx -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg dyp -pkg fmt -I util -I prop -I first_order -I Ensembles -I Ensembles/test test_ensembles.${EXT}
 	rm test_ensembles.${EXT}
 	mv _build/Ensembles/test/test_ensembles.${EXT} test_ensembles
 	./test_ensembles
@@ -143,5 +143,5 @@ cov_report:
 
 #####Private targets
 proof_server:
-	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg str -pkg dyp -I util -I prop -I first_order -I Ensembles -I protocol -I server proof_server.${EXT}
+	ocamlbuild -tag 'debug' -use-ocamlfind -cflag -safe-string -cflag -bin-annot -cflag -annot -pkg str -pkg dyp -pkg fmt -I util -I prop -I first_order -I Ensembles -I protocol -I server proof_server.${EXT}
 

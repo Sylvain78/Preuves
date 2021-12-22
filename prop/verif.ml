@@ -75,23 +75,32 @@ let rec verif ~hypotheses ~proved ~to_prove =
       (*Formula already present *)
       || List.mem f_i proved
       (*Formula is an instance of a theorem or axiom *)
-      || (List.exists (fun a -> try ignore(instance f_i a.conclusion_prop);true with _ -> false) 
+      || (List.exists (fun th -> 
+          try 
+            Logs.debug (fun m -> m " %a instance of %s (%a) ?" pp_formula f_i th.name_theorem_prop pp_formula th.conclusion_prop);
+            ignore(instance f_i th.conclusion_prop);
+            Logs.debug (fun m ->  m "YES");
+            true
+          with 
+          | _ -> 
+            Logs.debug (fun m ->  m "NO");
+            false) 
           (!theorems_prop @ !axioms_prop)) 
       (*cut*)
       || (cut f_i proved) 
-      || begin
-        match proved with 
-        | [] -> false 
-        (*application of notations*)
-        | f::_ -> equiv_notation f_i f
-      end
-)
+      (*application of notations*)
+      || List.exists (fun f -> equiv_notation f_i f) proved
+    )
     then 
-      verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
+      begin
+        Logs.debug (fun m -> pp_formula Fmt.stdout f_i; m "Proved");
+        verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
+      end
     else 
-      ((*SKE TODO Printexc.print_backtrace stderr ;*)
-        (*Formula_tooling.printer_formula_prop Format.err_formatter f_i;Format.print_flush();*) 
-            raise (Invalid_demonstration (f_i,List.rev (f_i::proved))))
+      begin
+        Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
+        raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
+      end
 
 let prop_proof_verif ~hyp:hypotheses f ~proof:proof =
   (* f is at the end of the proof *)
@@ -109,9 +118,9 @@ let prop_proof_verif ~hyp:hypotheses f ~proof:proof =
     verif ~hypotheses  ~proved:[] ~to_prove:proof
 ;;
 
-
-(* |   F \\implies  F *)
-prop_proof_verif  ~hyp:[] (formula_from_string "X_1 \\implies X_1") 
+(*displaced in theories/Bourbaki_Logic.prf
+  (* |   F \\implies  F *)
+  prop_proof_verif  ~hyp:[] (formula_from_string "X_1 \\implies X_1") 
   ~proof:(List.map formula_from_string [
       "(X_1  \\implies ((X_1  \\implies  X_1) \\implies X_1))  \\implies 
     (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
@@ -121,16 +130,18 @@ prop_proof_verif  ~hyp:[] (formula_from_string "X_1 \\implies X_1")
       "X_1 \\implies X_1"
     ]);;
 
-theorems_prop := {
+  theorems_prop := {
   kind_prop = Theorem;
   name_theorem_prop="[Bourbaki]C8";
   proof_prop = [];
   conclusion_prop=formula_from_string "X_1 \\implies X_1";
-}::!theorems_prop;;
+  }::!theorems_prop;;
+*)
 
-(* |   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)*)
-let demo_chaining = 
-  List.map (fun s -> (formula_from_string s)) [
+(* Displaced in theories/Bourbaki_Logic.prf
+   |-   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)
+   let demo_chaining = 
+   List.map (fun s -> (formula_from_string s)) [
     "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
     "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
     "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -152,17 +163,16 @@ let demo_chaining =
 
     "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
     "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
-  ] 
-;;
+   ] 
+   ;;
 
-
-theorems_prop := {
-  kind_prop = Theorem;
-  name_theorem_prop="chainage";
-  proof_prop=demo_chaining;
-  conclusion_prop=formula_from_string "(X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))";
-}::!theorems_prop;;
-
+   theorems_prop := {
+   kind_prop = Theorem;
+   name_theorem_prop="chainage";
+   proof_prop=demo_chaining;
+   conclusion_prop=formula_from_string "(X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))";
+   }::!theorems_prop;;
+*)
 (*non A  \\implies  non B |   B  \\implies  A*)
 (* TODO : delete once they are not needed anymore
    let h = ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))	
@@ -199,14 +209,14 @@ theorems_prop := {
       "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
       "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
     ]);;
-*)
 theorems_prop := {
   kind_prop = Assumed;
   name_theorem_prop="contraposition";
   proof_prop = [];
   conclusion_prop=formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
   ::!theorems_prop;;
-
+*)
+(*
 (* |   F ou F  \\implies  F *)
 prop_proof_verif ~hyp:[] (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
   ~proof:(List.map (fun s -> (formula_from_string s)) [
@@ -229,7 +239,7 @@ theorems_prop := {
   proof_prop = [];
   conclusion_prop=formula_from_string "(X_1 \\lor X_1) \\implies X_1";
 }::!theorems_prop;;
-
+*)
 
 (*|   A ou \\lnot A*)
 (* TODO delete when not need anymore

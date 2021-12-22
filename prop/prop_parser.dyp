@@ -105,11 +105,9 @@ semantique:
 save:
     | any_string eof @{
       let oc = open_out (String.sub $1 1 (String.length $1 -2)) in
-      print_endline "avant save parser";
       Marshal.to_channel oc
       ((*dyp.global_data,*) Dyp.function_free_pdev dyp.parser_pilot.pp_dev)
       [];
-      print_endline "après save parser";
       close_out oc;
      (), [Keep_grammar] }
 */

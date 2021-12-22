@@ -27,10 +27,10 @@ let is_instance_of_axiom_aux f =
             subst
         in
         Fmt_tty.setup_std_outputs ();
-        let pp i =
-          Fmt.pr "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Ax" Fmt.(parens int) i;
+        let pp ppf i =
+          Fmt.pf ppf "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Ax" Fmt.(parens int) i;
         in
-        pp i;
+        Logs.info (fun m -> m "%a" pp i);
         Some(Ax(i,subst'))
       with
       | Not_found -> None
@@ -71,13 +71,12 @@ let is_cut_aux demo f =
   try
     let (li, ri) = find_cut f demo
     in 
-    Fmt.pr "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Cut" Fmt.(parens (pair ~sep:Fmt.comma int int)) (li,ri);
-      Some(Cut(li,ri))
+    Logs.info (fun m -> Fmt.pr "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Cut" Fmt.(parens (pair ~sep:Fmt.comma int int)) (li,ri); m "");
+    Some(Cut(li,ri))
   with
   | Not_found -> None
 
 let compile_demonstration ?(theory=[]) ~demo () =
-  print_endline "compile_demonstration";
   let rec compile_demo_aux ~demo ~proof ~proved =
     match demo with
     | [] ->List.hd proved, proof
@@ -85,8 +84,12 @@ let compile_demonstration ?(theory=[]) ~demo () =
       let  proof_term = List.find_map (fun func -> func (expand_all_notations f)) [is_instance_of_axiom_aux ; is_known_theorem_aux theory; is_cut_aux (List.rev proved) ]
       in
       match proof_term with
-      | Some step -> pp_formula Fmt.stdout f;compile_demo_aux ~demo:demo_tail ~proved:(f::proved)  ~proof:(step :: proof)
-      | None -> raise (Prop.Verif.Invalid_demonstration (f, List.rev (f::proved)))
+      | Some step -> 
+        Logs.debug(fun m -> pp_formula Fmt.stdout f;m "proof_term");
+        compile_demo_aux ~demo:demo_tail ~proved:(f::proved)  ~proof:(step :: proof)
+      | None -> 
+        Logs.debug (fun m -> pp_formula Fmt.stdout f;m "Invalid_demonstration");
+        raise (Prop.Verif.Invalid_demonstration (f, List.rev (f::proved)))
   in
   let theorem, demonstration = compile_demo_aux ~demo:demo ~proved:[] ~proof:[]
   in
