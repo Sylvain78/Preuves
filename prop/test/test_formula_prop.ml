@@ -2,21 +2,40 @@ open OUnit2
 open Prop.Formula_prop
 open Prop.Verif
 
-let () = ignore (
-        notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \" => \" b\nSemantics\na \" \\implies \" b\nEnd";
-  )
+let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
+let () = 
+  ignore (formula_from_string "(X_1=>X_2)=>((X_2=>X_3)=>(X_1=>X_3))");
+ ignore ( formula_from_string "((\\lnot \\mathbf{A})=>((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A}))=>((((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))=>((\\lnot \\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A})))))")
 ;;
 
 (* |- F  \\implies  F *)
-let verif_tauto = prop_proof_verif ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
-    ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
+let verif_tauto = 
+  let demo_tauto=
+    (List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         "(X_1  \\implies  ((X_1  \\implies  X_1)  \\implies  X_1))   \\implies  
          (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
         "X_1  \\implies ((X_1  \\implies  X_1)  \\implies  X_1)";
         "(X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1)";
         "X_1  \\implies (X_1  \\implies  X_1)";
         "X_1  \\implies  X_1"
-      ]);;
+      ])
+  in
+  if (prop_proof_verif ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
+        ~proof:demo_tauto) then
+    begin
+      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
+      theorems_prop :=
+        {
+          kind_prop = Prop.Kind_prop.Theorem;
+          name_theorem_prop = "tauto";
+          proof_prop = demo_tauto;
+          conclusion_prop = (formula_from_string "X_1  \\implies  X_1");  
+        }
+        :: !theorems_prop;
+      true
+    end
+  else false
+;;
 
 (* |- (F  \\implies  G)  \\implies  (G  \\implies  H)  \\implies  (F  \\implies  H)*)
 let verif_cut = prop_proof_verif ~hyp:[] (formula_from_string "(X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))")
@@ -43,6 +62,52 @@ let verif_cut = prop_proof_verif ~hyp:[] (formula_from_string "(X_1  \\implies  
         "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))  \\implies  ((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
         "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))"
       ]);;
+let add_chaining =
+  let chaining =
+    formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
+  in
+  let demo_chaining = 
+    List.map (fun s -> (formula_from_string s)) [
+      "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
+      "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+      "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+      "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+      "(((X_2 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
+      "((X_2 \\implies X_3) \\implies  (X_1 \\implies (X_2 \\implies X_3)))";
+      "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3)))";
+      "((X_2 \\implies X_3) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+      "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+      "(((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))) \\implies ((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+      "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+
+      (*k*)
+      "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)))";
+
+      (*s*)
+      "((X_1 \\implies X_2) \\implies (((X_2 \\implies X_3) \\implies (X_1 \\implies X_2)) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))  \\implies 
+    (((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))))";
+
+      "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_2))) \\implies ((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))";
+      "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
+    ] 
+  in
+  let verif = (prop_proof_verif ~hyp:(List.map Prop.Verif.formula_from_string [])
+                 chaining
+                 ~proof:demo_chaining)          
+  in
+  if verif then
+    begin
+      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
+      theorems_prop :=
+        {
+          kind_prop = Prop.Kind_prop.Theorem;
+          name_theorem_prop = "C6";
+          proof_prop = demo_chaining;
+          conclusion_prop = chaining;
+        }
+        :: !theorems_prop
+    end
+;;
 
 (*non A  \\implies  non B |- B  \\implies  A*)
 let verif_contraposee = 
@@ -79,6 +144,45 @@ let verif_contraposee =
         "((((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  X_1))  \\implies  (((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1)))";
         "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))";
       ]);;
+
+(*non A  \\implies  non B  \\implies   B  \\implies  A*)
+let verif =
+  prop_proof_verif ~hyp:[] (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
+    ~proof:(List.map formula_from_string [
+
+        "((\\lnot (\\lnot X_1)) \\implies X_1)";
+        "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
+        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)";
+        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))";
+        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+        "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)";
+        "(X_2 \\implies \\lnot (\\lnot X_2))";
+        "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2)))";
+        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))";
+        "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+        "((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies  (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))  \\implies  ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1)))";
+        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)))";
+        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1))";
+        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)";
+        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))))";
+        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+        "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
+      ])
+in 
+if verif then 
+  theorems_prop := {
+    kind_prop = Assumed;
+    name_theorem_prop="contraposition";
+    proof_prop = [];
+    conclusion_prop=formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
+    ::!theorems_prop
+;;
 
 (*|- A ou \\lnot A*)
 let verif_tiers_exclus =
@@ -702,7 +806,29 @@ let test_ou_idempotent _ = assert_bool "ou idempotent" (verif_ou_idempotent)
 let test_ou_diamant _ = assert_bool "ou diamant" (verif_ou_diamant)
 
 let test_instance_1 _ = assert_equal [(PVar 1, PVar 1); (PVar 2, PVar 2)] (instance (formula_from_string "X_1 \\land X_2") (formula_from_string "X_1 \\land X_2"))
-let test_instance_2 _ = assert_equal [] (
+let test_instance_2 _ = assert_equal [(PVar 3,
+                                       PApply_notation
+                                         {apply_notation_prop =
+                                            {notation_prop_name = "imply";
+                                             notation_prop_params = [Param "a"; Param "b"];
+                                             notation_prop_notation = [Param "a"; String "=>"; Param "b"];
+                                             notation_prop_semantique =
+                                               [String "("; Param "a"; String ")"; String "\\implies"; String "(";
+                                                Param "b"; String ")"]};
+                                          apply_notation_prop_params =
+                                            [PNeg (PMetaVar "A"); PNeg (POr (PMetaVar "A", PMetaVar "A"))]});
+                                      (PVar 2,
+                                       PApply_notation
+                                         {apply_notation_prop =
+                                            {notation_prop_name = "imply";
+                                             notation_prop_params = [Param "a"; Param "b"];
+                                             notation_prop_notation = [Param "a"; String "=>"; Param "b"];
+                                             notation_prop_semantique =
+                                               [String "("; Param "a"; String ")"; String "\\implies"; String "(";
+                                                Param "b"; String ")"]};
+                                          apply_notation_prop_params =
+                                            [POr (PMetaVar "A", PMetaVar "A"); PMetaVar "A"]});
+                                      (PVar 1, PNeg (PMetaVar "A"))] (
     instance 
       (formula_from_string "((\\lnot \\mathbf{A})=>((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A}))=>((((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))=>((\\lnot \\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A})))))")
       (formula_from_string "(X_1=>X_2)=>((X_2=>X_3)=>(X_1=>X_3))"))
@@ -725,6 +851,8 @@ let test_to_string_formula_pneg _ =
   in assert_equal s "\\lnot X_1"
 
 let test_to_string_formula_pneg_notation _ =
+  let _ = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \" => \" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd"
+  in 
   let s = to_string_formula_prop (formula_from_string "\\lnot \\lnot (\\mathbf{A} => \\mathbf{A})")
   in assert_equal ~printer:(fun s -> s) "\\lnot \\lnot (\\mathbf{A} => \\mathbf{A})" s
 
@@ -833,9 +961,9 @@ let test_printer_formula_pappl_fail _ =
 
 let test_notation _  =
   try
-    let n = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\na \" \\implies \" b\nEnd"
+    let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd"
     in
-    ignore n
+    ignore notation
   with _ -> assert_failure "test_notation"
 
 let instance_suite =

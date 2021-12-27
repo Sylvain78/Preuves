@@ -1,3 +1,4 @@
+--resolve TODO in kernel/kernel_prop/test/test_compile.ml
 --Add logs and formatting in pretty boxes.
 --remove old specs/usage in proof_server.ml
 -- Better loading/saving of session

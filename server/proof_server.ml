@@ -11,6 +11,7 @@ open Protocol_commands
 open Session
 open Util__Unix_tools
 module type SESSION = module type of Session
+
 let socket_name =
   ref None
 let max_session =
@@ -56,18 +57,19 @@ let reporter ppf =
       in
       Fmt.kpf k ppf
         ("%s %a %a: @[" ^^ fmt ^^ "@]@.")
-        (pad 8 (if (dt <1_000.)
-                then Fmt.str "%#4.0fµs" dt
-                else if (dt/.1_000. <1_000.)
-                then Fmt.str "%#4.0fms" (dt/.1_000.)
-                else Fmt.str "%#4.0fs" (dt/.1_000_000.)))
+        (pad 8 (if (dt <1_000.) 
+                 then Fmt.str "%#4.0fµs" dt 
+                 else if (dt/.1_000. <1_000.)
+                 then Fmt.str "%#4.0fms" (dt/.1_000.) 
+                 else Fmt.str "%#4.0fs" (dt/.1_000_000.)))
         pp_header (level, h)
-        Fmt.(styled `Magenta string)
-        (pad 10 @@ Logs.Src.name src)
-    in
-    msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
-  in
-  { Logs.report }
+  Fmt.(styled `Magenta string)
+  (pad 10 @@ Logs.Src.name src)
+in
+msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
+in
+{ Logs.report }
+
 let setup_logs style_renderer level =
   Fmt_tty.setup_std_outputs ?style_renderer () ;
   Logs.set_level level ;
@@ -99,6 +101,7 @@ let session =
     axioms = [];
     theorems = [];
   }
+
 let save_session mode file=
   let oc = open_out file
   in
@@ -210,7 +213,10 @@ and eval s channels =
             Buffer.add_string buf (String.concat " " (List.map (function Param s | String s -> s) n.semantics));
             Buffer.add_char buf '\n';
             Buffer.add_string buf "End";
-            Prop.Prop_parser.notation_from_string (Buffer.contents buf)        
+            print_newline();
+            (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
+            Prop.Prop_parser.notation_from_string (Buffer.contents buf)
+
           in
           Answer ("Notation "^notation.Formula_prop.notation_prop_name)
         | First_order -> Answer "Notation first_order : unimplemented"
@@ -312,7 +318,7 @@ and eval s channels =
 and repl channels =
   let command = Buffer.create 8192
   in
- (*
+  (*
 * read
 * eval
 * print
