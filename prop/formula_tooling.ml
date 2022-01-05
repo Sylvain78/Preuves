@@ -14,17 +14,10 @@ let rec instance f g =
           in
           if (t = f) then l
           else begin
-            print_string "XXXX\n";
-            printer_formula_prop Fmt.stdout t;
             raise (Failed_Unification(f, g))
           end
         with Not_found -> 
           begin
-            print_string "\nYYY\n";
-            printer_formula_prop Fmt.stdout f;
-            print_string "\nYYY\n";
-            printer_formula_prop Fmt.stdout g;
-            flush Stdlib.stdout;
             (g, f)::l (*g=Xi bound to f*)
           end
       end

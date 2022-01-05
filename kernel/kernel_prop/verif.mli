@@ -5,6 +5,7 @@ type kernel_proof_term =
   | Known of int (*formula already known in the theory*)
   | Cut of int * int (*cut Fj, (Fj=>Fk) : Fk*)
 
+val printer_kernel_proof_term : Format.formatter -> kernel_proof_term -> unit
 
 type kernel_proof = 
   { 

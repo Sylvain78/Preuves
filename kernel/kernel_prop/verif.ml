@@ -6,11 +6,20 @@ type kernel_proof_term =
   | Known of int (*formula already known in the theory*)
   | Cut of int * int (*cut Fj, (Fj=>Fk) : Fk*)
 
+let printer_kernel_proof_term out =
+  function 
+  | Ax(i,l) -> Format.fprintf out "Ax(%d,%a)" i (fun out list_proof_term -> 
+      Format.pp_print_list (printer_formula_prop) Format.str_formatter list_proof_term; Format.fprintf out "%s" (Format.flush_str_formatter())) (l |> List.split |> snd)
+  | Known i -> Format.fprintf out "Known(%d)" i
+  | Cut(i,j) -> Format.fprintf out "Cut(%d,%d)" i j
+
 type kernel_proof =
   {
     theorem : formula_prop ;
     demonstration : kernel_proof_term  list ;
   }
+
+
 
 let kernel_verif ?(theory=[]) ~formula:f ~proof () =
   let formula_stack = ref []
