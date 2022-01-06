@@ -8,8 +8,13 @@ type kernel_proof_term =
 
 let printer_kernel_proof_term out =
   function 
-  | Ax(i,l) -> Format.fprintf out "Ax(%d,%a)" i (fun out list_proof_term -> 
-      Format.pp_print_list (printer_formula_prop) Format.str_formatter list_proof_term; Format.fprintf out "%s" (Format.flush_str_formatter())) (l |> List.split |> snd)
+  | Ax(i,l) -> Format.fprintf out "Ax(%d,[%a])" i 
+                 (fun out list_proof_term -> 
+                    Format.pp_print_list 
+                      ~pp_sep:(fun out () -> Format.pp_print_char out ',') 
+                      (fun out (i,f) -> Format.fprintf out "(%d,\"%a\")" i printer_formula_prop f) 
+                      out list_proof_term) l; 
+    Format.fprintf out "%s" (Format.flush_str_formatter()) 
   | Known i -> Format.fprintf out "Known(%d)" i
   | Cut(i,j) -> Format.fprintf out "Cut(%d,%d)" i j
 
