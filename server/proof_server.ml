@@ -43,9 +43,8 @@ let pp_header ppf (level, header) =
   let level = Logs.level_to_string (Some level)
   in
   Fmt.pf ppf "[%a][%a]"
-    (Fmt.styled level_style Fmt.string)
-    level (Fmt.option Fmt.string)
-    (Option.map (pad 10) header)
+    (Fmt.styled level_style Fmt.string) level 
+    (Fmt.option Fmt.string) (Option.map (pad 10) header)
 let reporter ppf =
   let report src level ~over k msgf =
     let k _ =
@@ -68,7 +67,7 @@ let reporter ppf =
 in
 msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
 in
-{ Logs.report }
+{ Logs.report = report }
 
 let setup_logs style_renderer level =
   Fmt_tty.setup_std_outputs ?style_renderer () ;
@@ -156,9 +155,7 @@ and eval s channels =
       session.mode.verbose_level <- level;
       Ok
     | Prop ->
-      let c = Mtime_clock.counter ()    
-      in
-      Logs.info(fun m -> m "Prop" ~tags:(stamp c));
+      Logs.info(fun m -> m "Prop");
       session.mode.order<-Session.Prop;
       session.axioms <- !Axioms_prop.axioms_prop;
       Ok
@@ -444,7 +441,6 @@ let main _ (*quiet*) socket_val =
      (close_sock_listen());`Ok 0
    with
    | _ -> begin
-       Printexc.print_backtrace Stdlib.stderr;flush Stdlib.stderr;
        close_sock_listen();
        `Error (false, Fmt.str "%s." "Erreur")
      end

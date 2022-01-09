@@ -28,9 +28,9 @@ let is_instance_of_axiom_aux f =
         in
         Fmt_tty.setup_std_outputs ();
         let pp ppf i =
-          Fmt.pf ppf "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Ax" Fmt.(parens int) i;
+          Fmt.pf ppf "%a%a" Fmt.(styled `Cyan (styled `Bold string)) "Ax" Fmt.(parens int) i;
         in
-        Logs.info (fun m -> m "%a" pp i);
+        Logs.info (fun m -> m "%a" ~header:"Ax" pp i);
         Some(Ax(i,subst'))
       with
       | Not_found -> None
@@ -71,7 +71,10 @@ let is_cut_aux demo f =
   try
     let (li, ri) = find_cut f demo
     in 
-    Logs.info (fun m -> Fmt.pr "%a%a@." Fmt.(styled `Cyan (styled `Bold string)) "Cut" Fmt.(parens (pair ~sep:Fmt.comma int int)) (li,ri); m "");
+        let pp ppf (i,j) =
+          Fmt.pf ppf "%a%a" Fmt.(styled `Green (styled `Bold string)) "Cut" Fmt.(parens (pair ~sep:Fmt.comma int int)) (i,j);
+        in
+        Logs.info (fun m -> m "%a" pp (li,ri));
     Some(Cut(li,ri))
   with
   | Not_found -> None
