@@ -56,18 +56,18 @@ let reporter ppf =
       in
       Fmt.kpf k ppf
         ("%s %a %a: @[" ^^ fmt ^^ "@]@.")
-        (pad 8 (if (dt <1_000.) 
-                 then Fmt.str "%#4.0fµs" dt 
-                 else if (dt/.1_000. <1_000.)
-                 then Fmt.str "%#4.0fms" (dt/.1_000.) 
-                 else Fmt.str "%#4.0fs" (dt/.1_000_000.)))
+        (pad 8 (if (dt <1_000.)
+                then Fmt.str "%#4.0fµs" dt
+                else if (dt/.1_000. <1_000.)
+                then Fmt.str "%#4.0fms" (dt/.1_000.)
+                else Fmt.str "%#4.0fs" (dt/.1_000_000.)))
         pp_header (level, h)
-  Fmt.(styled `Magenta string)
-  (pad 10 @@ Logs.Src.name src)
-in
-msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
-in
-{ Logs.report = report }
+        Fmt.(styled `Magenta string)
+        (pad 10 @@ Logs.Src.name src)
+    in
+    msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
+  in
+  { Logs.report = report }
 
 let setup_logs style_renderer level =
   Fmt_tty.setup_std_outputs ?style_renderer () ;
@@ -250,7 +250,7 @@ and eval s channels =
                 Prop.Verif.prop_proof_verif
               | Session.Compiled ->
                 fun ~hyp _ ~proof->
-                  let compiled_demo = Kernel_prop.Compile.compile_demonstration ~theory:hyp ~demo:proof ()                
+                  let compiled_demo = Kernel_prop.Compile.compile_demonstration ~theory:hyp ~demo:proof ()
                   in
                   match Kernel_prop.Verif.kernel_verif ~theory:hyp ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
                   with
@@ -260,9 +260,13 @@ and eval s channels =
             let proof =(List.map (fun s -> Prop.Verif.formula_from_string s) demonstration)
             and conclusion = Prop.Verif.formula_from_string conclusion
             in
-            let verif = (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses)
-                           conclusion
-                           ~proof:proof)          
+            let verif =
+              try
+                (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses)
+                   conclusion
+                   ~proof:proof)
+              with
+              | _ -> (Logs.err (fun m -> m "verif : not verified"); false)
             in
             if verif then
               begin
@@ -310,11 +314,11 @@ and eval s channels =
         )
       else
         failwith "session mode not Prop"
-    | List `Theorems -> 
-       match session.mode.order 
-       with
-       | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
-       | First_order -> failwith "Unimplemented"
+    | List `Theorems ->
+      match session.mode.order
+      with
+      | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
+      | First_order -> failwith "Unimplemented"
   with
   | Failure s -> Answer s
 and repl channels =
@@ -445,7 +449,7 @@ let main _ (*quiet*) socket_val =
      done;
      (close_sock_listen());`Ok 0
    with
-   | _ -> begin
+   | Prop.Verif.Invalid_demonstration _ -> begin
        close_sock_listen();
        `Error (false, Fmt.str "%s." "Erreur")
      end
