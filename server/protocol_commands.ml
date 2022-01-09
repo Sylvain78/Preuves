@@ -14,4 +14,5 @@ type command =
   | Axiom of {name:string; formula:string} 
   | History
   | Show of string
+  | List of [`Axioms | `Theorems]
   | Quit

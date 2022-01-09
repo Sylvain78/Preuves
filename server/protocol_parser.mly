@@ -23,6 +23,9 @@
 %token BINARY
 %token TEXT
 %token HISTORY
+%token LIST
+%token AXIOMS
+%token THEOREMS
 %token SHOW
 %token VERBOSE
 %token QUIT
@@ -119,5 +122,7 @@ file_command :
 info :
 | QUIT {Quit}
 | HISTORY { History }
+| LIST NEWLINE AXIOMS { List `Axioms }
+| LIST NEWLINE THEOREMS { List `Theorems }
 | SHOW NEWLINE
   IDENT { Show $3 }

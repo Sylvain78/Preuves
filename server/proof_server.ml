@@ -285,7 +285,7 @@ and eval s channels =
     | Show theorem_name ->
       if (session.mode.order = Session.Prop)
       then
-        Answer(
+        Answer (
           List.filter (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
           |> List.map (fun {
               kind_prop;
@@ -309,7 +309,12 @@ and eval s channels =
           |> String.concat "\n"
         )
       else
-        failwith "session mode not Prop "
+        failwith "session mode not Prop"
+    | List `Theorems -> 
+       match session.mode.order 
+       with
+       | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
+       | First_order -> failwith "Unimplemented"
   with
   | Failure s -> Answer s
 and repl channels =

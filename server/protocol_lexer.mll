@@ -10,6 +10,9 @@ let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v)
       ("Interpreted", INTERPRETED);
       ("Notation",NOTATION) ; 
       ("History",HISTORY) ; 
+      ("List",LIST) ; 
+      ("Axioms",AXIOMS) ; 
+      ("Theorems",THEOREMS) ; 
       ("Show",SHOW) ; 
       ("Param",PARAM) ;
       ("Syntax",SYNTAX) ;
