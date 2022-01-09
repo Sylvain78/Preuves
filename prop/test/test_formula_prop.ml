@@ -23,7 +23,6 @@ let verif_tauto =
   if (prop_proof_verif ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
         ~proof:demo_tauto) then
     begin
-      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
       theorems_prop :=
         {
           kind_prop = Prop.Kind_prop.Theorem;
@@ -96,8 +95,6 @@ let add_chaining =
                  ~proof:demo_chaining)          
   in
   if verif then
-    begin
-      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
       theorems_prop :=
         {
           kind_prop = Prop.Kind_prop.Theorem;
@@ -106,7 +103,6 @@ let add_chaining =
           conclusion_prop = chaining;
         }
         :: !theorems_prop
-    end
 ;;
 
 (*non A  \\implies  non B |- B  \\implies  A*)

@@ -46,8 +46,6 @@ let add_chaining =
                  ~proof:demo_chaining)          
   in
   if verif then
-    begin
-      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
       theorems_prop :=
         {
           kind_prop = Prop.Kind_prop.Theorem;
@@ -56,7 +54,6 @@ let add_chaining =
           conclusion_prop = chaining;
         }
         :: !theorems_prop
-    end
 ;;
 let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 let a,b,c=x1,x2,x3

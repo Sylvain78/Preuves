@@ -44,8 +44,6 @@ let add_chaining =
                  ~proof:demo_chaining)          
   in
   if verif then
-    begin
-      print_string "\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
       theorems_prop :=
         {
           kind_prop = Prop.Kind_prop.Theorem;
@@ -54,7 +52,6 @@ let add_chaining =
           conclusion_prop = chaining;
         }
         :: !theorems_prop
-    end
 ;;
 
 
@@ -89,15 +86,6 @@ let test_compile_a_implies_a _ =
     }
 
     (compile_demonstration ~demo:demo ())
-
-let test_instance_s1_3 _ =
-  let _ = Prop.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd" and 
-  f = Prop.Prop_parser.formula_from_string 
-                                                                                                                                                             "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies ((((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
-  in 
-  let subst = (Prop.Formula_tooling.instance f Prop.Axioms_prop.a2)
-  in
-  assert_equal true (List.length subst > 0)
 
 let test_compile_s1 _ =
   let demo_chaining x1 x2 x3 = 
@@ -225,9 +213,6 @@ let test_compile_s1 _ =
                                               "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}"
                                             ])) ()
   in
-  Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_kernel_proof_term Format.std_formatter demo.demonstration;
-  Format.pp_print_flush Format.std_formatter ();
-
   assert_equal ~printer:(fun s -> Format.pp_print_list (printer_kernel_proof_term) Format.str_formatter s.demonstration; Format.flush_str_formatter ())
     {theorem =
        PImpl
@@ -358,7 +343,7 @@ let compile_suite =
     "test compile" >:: test_compile;
     "test_compile_a_implies_a" >:: test_compile_a_implies_a;
     "test_compile_s1" >:: test_compile_s1;
-    "test_instance_s1_3" >:: test_instance_s1_3]
+  ]
 
 let () = 
   run_test_tt_main compile_suite

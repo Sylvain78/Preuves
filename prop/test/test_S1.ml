@@ -27,15 +27,12 @@ let verif_C8 =
   in
   if (prop_proof_verif ~hyp:[] (a=>. a) ~proof:(List.map (fun s -> s) demo))
   then 
-    begin
-      print_string "KKKKKK\n";
-      theorems_prop := {
-        kind_prop = Theorem;
-        name_theorem_prop="[Bourbaki]C8";
-        proof_prop = demo;
-        conclusion_prop=formula_from_string "X_1 \\implies X_1";
-      }::!theorems_prop 
-    end;;
+    theorems_prop := {
+      kind_prop = Theorem;
+      name_theorem_prop="[Bourbaki]C8";
+      proof_prop = demo;
+      conclusion_prop=formula_from_string "X_1 \\implies X_1";
+    }::!theorems_prop 
 
 let add_chaining =
   let chaining =
@@ -71,17 +68,14 @@ let add_chaining =
                  ~proof:demo_chaining)          
   in
   if verif then
-    begin
-      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
-      theorems_prop :=
-        {
-          kind_prop = Prop.Kind_prop.Theorem;
-          name_theorem_prop = "C6";
-          proof_prop = demo_chaining;
-          conclusion_prop = chaining;
-        }
-        :: !theorems_prop
-    end
+    theorems_prop :=
+      {
+        kind_prop = Prop.Kind_prop.Theorem;
+        name_theorem_prop = "C6";
+        proof_prop = demo_chaining;
+        conclusion_prop = chaining;
+      }
+      :: !theorems_prop
 ;;
 (*non A  \\implies  non B |   B  \\implies  A*)
 (* TODO : delete once they are not needed anymore
@@ -135,7 +129,6 @@ let  axioms () =
   List.iter (fun th -> print_string th.name_theorem_prop; print_newline() ; flush Stdlib.stdout) (!axioms_prop @ !theorems_prop);
   print_string "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";flush Stdlib.stdout
 ;;
-axioms();;
 
 (* |   F ou F  \\implies  F *)
 let demo = (List.map (fun s -> (formula_from_string s)) [
@@ -154,15 +147,12 @@ let demo = (List.map (fun s -> (formula_from_string s)) [
 in
 if prop_proof_verif ~hyp:[] (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
     ~proof:demo then
-    begin
-      print_string "KKKKKK\n";
   theorems_prop := {
     kind_prop = Assumed;
     name_theorem_prop="[Bourbaki]S1";
     proof_prop = demo;
     conclusion_prop=formula_from_string "(X_1 \\lor X_1) \\implies X_1";
   }::!theorems_prop 
-    end;;
 
 
 let demo = 

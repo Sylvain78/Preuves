@@ -39,9 +39,7 @@ let add_chaining =
                  ~proof:demo_chaining)          
   in
   if verif then
-    begin
-      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
-      theorems_prop :=
+     theorems_prop :=
         {
           kind_prop = Prop.Kind_prop.Theorem;
           name_theorem_prop = "C6";
@@ -49,7 +47,6 @@ let add_chaining =
           conclusion_prop = chaining;
         }
         :: !theorems_prop
-    end
 ;;
 
 let add_idem =
@@ -68,8 +65,6 @@ let add_idem =
                  ~proof:demo_idem)          
   in
   if verif then
-    begin
-      print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\nZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n";
       theorems_prop :=
         {
           kind_prop = Prop.Kind_prop.Theorem;
@@ -78,7 +73,6 @@ let add_idem =
           conclusion_prop = idem;
         }
         :: !theorems_prop
-    end
 ;;
 
 (*non A  \\implies  non B  \\implies   B  \\implies  A*)
