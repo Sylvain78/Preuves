@@ -59,11 +59,11 @@ let cut f p =
 let theorems_prop = ref []
 
 exception Invalid_demonstration of formula_prop * formula_prop list;;
-Printexc.register_printer (function Invalid_demonstration(f,t) -> 
+(*Printexc.register_printer (function Invalid_demonstration(f,t) -> 
     Printexc.print_backtrace stdout; Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
                                           (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n") 
                                   | _ -> None)
-;;
+*);;
 
 let rec verif ~hypotheses ~proved ~to_prove = 
   match to_prove with
