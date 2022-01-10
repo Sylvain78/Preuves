@@ -260,13 +260,23 @@ and eval s channels =
             let proof =(List.map (fun s -> Prop.Verif.formula_from_string s) demonstration)
             and conclusion = Prop.Verif.formula_from_string conclusion
             in
-            let verif =
+            let error,verif =
               try
-                (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses)
-                   conclusion
-                   ~proof:proof)
+                ("", (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses)
+                        conclusion
+                        ~proof:proof))
               with
-              | _ -> (Logs.err (fun m -> m "verif : not verified"); false)
+              | Prop.Verif.Invalid_demonstration(f,t) -> 
+                let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
+                in
+                Logs.err (fun m -> m ~header:("Invalid demonstration") error_format 
+                             Prop.Verif.printer_formula_prop f 
+                             (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t 
+                         );
+                ((Format.fprintf Format.str_formatter error_format 
+                    Prop.Verif.printer_formula_prop f 
+                    (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t; Format.flush_str_formatter()), 
+                 false)
             in
             if verif then
               begin
@@ -281,7 +291,7 @@ and eval s channels =
                 Answer ("Theorem " ^ name ^ " verified.")
               end
             else
-              Answer ("Theorem " ^ name ^ " not verified.")
+              Answer ("Theorem " ^ name ^ " not verified.\n" ^ error)
           end
         | Session.First_order ->
           failwith "TheoremFirst_order"
@@ -449,9 +459,10 @@ let main _ (*quiet*) socket_val =
      done;
      (close_sock_listen());`Ok 0
    with
-   | Prop.Verif.Invalid_demonstration _ -> begin
+   | Prop.Verif.Invalid_demonstration(f,t) -> begin
        close_sock_listen();
-       `Error (false, Fmt.str "%s." "Erreur")
+       `Error (false, Fmt.str "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
+                                    (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
      end
   )
 let () =
