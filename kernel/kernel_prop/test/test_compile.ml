@@ -9,6 +9,13 @@ let x1,x2,x3 = PVar 1,PVar 2, PVar 3
 let (=>) a b = PImpl(a,b)
 let formula = x1=>x1
 
+let assumed f =
+  {
+    kind_prop = Assumed;
+    name_theorem_prop = "";
+    proof_prop = [];
+    conclusion_prop = f;
+  }
 
 let add_chaining =
   let chaining =
@@ -39,9 +46,7 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (prop_proof_verif ~hyp:(List.map Prop.Verif.formula_from_string [])
-                 chaining
-                 ~proof:demo_chaining)          
+  let verif = (prop_proof_verif ~axioms:!axioms_prop chaining ~proof:demo_chaining)          
   in
   if verif then
       theorems_prop :=
@@ -64,15 +69,15 @@ let demo =
     x1 => x1
   ]
 
-let test = compile_demonstration ~theory:[] ~demo ();;
+let test = compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo ();;
 
 let test_cut _ =
   assert_equal {theorem=x2 ; demonstration=[Known 1 ; Known 2 ; Cut(1,2)]}
-    (compile_demonstration ~demo:[x1; x1=>x2 ; x2] ~theory:[x1;x1=>x2] ())
+    (compile_demonstration ~axioms:!axioms_prop  ~demo:[x1; x1=>x2 ; x2] ~theorems:[assumed x1;assumed (x1=>x2)] ())
 
 let test_compile _ =
   assert_equal { theorem=formula ; demonstration=[ Known 1 ] }
-    (compile_demonstration ~demo:[formula] ~theory:[formula] ())
+    (compile_demonstration ~axioms:!axioms_prop ~demo:[formula] ~theorems:[assumed formula] ())
 
 let test_compile_a_implies_a _ =
   assert_equal 
@@ -85,7 +90,7 @@ let test_compile_a_implies_a _ =
                       ]
     }
 
-    (compile_demonstration ~demo:demo ())
+    (compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:demo ())
 
 let test_compile_s1 _ =
   let demo_chaining x1 x2 x3 = 
@@ -114,7 +119,7 @@ let test_compile_s1 _ =
     ] 
   in
   let _ = Prop.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd"
-  and demo = compile_demonstration ~demo:((List.map Prop.Prop_parser.formula_from_string [
+  and demo = compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:((List.map Prop.Prop_parser.formula_from_string [
       "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))";
       "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
       "((\\lnot \\mathbf{A}) \\implies (((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A})))) \\implies (((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies ((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";

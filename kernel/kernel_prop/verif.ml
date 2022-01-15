@@ -4,6 +4,7 @@ open Prop.Formula_tooling
 type kernel_proof_term =
   | Ax of int * (int * formula_prop) list (*instantce of axiom i, with list of simulatenous substitution X_j => F_j*)
   | Known of int (*formula already known in the theory*)
+  | Hyp of int (*use of a hypothesis*)
   | Cut of int * int (*cut Fj, (Fj=>Fk) : Fk*)
 
 let printer_kernel_proof_term out =
@@ -16,6 +17,7 @@ let printer_kernel_proof_term out =
                       out list_proof_term) l; 
     Format.fprintf out "%s" (Format.flush_str_formatter()) 
   | Known i -> Format.fprintf out "Known(%d)" i
+  | Hyp i -> Format.fprintf out "Hyp(%d)" i
   | Cut(i,j) -> Format.fprintf out "Cut(%d,%d)" i j
 
 type kernel_proof =
@@ -24,15 +26,16 @@ type kernel_proof =
     demonstration : kernel_proof_term  list ;
   }
 
-
-
-let kernel_verif ?(theory=[]) ~formula:f ~proof () =
+let kernel_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) ~formula:f ~proof () =
   let formula_stack = ref []
   in
-  let formula_from_proof_term theory = function
-    | Known i -> List.nth theory (i-1)
+  let formula_from_proof_term (axioms:Prop.Theorem_prop.theorem_prop list) 
+      (theorems:Prop.Theorem_prop.theorem_prop list) 
+      (hypotheses:Prop.Formula_prop.formula_prop list) = function
+    | Hyp i -> (List.nth hypotheses (i-1))
+    | Known i -> (List.nth theorems (i-1)).conclusion_prop
     | Ax (i,subst) ->
-      let axiom = List.nth (!Prop.Axioms_prop.axioms_prop) (i-1)
+      let axiom = List.nth axioms (i-1)
       in
       let  lv,lt = List.split subst
       in
@@ -48,7 +51,7 @@ let kernel_verif ?(theory=[]) ~formula:f ~proof () =
   in
   List.iter
     (function proof_term ->
-       formula_stack := (formula_from_proof_term theory proof_term)  :: !formula_stack
+       formula_stack := (formula_from_proof_term axioms theorems hypotheses proof_term)  :: !formula_stack
     )
     proof;
   (*verify formula is at the end of the proof*)

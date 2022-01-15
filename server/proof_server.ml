@@ -142,10 +142,11 @@ let rec load_session mode file channels =
   close_in ic
 and eval s channels =
   (* print_endline ("eval : " ^ s); *)
-  (*let module M = (val session.prop : Session.P)
-    in
-    print_endline ("number of axioms : "^ (string_of_int @@ List.length @@ !M.axioms_prop));
-  *)
+  Logs.info (fun m -> m "eval %s" s); 
+  let log_number label lf=     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
+  in
+  log_number "theorems" session.theorems;
+  log_number "axioms" session.axioms;
   try
     let command = decode s
     in
@@ -249,10 +250,10 @@ and eval s channels =
               | Session.Interpreted ->
                 Prop.Verif.prop_proof_verif
               | Session.Compiled ->
-                fun ~hyp _ ~proof->
-                  let compiled_demo = Kernel_prop.Compile.compile_demonstration ~theory:hyp ~demo:proof ()
+                fun ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) _ ~proof->
+                  let compiled_demo = Kernel_prop.Compile.compile_demonstration ~axioms ~theorems ~hypotheses  ~demo:proof ()
                   in
-                  match Kernel_prop.Verif.kernel_verif ~theory:hyp ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
+                  match Kernel_prop.Verif.kernel_verif ~axioms ~theorems ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
                   with
                   | Ok _ -> true
                   | Error _ -> false
@@ -262,9 +263,16 @@ and eval s channels =
             in
             let error,verif =
               try
-                ("", (verif_function ~hyp:(List.map Prop.Verif.formula_from_string premisses)
-                        conclusion
-                        ~proof:proof))
+                ("", (verif_function ~theorems:(List.map (fun f -> 
+                     {
+                       kind_prop = Kind_prop.Theorem;
+                       name_theorem_prop = t.name;
+                       proof_prop = proof;
+                       conclusion_prop = Prop.Verif.formula_from_string f;
+                     }
+                   ) premisses)
+                     conclusion
+                     ~proof:proof))
               with
               | Prop.Verif.Invalid_demonstration(f,t) -> 
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"

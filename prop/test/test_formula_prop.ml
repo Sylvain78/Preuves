@@ -5,7 +5,7 @@ open Prop.Verif
 let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 let () = 
   ignore (formula_from_string "(X_1=>X_2)=>((X_2=>X_3)=>(X_1=>X_3))");
- ignore ( formula_from_string "((\\lnot \\mathbf{A})=>((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A}))=>((((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))=>((\\lnot \\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A})))))")
+  ignore ( formula_from_string "((\\lnot \\mathbf{A})=>((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A}))=>((((\\mathbf{A} \\lor \\mathbf{A})=>\\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))=>((\\lnot \\mathbf{A})=>((\\lnot \\mathbf{A})=>(\\lnot (\\mathbf{A} \\lor \\mathbf{A})))))")
 ;;
 
 (* |- F  \\implies  F *)
@@ -20,7 +20,7 @@ let verif_tauto =
         "X_1  \\implies  X_1"
       ])
   in
-  if (prop_proof_verif ~hyp:[] (formula_from_string "X_1  \\implies   X_1") 
+  if (prop_proof_verif ~axioms:!axioms_prop (formula_from_string "X_1  \\implies   X_1") 
         ~proof:demo_tauto) then
     begin
       theorems_prop :=
@@ -37,7 +37,7 @@ let verif_tauto =
 ;;
 
 (* |- (F  \\implies  G)  \\implies  (G  \\implies  H)  \\implies  (F  \\implies  H)*)
-let verif_cut = prop_proof_verif ~hyp:[] (formula_from_string "(X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))")
+let verif_cut = prop_proof_verif ~axioms:!axioms_prop (formula_from_string "(X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))")
     ~proof: (List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         "(X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))";
         "((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
@@ -90,19 +90,18 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (prop_proof_verif ~hyp:(List.map Prop.Verif.formula_from_string [])
-                 chaining
-                 ~proof:demo_chaining)          
+  let verif = (prop_proof_verif ~axioms:!axioms_prop chaining ~proof:demo_chaining)          
   in
   if verif then
-      theorems_prop :=
-        {
-          kind_prop = Prop.Kind_prop.Theorem;
-          name_theorem_prop = "C6";
-          proof_prop = demo_chaining;
-          conclusion_prop = chaining;
-        }
-        :: !theorems_prop
+    print_endline "C6 verified";
+    theorems_prop :=
+      {
+        kind_prop = Prop.Kind_prop.Theorem;
+        name_theorem_prop = "C6";
+        proof_prop = demo_chaining;
+        conclusion_prop = chaining;
+      }
+      :: !theorems_prop
 ;;
 
 (*non A  \\implies  non B |- B  \\implies  A*)
@@ -114,7 +113,7 @@ let verif_contraposee =
     and a2=    (X_2  \\implies  \\lnot (\\lnot X_2))
     in
   *)
-  prop_proof_verif ~hyp:[] (formula_from_string "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))")
+  prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))")
     ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         "((\\lnot (\\lnot X_1))  \\implies   X_1)";
         "((\\lnot (\\lnot X_1))  \\implies   X_1)  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1))";
@@ -143,7 +142,7 @@ let verif_contraposee =
 
 (*non A  \\implies  non B  \\implies   B  \\implies  A*)
 let verif =
-  prop_proof_verif ~hyp:[] (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
+  prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
     ~proof:(List.map formula_from_string [
 
         "((\\lnot (\\lnot X_1)) \\implies X_1)";
@@ -186,7 +185,7 @@ let verif_tiers_exclus =
     and tout = \\lnot (X_1  \\implies  X_1)
     in
   *)
-  prop_proof_verif ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
+  prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "X_1 \\lor \\lnot X_1")
     ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
 
         "(X_1  \\implies  X_1)";
@@ -250,7 +249,7 @@ let verif_rajout_hypothese =
     let (X_1  \\implies  X_3) = (X_1  \\implies  X_3)
     and (X_2  \\implies  X_3) = (b  \\implies  X_3)
     in*)
-  prop_proof_verif ~hyp:[] (formula_from_string "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))")
+  prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))")
     ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
         (*((S (K (S (K K)))) I)*)    
         "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)";(*i*)
@@ -270,9 +269,9 @@ let verif_rajout_hypothese =
 
 (* |- F ou F  \\implies  F *)
 let verif_ou_idempotent =
-  prop_proof_verif ~hyp:[] (formula_from_string "(X_1 \\lor X_1)  \\implies  X_1")
+  prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(X_1 \\lor X_1)  \\implies  X_1")
     ~proof:(List.map (fun s -> (*TPPFormula*) (formula_from_string s)) [
-        "((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))";
+        "((X_1 \\lor X_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))";
         "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))";
         "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))  \\implies  ((((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies  ((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))))";
         "((((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies  ((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))))";
@@ -790,7 +789,7 @@ let verif_ou_diamant =
               diamond;
             ]
   in
-  prop_proof_verif ~hyp:[] (formula_from_string "(X_1 \\lor X_2)  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3))")
+  prop_proof_verif ~axioms:!axioms_prop (formula_from_string "(X_1 \\lor X_2)  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3))")
     ~proof:demo
 
 let test_tauto _ = assert_bool "tauto" (verif_tauto)

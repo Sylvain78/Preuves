@@ -41,9 +41,7 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (prop_proof_verif ~hyp:(List.map Prop.Verif.formula_from_string [])
-                 chaining
-                 ~proof:demo_chaining)          
+  let verif = (prop_proof_verif ~axioms:!axioms_prop chaining ~proof:demo_chaining)          
   in
   if verif then
       theorems_prop :=
@@ -550,13 +548,14 @@ let demo =
           ];;
 let demo_S1 = 
   try 
-    compile_demonstration ~demo:demo ~theory:[] ()
+    compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo  ()
   with Invalid_demonstration(f,l) -> failwith (Printf.eprintf"\n";Printf.eprintf "\n";to_string_formula_prop f ^ (string_of_int @@ List.length @@ l) )
 
 let test_verif _ =
   assert_equal 
     (Ok ()) 
-    (kernel_verif ~formula:(a_ou_b =>. (a_entraine_c=>.(b_entraine_c =>. c))) ~proof:(compile_demonstration ~demo:demo ()).demonstration ())
+    (kernel_verif ~axioms:!axioms_prop ~theorems:!theorems_prop ~formula:(a_ou_b =>. (a_entraine_c=>.(b_entraine_c =>. c))) 
+       ~proof:(compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:demo ()).demonstration ())
 let verif_suite =
   "verif test" >:::
   [

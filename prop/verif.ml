@@ -59,13 +59,15 @@ let cut f p =
 let theorems_prop = ref []
 
 exception Invalid_demonstration of formula_prop * formula_prop list;;
-(*Printexc.register_printer (function Invalid_demonstration(f,t) -> 
-    Printexc.print_backtrace stdout; Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
-                                          (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n") 
-                                  | _ -> None)
-*);;
+Printexc.register_printer (function 
+    | Invalid_demonstration(f,t) -> 
+      Printexc.print_backtrace stdout; flush stdout;
+      Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
+           (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n") 
+    | _ -> None)
+;;
 
-let rec verif ~hypotheses ~proved ~to_prove = 
+let rec verif ?(axioms=[]) ?(theorems=[]) () ~hypotheses ~proved ~to_prove = 
   match to_prove with
   | [] -> true
   | f_i::p ->  
@@ -76,16 +78,18 @@ let rec verif ~hypotheses ~proved ~to_prove =
       || List.mem f_i proved
       (*Formula is an instance of a theorem or axiom *)
       || (List.exists (fun th -> 
-          try 
+          try
+            Printf.printf " %s instance of %s (%s) ?\n" (to_string_formula_prop f_i ) th.name_theorem_prop (to_string_formula_prop th.conclusion_prop);
             Logs.debug (fun m -> m " %a instance of %s (%a) ?" pp_formula f_i th.name_theorem_prop pp_formula th.conclusion_prop);
             ignore(instance f_i th.conclusion_prop);
+            print_endline "yes";
             Logs.debug (fun m ->  m "YES");
             true
           with 
           | _ -> 
             Logs.debug (fun m ->  m "NO");
             false) 
-          (!theorems_prop @ !axioms_prop)) 
+          (theorems @ axioms)) 
       (*cut*)
       || (cut f_i proved) 
       (*application of notations*)
@@ -94,7 +98,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
     then 
       begin
         Logs.debug (fun m -> pp_formula Fmt.stdout f_i; m "Proved");
-        verif ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
+        verif ~axioms ~theorems () ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
       end
     else 
       begin
@@ -102,7 +106,7 @@ let rec verif ~hypotheses ~proved ~to_prove =
         raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
       end
 
-let prop_proof_verif ~hyp:hypotheses f ~proof:proof =
+let prop_proof_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) f ~proof:proof =
   (* f is at the end of the proof *)
   let is_end_proof f t =
     let rev_t = List.rev t
@@ -115,7 +119,7 @@ let prop_proof_verif ~hyp:hypotheses f ~proof:proof =
   if not (is_end_proof f proof)
   then failwith "Formula is not at the end of the proof"
   else
-    verif ~hypotheses  ~proved:[] ~to_prove:proof
+    verif ~axioms ~theorems () ~hypotheses  ~proved:[] ~to_prove:proof
 ;;
 
 (*displaced in theories/Bourbaki_Logic.prf

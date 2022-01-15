@@ -25,7 +25,7 @@ let verif_C8 =
     a =>. a;
   ]
   in
-  if (prop_proof_verif ~hyp:[] (a=>. a) ~proof:(List.map (fun s -> s) demo))
+  if (prop_proof_verif ~axioms:!axioms_prop (a=>. a) ~proof:(List.map (fun s -> s) demo))
   then 
     theorems_prop := {
       kind_prop = Theorem;
@@ -63,9 +63,7 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (prop_proof_verif ~hyp:(List.map Prop.Verif.formula_from_string [])
-                 chaining
-                 ~proof:demo_chaining)          
+  let verif = (prop_proof_verif ~axioms:!axioms_prop chaining ~proof:demo_chaining)          
   in
   if verif then
     theorems_prop :=
@@ -86,7 +84,7 @@ let add_chaining =
    in
 *)
 let verif =
-  prop_proof_verif ~hyp:[] (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
+  prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
     ~proof:(List.map formula_from_string [
 
         "((\\lnot (\\lnot X_1)) \\implies X_1)";
@@ -145,7 +143,7 @@ let demo = (List.map (fun s -> (formula_from_string s)) [
     "(\\mathbf{A}\\lor \\mathbf{A})  \\implies  \\mathbf{A}";
   ])
 in
-if prop_proof_verif ~hyp:[] (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
+if prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
     ~proof:demo then
   theorems_prop := {
     kind_prop = Assumed;
@@ -582,5 +580,5 @@ let demo1 = demo @ [
     a_ou_b =>. c;];;
 
 let verif_S3 = 
-  (prop_proof_verif ~hyp:[] (a_ou_b=>. c) ~proof:(List.map (fun s -> s) demo1))
+  (prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (a_ou_b=>. c) ~proof:(List.map (fun s -> s) demo1))
 ;;
