@@ -8,7 +8,7 @@ let rec instance f g =
   let rec instance_aux2 l f g  = 
     match f, g 
     with
-    | _, (PVar _ as g) -> begin
+    | _, (PVar _ as g) | _, (PMetaVar _ as g) -> begin
         try
           let (_, t) = List.find (fun (v1, _) -> v1 = g) l
           in

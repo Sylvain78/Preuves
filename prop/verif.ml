@@ -87,6 +87,7 @@ let rec verif ?(axioms=[]) ?(theorems=[]) () ~hypotheses ~proved ~to_prove =
             true
           with 
           | _ -> 
+            print_endline "no";
             Logs.debug (fun m ->  m "NO");
             false) 
           (theorems @ axioms)) 
@@ -97,7 +98,7 @@ let rec verif ?(axioms=[]) ?(theorems=[]) () ~hypotheses ~proved ~to_prove =
     )
     then 
       begin
-        Logs.debug (fun m -> pp_formula Fmt.stdout f_i; m "Proved");
+        Logs.debug (fun m -> m "%a Proved" pp_formula f_i);
         verif ~axioms ~theorems () ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
       end
     else 

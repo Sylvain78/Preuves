@@ -16,6 +16,8 @@ let socket_name =
   ref None
 let max_session =
   ref None
+let nb_session = 
+  ref 0
 let file_name = ref (None : string option)
 let usage = "usage: proof-server [options] "
 let version = "α"
@@ -248,12 +250,12 @@ and eval s channels =
             let verif_function =
               match session.mode.evaluation with
               | Session.Interpreted ->
-                Prop.Verif.prop_proof_verif
+                Prop.Verif.prop_proof_verif 
               | Session.Compiled ->
                 fun ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) _ ~proof->
                   let compiled_demo = Kernel_prop.Compile.compile_demonstration ~axioms ~theorems ~hypotheses  ~demo:proof ()
                   in
-                  match Kernel_prop.Verif.kernel_verif ~axioms ~theorems ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
+                  match Kernel_prop.Verif.kernel_verif ~axioms ~theorems ~hypotheses ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
                   with
                   | Ok _ -> true
                   | Error _ -> false
@@ -263,16 +265,7 @@ and eval s channels =
             in
             let error,verif =
               try
-                ("", (verif_function ~theorems:(List.map (fun f -> 
-                     {
-                       kind_prop = Kind_prop.Theorem;
-                       name_theorem_prop = t.name;
-                       proof_prop = proof;
-                       conclusion_prop = Prop.Verif.formula_from_string f;
-                     }
-                   ) premisses)
-                     conclusion
-                     ~proof:proof))
+                ("", (verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof))
               with
               | Prop.Verif.Invalid_demonstration(f,t) -> 
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
@@ -332,10 +325,19 @@ and eval s channels =
         )
       else
         failwith "session mode not Prop"
+    | List `Axioms ->
+      begin
+        match session.mode.order
+        with
+        | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
+                                                                 (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.axioms))
+        | First_order -> failwith "Unimplemented"
+      end
     | List `Theorems ->
       match session.mode.order
       with
-      | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
+      | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
+                                                               (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
       | First_order -> failwith "Unimplemented"
   with
   | Failure s -> Answer s
@@ -436,16 +438,11 @@ let main _ (*quiet*) socket_val =
      while (match !max_session
             with
             | None -> true
-            | Some n -> Format.printf "max_sessions = %d\n" n; flush Stdlib.stdout;n > 0)
+            | Some n -> Format.printf "max_sessions = %d\n" n; flush Stdlib.stdout;!nb_session < n)
      do
        let (sock, _) = accept sock_listen
        in
-       begin
-         match !max_session
-         with
-         | Some n -> max_session:= Some (n-1)
-         | None -> ()
-       end;
+       incr nb_session;
        let pid = fork()
        in
        match pid with
@@ -459,6 +456,7 @@ let main _ (*quiet*) socket_val =
            | End_of_file | Exit ->
              begin
                close io_chan.io_fd;
+               decr nb_session;
                exit 0 (*child quit the loop*)
              end
          end
