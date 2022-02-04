@@ -946,6 +946,5 @@ $(((\lnot \mathbf{a}) \implies ((\mathbf{a} \implies \mathbf{b}) \implies ((\mat
 #
 # ((a=>b) => ((c ou a) => (c ou b)))
 $((\mathbf{a} \implies \mathbf{b}) \implies ((\mathbf{c} \lor \mathbf{a}) \implies (\mathbf{c} \lor \mathbf{b})))$
-#
 End
 
