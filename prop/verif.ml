@@ -79,15 +79,12 @@ let rec verif ?(axioms=[]) ?(theorems=[]) () ~hypotheses ~proved ~to_prove =
       (*Formula is an instance of a theorem or axiom *)
       || (List.exists (fun th -> 
           try
-            Printf.printf " %s instance of %s (%s) ?\n" (to_string_formula_prop f_i ) th.name_theorem_prop (to_string_formula_prop th.conclusion_prop);
             Logs.debug (fun m -> m " %a instance of %s (%a) ?" pp_formula f_i th.name_theorem_prop pp_formula th.conclusion_prop);
             ignore(instance f_i th.conclusion_prop);
-            print_endline "yes";
             Logs.debug (fun m ->  m "YES");
             true
           with 
           | _ -> 
-            print_endline "no";
             Logs.debug (fun m ->  m "NO");
             false) 
           (theorems @ axioms)) 
