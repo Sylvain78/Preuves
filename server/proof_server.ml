@@ -14,20 +14,14 @@ module type SESSION = module type of Session
 
 let socket_name =
   ref None
-let max_session =
-  ref None
 let nb_session = 
   ref 0
 let file_name = ref (None : string option)
-let usage = "usage: proof-server [options] "
 let version = "α"
-let print_version_num () =
-  print_endline version;
-  exit 0
 let print_version_string () =
   print_string "proof-server, version ";
-  print_endline version;
-  exit 0
+  print_endline version
+
 let stamp_tag : Mtime.span Logs.Tag.def =
   Logs.Tag.def "stamp" ~doc:"Relative monotonic time stamp" Mtime.Span.pp
 let stamp c = Logs.Tag.(empty |> add stamp_tag (Mtime_clock.count c))
@@ -84,15 +78,8 @@ let setup_logs style_renderer level =
   quiet
 let setup_logs =
   Cmdliner.Term.(const setup_logs $ Fmt_cli.style_renderer () $ Logs_cli.level ())
-let specs =
-  [
-    "-socket", Stdlib.Arg.String (fun x -> socket_name := Some x),
-    " <socket> Set socket name to <socket> : filename, host:port, ip:port";
-    "-max_session", Stdlib.Arg.Int (fun x -> max_session := Some x), " maximum number of sessions accepted by the server before shutdown";
-    "-v", Stdlib.Arg.Unit print_version_string, " Print version and exit";
-    "-version", Stdlib.Arg.Unit print_version_string, " Print version and exit";
-    "-vnum", Stdlib.Arg.Unit print_version_num, " Print version number and exit";
-  ]
+
+
 let session =
   {
     mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Compiled };
@@ -125,13 +112,13 @@ let save_session mode file=
   end;
   close_out oc
 
-let rec load_session mode file channels =
+let rec load_session mode file out_channel =
   let ic = open_in file
   in
   begin
     match mode with
     | Session.Text ->
-      repl {io_in=ic ; io_out = channels.io_out ; io_fd = channels.io_fd}
+      repl ic out_channel
     | Session.Binary ->
       let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic)
       in
@@ -142,7 +129,7 @@ let rec load_session mode file channels =
       session.theorems <- session_loaded.theorems;
   end;
   close_in ic
-and eval s channels =
+and eval s out_channel =
   (* print_endline ("eval : " ^ s); *)
   Logs.info (fun m -> m "eval %s" s); 
   let log_number label lf=     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
@@ -186,7 +173,7 @@ and eval s channels =
       end
     | Load (mode,file) ->
       begin
-        load_session mode file channels;
+        load_session mode file out_channel;
         Answer ("Loaded file "^file)
       end
     | Notation n ->
@@ -241,7 +228,7 @@ and eval s channels =
         end
       else Answer("Axiom for first order unimplemented")
     | Theorem ({name; params=_; premisses; conclusion; demonstration; status=_} as t) ->
-      Logs.info (fun m -> m "Theorem %s" name);
+      Logs.info (fun m -> m "Begin verification of Theorem %s" name);
       begin
         match session.mode.order
         with
@@ -265,7 +252,10 @@ and eval s channels =
             in
             let error,verif =
               try
-                ("", (verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof))
+                ("", 
+                 try
+                   (verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof)
+                 with _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
               with
               | Prop.Verif.Invalid_demonstration(f,t) -> 
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
@@ -295,7 +285,7 @@ and eval s channels =
               Answer ("Theorem " ^ name ^ " not verified.\n" ^ error)
           end
         | Session.First_order ->
-          failwith "TheoremFirst_order"
+          failwith "Theorem First_order"
       end
     | Show theorem_name ->
       if (session.mode.order = Session.Prop)
@@ -341,9 +331,7 @@ and eval s channels =
       | First_order -> failwith "Unimplemented"
   with
   | Failure s -> Answer s
-and repl channels =
-  let command = Buffer.create 8192
-  in
+and repl in_channel out_channel  =
   (*
 * read
 * eval
@@ -359,11 +347,18 @@ and repl channels =
   while true
   do
     (* read *)
-    let buffer = BytesLabels.make 8192 '\000'
+    let buffer = BytesLabels.make 4000 '\000'
     in
-    let nb_read = read channels.io_fd ~buf:buffer ~pos:0 ~len:8192
+    let nb_read = 
+      try 
+        Logs.info (fun m -> m "avant read");
+        input in_channel buffer 0 4000
+      with
+      |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
     in
-    if nb_read=0 then raise End_of_file;
+    Logs.info (fun m -> m "lus %d bytes : \n%s" nb_read (Bytes.to_string buffer));
+  let command = Buffer.create 4000
+  in
     Buffer.add_subbytes command buffer 0 nb_read;
     let s = ref ""
     in
@@ -385,20 +380,30 @@ and repl channels =
       Buffer.add_string command command_next;
       (* eval *)
       (*channels needed to cause repl in case of executing a text file (load text)*)
-      let answer = eval com channels
+      let answer = eval com out_channel
       in
       (* print *)
       begin
         match answer with
         | Ok -> ()
-        | Answer s -> output_string channels.io_out (s^"\n")
+        | Answer s -> output_string out_channel (s^"\n")
       end;
-      flush channels.io_out
+      flush out_channel
       (* loop *)
     done
   done
-let main _ (*quiet*) socket_val =
+
+let main _ (*quiet*) socket_val (max_session : int option)  version=
+  if version 
+  then
+    begin
+      print_version_string ();
+      exit 0;
+    end;
   socket_name := Some socket_val;
+  nb_session := (match max_session with 
+      | None -> -1
+      | Some n -> n);
   let address = match !socket_name with
       Some x -> x
     | None ->
@@ -425,52 +430,57 @@ let main _ (*quiet*) socket_val =
     | None -> close sock_listen
   in
   (try
-     setsockopt sock_listen SO_REUSEADDR true;
-     bind sock_listen ~addr:socket_address;
-     if socket_domain = PF_INET then
-       begin
-         match getsockname sock_listen
-         with
-         | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
-         | _ -> ()
-       end;
-     listen sock_listen ~max:3;
-     while (match !max_session
+     Logs.app (fun m -> m "Listening on %s" address);
+     establish_server repl ~addr:socket_address
+   (*     setsockopt sock_listen SO_REUSEADDR true;
+          bind sock_listen ~addr:socket_address;
+          if socket_domain = PF_INET then
+          begin
+            match getsockname sock_listen
             with
-            | None -> true
-            | Some n -> Format.printf "max_sessions = %d\n" n; flush Stdlib.stdout;!nb_session < n)
-     do
-       let (sock, _) = accept sock_listen
-       in
-       incr nb_session;
-       let pid = fork()
-       in
-       match pid with
-       | 0 -> (*child*)
-         let io_chan = io_channel_of_descr sock
-         in
-         begin
-           try
-             repl io_chan
-           with
-           | End_of_file | Exit ->
-             begin
-               close io_chan.io_fd;
-               decr nb_session;
-               exit 0 (*child quit the loop*)
-             end
-         end
-       | _ -> (*father*)
-         ()
-     done;
-     (close_sock_listen());`Ok 0
+            | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
+            | _ -> ()
+          end;
+          listen sock_listen ~max:3;
+          while (Printf.printf "nb session : %d\n" !nb_session;!nb_session <> 0)
+
+          do
+          let (sock, _) = accept sock_listen
+          in
+          Logs.info (fun m -> m "sock rcv timeout =%f" (Unix.getsockopt_float sock SO_RCVTIMEO));
+          Logs.info (fun m -> m "sock snd timeout =%f" (Unix.getsockopt_float sock SO_SNDTIMEO));
+
+          decr nb_session;
+          let pid = fork()
+          in
+          match pid with
+          | 0 -> (*child*)
+            let io_chan = io_channel_of_descr sock
+            in
+            begin
+              try
+                repl io_chan
+              with
+              | End_of_file | Exit ->
+                begin
+                  Logs.info (fun m -> m "repl exited");
+                  close io_chan.io_fd;
+                  exit 0 (*child quit the loop*)
+                end
+            end
+          | id -> (*father*)
+            Unix.close sock; ignore(Unix.waitpid [] id) 
+          done;
+          (close_sock_listen());`Ok ()
+   *)
    with
    | Prop.Verif.Invalid_demonstration(f,t) -> begin
        close_sock_listen();
-       `Error (false, Fmt.str "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
-                                    (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
+       Logs.err(fun m -> m "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
+                                   (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
      end
   )
+
 let () =
   let socket =
     let default = "localhost:5757"
@@ -481,10 +491,24 @@ let () =
         ~doc:"socket value : ip:port, hostname:port, fifo file"
     in
     Cmdliner.Arg.value (Cmdliner.Arg.opt Cmdliner.Arg.string default info)
+  and max_session =
+    let info_max_session = 
+      Cmdliner.Arg.info ["m"; "max-session"]
+        ~docv:"MAX SESSION"
+        ~doc:"maximum number of sessions accepted by the server before shutdown"
+    in
+    Cmdliner.Arg.(value (opt (some int) None info_max_session))
+  and version =
+    let info =
+      Cmdliner.Arg.info ["vnum"; "version"]
+        ~docv:"VERSION"
+        ~doc:"Print version and exit"
+    in
+    Cmdliner.Arg.value (Cmdliner.Arg.flag info)
   in
   let command =
     let doc ="Launch the proof server"
     in
-    Cmdliner.Term.(ret (const main $ setup_logs $ socket), info "main" ~doc)
+    Cmdliner.Cmd.v (Cmdliner.Cmd.info "main" ~doc) (Cmdliner.Term.(const main $ setup_logs $ socket $ max_session $ version))
   in
-  Cmdliner.Term.(exit @@ eval command)
+  exit(Cmdliner.Cmd.eval ~catch:true command)
