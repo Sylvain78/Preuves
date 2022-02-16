@@ -16,26 +16,26 @@ let a10 = Prop_parser.formula_from_string "X_2 \\implies (X_1 \\lor X_2)";;
 let a11 = Prop_parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_2) \\implies X_2)";;
 
 let axioms_prop = ref [
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A1";
-    proof_prop=[];
-    conclusion_prop=a1;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A2";
-    proof_prop=[];
-    conclusion_prop=a2;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A3";
-    proof_prop=[];
-    conclusion_prop=a3;
-  };
-  {
-    kind_prop=Axiom;
+    {
+      kind_prop=Axiom;
+      name_theorem_prop="A1";
+      proof_prop=[];
+      conclusion_prop=a1;
+    };
+    {
+      kind_prop=Axiom;
+      name_theorem_prop="A2";
+      proof_prop=[];
+      conclusion_prop=a2;
+    };
+    {
+      kind_prop=Axiom;
+      name_theorem_prop="A3";
+      proof_prop=[];
+      conclusion_prop=a3;
+    };
+    {
+      kind_prop=Axiom;
     name_theorem_prop="A4";
     proof_prop=[];
     conclusion_prop=a4;
