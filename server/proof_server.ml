@@ -344,22 +344,24 @@ and repl in_channel out_channel  =
   in
   let index_end_of_command = ref 0
   in
-  while true
+  let command = Buffer.create 8192
+  in
+  let nb_read = ref (-1)
+  in
+  while !nb_read != 0
   do
     (* read *)
-    let buffer = BytesLabels.make 4000 '\000'
+    let buffer = BytesLabels.make 8192 '\000'
     in
-    let nb_read = 
-      try 
-        Logs.info (fun m -> m "avant read");
-        input in_channel buffer 0 4000
-      with
-      |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
-    in
-    Logs.info (fun m -> m "lus %d bytes : \n%s" nb_read (Bytes.to_string buffer));
-  let command = Buffer.create 4000
-  in
-    Buffer.add_subbytes command buffer 0 nb_read;
+    nb_read := 
+      (try 
+         Logs.info (fun m -> m "avant read (command size =%d, buffer size = %d" (Buffer.length command) (BytesLabels.length buffer));
+         input in_channel buffer 0 8192
+       with
+       |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
+      );
+    Logs.info (fun m -> m "lus %d bytes : \n%s" !nb_read (Bytes.to_string buffer));
+    Buffer.add_subbytes command buffer 0 !nb_read;
     let s = ref ""
     in
     while
@@ -474,10 +476,15 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
           (close_sock_listen());`Ok ()
    *)
    with
-   | Prop.Verif.Invalid_demonstration(f,t) -> begin
+   | Prop.Verif.Invalid_demonstration(f,t) -> 
+     begin
        close_sock_listen();
        Logs.err(fun m -> m "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
-                                   (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
+                                 (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
+     end
+   | Stdlib.Exit -> 
+     begin
+       close_sock_listen();Logs.info (fun m -> m "In memoriam Alexandre Grothendieck, 1928 ̶ 2013") 
      end
   )
 
