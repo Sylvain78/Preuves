@@ -40,7 +40,7 @@ let pp_header ppf (level, header) =
   in
   Fmt.pf ppf "[%a][%a]"
     (Fmt.styled level_style Fmt.string) level 
-    (Fmt.option Fmt.string) (Option.map (pad 10) header)
+    (Fmt.option Fmt.string) ((*Option.map (pad 10)*) header)
 let reporter ppf =
   let report src level ~over k msgf =
     let k _ =
@@ -61,7 +61,10 @@ let reporter ppf =
         Fmt.(styled `Magenta string)
         (pad 10 @@ Logs.Src.name src)
     in
-    msgf @@ fun ?header ?tags fmt -> with_src_and_stamp header tags k fmt
+    msgf @@ fun ?header ?tags fmt ->
+    match header with
+    | None -> with_src_and_stamp (Some(string_of_int (Unix.getpid()))) tags k fmt
+    | Some _ -> with_src_and_stamp header tags k fmt
   in
   { Logs.report = report }
 
