@@ -1,0 +1,12 @@
+License anarchiste, version 0.1
+
+Permission est donnée à toute personne et organisation de copier, compiler et utiliser le code disponible à partir de ce dossier
+dans les conditions suivantes :
+
+1) Vous n'êtes pas une entreprise capitaliste (pas d'actionnaires) .
+2) Vous ne travaillez pas ni n'utilisez ce logiciel dans un cadre antisocial : police, justice, armée, banditisme.
+3) Ce fichier de licence reste intact dans toute copie et travail dérivé que vous ferez du logiciel.
+
+Si vous avez aimez mon travail, faites le moi savoir et écrivez-moi à sylvain_kerjean@hotmail.com
+
+Salutations anarcho-communistes.
