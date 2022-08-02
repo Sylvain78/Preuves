@@ -2,7 +2,12 @@ enum  File_mode {
 	TEXT = 0;
 	BINARY = 1;
 }
-
+message Notation_element {
+	oneof t {
+		string param = 1;
+		string string = 2;
+	}
+}
 message Command{
 
 	message Prop {}
@@ -14,6 +19,13 @@ message Command{
 	message Expand_notations{}
 	message Compiled{}
 	message Interpreted{}
+	message First_order{}
+	message Notation {
+		required string name = 1;
+		repeated string params = 2;
+		repeated Notation_element syntax = 3;
+		repeated Notation_element semantics = 4;
+	}
 	oneof t {
 		int32 verbose = 1;
 		Prop prop = 2;
@@ -23,5 +35,7 @@ message Command{
 		Interpreted interpreted = 6;
 		File save = 7;
 		File load = 8;
+		First_order first_order = 9;
+		Notation notation = 10;
 	}
 }
