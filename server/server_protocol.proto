@@ -1,0 +1,27 @@
+enum  File_mode {
+	TEXT = 0;
+	BINARY = 1;
+}
+
+message Command{
+
+	message Prop {}
+	message File {
+		required File_mode mode = 1;
+		required string filename = 2;
+	}
+	message Keep_notations {}
+	message Expand_notations{}
+	message Compiled{}
+	message Interpreted{}
+	oneof t {
+		int32 verbose = 1;
+		Prop prop = 2;
+		Keep_notations keep_notations = 3;
+		Expand_notations expand_notations = 4;
+		Compiled compiled = 5;
+		Interpreted interpreted = 6;
+		File save = 7;
+		File load = 8;
+	}
+}
