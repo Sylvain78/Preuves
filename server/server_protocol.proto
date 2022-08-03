@@ -1,3 +1,5 @@
+syntax = "proto3";
+
 enum  File_mode {
 	TEXT = 0;
 	BINARY = 1;
@@ -8,8 +10,8 @@ enum Status {
 	FALSE = 2;
 }
 enum Known {
-	AXIOMS = 1;
-	THEOREMS = 2;
+	AXIOMS = 0;
+	THEOREMS = 1;
 }
 message Notation_element {
 	oneof t {
@@ -21,8 +23,8 @@ message Command {
 
 	message Prop {}
 	message File {
-		required File_mode mode = 1;
-		required string filename = 2;
+		 File_mode mode = 1;
+		 string filename = 2;
 	}
 	message Keep_notations {}
 	message Expand_notations {}
@@ -30,24 +32,25 @@ message Command {
 	message Interpreted {}
 	message First_order {}
 	message Notation {
-		required string name = 1;
+		 string name = 1;
 		repeated string params = 2;
 		repeated Notation_element syntax = 3;
 		repeated Notation_element semantics = 4;
 	}
 	message Theorem {
-		required string name = 1;
+		 string name = 1;
 		repeated string params = 2;
 		repeated string premisses = 3;
-		required string conclusion = 4;
+		 string conclusion = 4;
 		repeated string demonstration = 5;
-		required Status status = 6;
+		 Status status = 6;
 	}
 	message Axiom {
-		required string name = 1;
-		required string formula = 2;
+		 string name = 1;
+		 string formula = 2;
 	}
 	message History {}
+	message Quit {}
 	oneof t {
 		int32 verbose = 1; 
 		Prop prop = 2;
@@ -64,5 +67,6 @@ message Command {
 		History history = 13;
 		string show = 14;
 		Known list = 15;
+		Quit quit = 16;
 	}
 }

@@ -7,7 +7,7 @@ open Prop
 open Prop.Theorem_prop
 open Prop__Kind_prop
 open Protocol
-open Protocol_commands
+open Server_protocol_types
 open Session
 open Util__Unix_tools
 module type SESSION = module type of Session
@@ -98,9 +98,9 @@ let save_session mode file=
   in
   begin
     match mode with
-    | Session.Text ->
+    | Server_protocol_types.Text ->
       List.iter (fun s -> Printf.fprintf oc "%s\n\n" s) (List.rev session.history);
-    | Session.Binary ->
+    | Server_protocol_types.Binary ->
       (*TODO one day....
        * let (base,ext) = Filename.remove_extension file, Filename.extension file
        *
@@ -120,9 +120,9 @@ let rec load_session mode file out_channel =
   in
   begin
     match mode with
-    | Session.Text ->
+    | Server_protocol_types.Text ->
       repl ic out_channel
-    | Session.Binary ->
+    | Server_protocol_types.Binary ->
       let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic)
       in
       session.mode <- session_loaded.mode;
@@ -151,7 +151,7 @@ and eval s out_channel =
       Logs.info(fun m -> m "Prop");
       session.mode.order<-Session.Prop;
       session.axioms <- !Axioms_prop.axioms_prop;
-      Ok
+      Answer("Prop")
     | First_order ->
       session.mode.order<-Session.First_order;
       Ok
@@ -169,12 +169,12 @@ and eval s out_channel =
       Ok
     | History ->
       Answer (String.concat "\n" @@ List.rev @@ session.history)
-    | Save (mode,file) ->
+    | Save ({mode; filename=file}) ->
       begin
         save_session mode file;
         Answer ("Saved to file "^file)
       end
-    | Load (mode,file) ->
+    | Load ({mode; filename=file}) ->
       begin
         load_session mode file out_channel;
         Answer ("Loaded file "^file)
@@ -318,7 +318,7 @@ and eval s out_channel =
         )
       else
         failwith "session mode not Prop"
-    | List `Axioms ->
+    | List Axioms ->
       begin
         match session.mode.order
         with
@@ -326,7 +326,7 @@ and eval s out_channel =
                                                                  (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.axioms))
         | First_order -> failwith "Unimplemented"
       end
-    | List `Theorems ->
+    | List Theorems ->
       match session.mode.order
       with
       | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
@@ -498,7 +498,7 @@ let () =
     let info =
       Cmdliner.Arg.info ["s"; "socket"]
         ~docv:"SOCKET"
-        ~doc:"socket value : ip:port, hostname:port, fifo file"
+        ~doc:"socket value : ip:port, hostname:port"
     in
     Cmdliner.Arg.value (Cmdliner.Arg.opt Cmdliner.Arg.string default info)
   and max_session =

@@ -36,7 +36,7 @@
 %token<string> STRING
 %token<string> FORMULA
 %start phrase
-%type<Protocol_commands.command> phrase
+%type<Server_protocol_types.command> phrase
 
 %%
 
@@ -113,16 +113,16 @@ term_proof_list:
 ;
 
 file_command :
-| SAVE NEWLINE BINARY NEWLINE QUOTED_STRING{ Save(Binary, String.sub $5 1 ((String.length $5) - 2)) }
-| SAVE NEWLINE TEXT NEWLINE QUOTED_STRING { Save(Text, String.sub $5 1 ((String.length $5) - 2)) }
-| LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { Load(Binary, String.sub $5 1 ((String.length $5) - 2)) }
-| LOAD NEWLINE TEXT NEWLINE QUOTED_STRING { Load(Text, String.sub $5 1 ((String.length $5) - 2)) } 
+| SAVE NEWLINE BINARY NEWLINE QUOTED_STRING { Save({mode=Binary; filename=String.sub $5 1 ((String.length $5) - 2)}) }
+| SAVE NEWLINE TEXT NEWLINE QUOTED_STRING   { Save({mode=Text; filename=String.sub $5 1 ((String.length $5) - 2)}) }
+| LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { Load({mode=Binary; filename=String.sub $5 1 ((String.length $5) - 2)}) }
+| LOAD NEWLINE TEXT NEWLINE QUOTED_STRING   { Load({mode=Text; filename=String.sub $5 1 ((String.length $5) - 2)}) } 
 ;
 
 info :
 | QUIT {Quit}
 | HISTORY { History }
-| LIST NEWLINE AXIOMS { List `Axioms }
-| LIST NEWLINE THEOREMS { List `Theorems }
+| LIST NEWLINE AXIOMS { List Axioms }
+| LIST NEWLINE THEOREMS { List Theorems }
 | SHOW NEWLINE
   IDENT { Show $3 }
