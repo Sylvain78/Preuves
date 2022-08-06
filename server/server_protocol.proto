@@ -23,8 +23,8 @@ message Command {
 
 	message Prop {}
 	message File {
-		 File_mode mode = 1;
-		 string filename = 2;
+		File_mode mode = 1;
+		string filename = 2;
 	}
 	message Keep_notations {}
 	message Expand_notations {}
@@ -32,22 +32,22 @@ message Command {
 	message Interpreted {}
 	message First_order {}
 	message Notation {
-		 string name = 1;
+		string name = 1;
 		repeated string params = 2;
 		repeated Notation_element syntax = 3;
 		repeated Notation_element semantics = 4;
 	}
 	message Theorem {
-		 string name = 1;
+		string name = 1;
 		repeated string params = 2;
 		repeated string premisses = 3;
-		 string conclusion = 4;
+		string conclusion = 4;
 		repeated string demonstration = 5;
-		 Status status = 6;
+		Status status = 6;
 	}
 	message Axiom {
-		 string name = 1;
-		 string formula = 2;
+		string name = 1;
+		string formula = 2;
 	}
 	message History {}
 	message Quit {}
@@ -68,5 +68,17 @@ message Command {
 		string show = 14;
 		Known list = 15;
 		Quit quit = 16;
+	}
+}
+
+message Answer {
+	message Ok {}
+	message Error { 
+		string error_message = 1;
+		Command command = 2;
+	}
+	oneof t {
+		Ok ok = 1;
+		Error error = 2;
 	}
 }
