@@ -115,6 +115,40 @@ let save_session mode file=
   end;
   close_out oc
 
+let send_answer oc answer =
+  (* Create a Protobuf encoder and encode value *)
+  let encoder = Pbrt.Encoder.create () 
+  in 
+  Server_protocol_pb.encode_answer answer  encoder; 
+  let message = (Pbrt.Encoder.to_bytes encoder)
+  in
+  (* Output size *)
+  let size = Bytes.length(message)
+  in
+  (*TODO replace by htonl as soon as available in stdlib or unix lib*)
+  if (Sys.big_endian) 
+  then
+    output_binary_int oc size
+  else
+    begin
+      let nb_byte = (Sys.int_size+1)/8
+      in 
+      let format = if nb_byte = 4 then format_of_string "%08x" else format_of_string "%016x"
+      and chars = Array.make nb_byte ' '
+      in
+      let size_as_string = Printf.sprintf format size
+      in
+      for i = 0 to (nb_byte)-1 do
+        print_int i;
+        chars.(i) <- char_of_int @@ int_of_string ("0x" ^ (String.sub size_as_string (2*i) 2))
+      done;
+      for i = (nb_byte) -1 downto 0 do
+        output_char oc chars.(i);
+      done
+    end;
+  (* Output the protobuf message to a file *) 
+  output_bytes oc message
+
 let rec load_session mode file out_channel =
   let ic = open_in file
   in
@@ -151,7 +185,7 @@ and eval s out_channel =
       Logs.info(fun m -> m "Prop");
       session.mode.order<-Session.Prop;
       session.axioms <- !Axioms_prop.axioms_prop;
-      Answer("Prop")
+      Ok 
     | First_order ->
       session.mode.order<-Session.First_order;
       Ok
@@ -306,9 +340,9 @@ and eval s out_channel =
                  (*TODO "(" ^
                    (String.concat ", " @@
                    List.map (function
-                   | `PMetaVar s -> s
+                           | `PMetaVar s -> s
                    | `PVar i -> if i>0 && i<10
-                   then "X_"^ (string_of_int i)
+                              then "X_"^ (string_of_int i)
                    else "X_{"^ (string_of_int i) ^ "}")
                    parameters_prop) ^
                    ") : " ^*)
@@ -335,12 +369,12 @@ and eval s out_channel =
   with
   | Failure s -> Answer s
 and repl in_channel out_channel  =
-  (*
-* read
-* eval
-* print
-* loop
-*)
+        (*
+         * read
+         * eval
+         * print
+         * loop
+         *)
   let command_pattern = "\n\n"
   in
   let r = Str.regexp command_pattern
@@ -384,15 +418,11 @@ and repl in_channel out_channel  =
       Buffer.clear command;
       Buffer.add_string command command_next;
       (* eval *)
-      (*channels needed to cause repl in case of executing a text file (load text)*)
+      (*channels needed to be passed to  repl in case of executing a text file (load text)*)
       let answer = eval com out_channel
       in
       (* print *)
-      begin
-        match answer with
-        | Ok -> ()
-        | Answer s -> output_string out_channel (s^"\n")
-      end;
+      send_answer out_channel answer;
       flush out_channel
       (* loop *)
     done
@@ -439,12 +469,13 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
      establish_server repl ~addr:socket_address
    (*     setsockopt sock_listen SO_REUSEADDR true;
           bind sock_listen ~addr:socket_address;
-          if socket_domain = PF_INET then
+          if socket_domain = PF_INET 
+          then
           begin
-            match getsockname sock_listen
+          match getsockname sock_listen
             with
             | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
-            | _ -> ()
+          | _ -> ()
           end;
           listen sock_listen ~max:3;
           while (Printf.printf "nb session : %d\n" !nb_session;!nb_session <> 0)
@@ -460,21 +491,21 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
           in
           match pid with
           | 0 -> (*child*)
-            let io_chan = io_channel_of_descr sock
+                          let io_chan = io_channel_of_descr sock
             in
             begin
-              try
-                repl io_chan
-              with
+                    try
+                            repl io_chan
+          with
               | End_of_file | Exit ->
-                begin
-                  Logs.info (fun m -> m "repl exited");
+                              begin
+                                      Logs.info (fun m -> m "repl exited");
                   close io_chan.io_fd;
                   exit 0 (*child quit the loop*)
                 end
             end
           | id -> (*father*)
-            Unix.close sock; ignore(Unix.waitpid [] id) 
+                    Unix.close sock; ignore(Unix.waitpid [] id) 
           done;
           (close_sock_listen());`Ok ()
    *)

@@ -1,8 +1,3 @@
-
-type answer =
-  | Ok
-  | Answer of string
-
 let decode s =
   try Protocol_parser.phrase Protocol_lexer.token (Lexing.from_string s)
   with 
