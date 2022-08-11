@@ -131,22 +131,24 @@ let send_answer oc answer =
     output_binary_int oc size
   else
     begin
-      let nb_byte = (Sys.int_size+1)/8
-      in 
-      let format = if nb_byte = 4 then format_of_string "%08x" else format_of_string "%016x"
-      and chars = Array.make nb_byte ' '
+      Logs.info (fun m -> m "little endian");
+      let format = format_of_string "%08x"
+      and chars = Array.make  4 ' '
       in
       let size_as_string = Printf.sprintf format size
       in
-      for i = 0 to (nb_byte)-1 do
-        print_int i;
+      for i = 0 to 3 do
         chars.(i) <- char_of_int @@ int_of_string ("0x" ^ (String.sub size_as_string (2*i) 2))
       done;
-      for i = (nb_byte) -1 downto 0 do
-        output_char oc chars.(i);
-      done
+      for i = 0 to 3 do
+      	Stdlib.(print_int (int_of_char chars.(i)));
+        output_char oc chars.(i)
+      done;
+      Stdlib.(print_newline();flush stdout)
     end;
   (* Output the protobuf message to a file *) 
+  Logs.info (fun m -> m "send protobuf = %d bytes" size);
+  Stdlib.(flush stdout);
   output_bytes oc message
 
 let rec load_session mode file out_channel =
@@ -369,12 +371,15 @@ and eval s out_channel =
   with
   | Failure s -> Answer s
 and repl in_channel out_channel  =
+  Logs.info (fun m -> m "Launching repl");
         (*
+         * init
          * read
          * eval
          * print
          * loop
          *)
+  
   let command_pattern = "\n\n"
   in
   let r = Str.regexp command_pattern

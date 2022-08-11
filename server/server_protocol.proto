@@ -7,8 +7,9 @@ enum  File_mode {
 enum Status {
 	UNVERIFIED = 0;
 	VERIFIED = 1;
-	FALSE = 2;
+	UNTRUE = 2; //FALSE is reserved by SupportDefs.h on haiku ; TODO : use namespace ?
 }
+
 enum Known {
 	AXIOMS = 0;
 	THEOREMS = 1;
