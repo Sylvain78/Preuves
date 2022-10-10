@@ -363,11 +363,15 @@ and eval s out_channel =
         | First_order -> failwith "Unimplemented"
       end
     | List Theorems ->
-      match session.mode.order
-      with
-      | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
-                                                               (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
-      | First_order -> failwith "Unimplemented"
+      begin
+        match session.mode.order
+        with
+        | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
+                                                                 (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
+        | First_order -> failwith "Unimplemented"
+       end
+    | List Files ->
+    Answer (String.concat ", " [(*TODO*)])
   with
   | Failure s -> Answer s
 and repl in_channel out_channel  =
