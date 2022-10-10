@@ -13,6 +13,7 @@ let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v)
       ("List",LIST) ; 
       ("Axioms",AXIOMS) ; 
       ("Theorems",THEOREMS) ; 
+      ("Files",FILES) ; 
       ("Show",SHOW) ; 
       ("Param",PARAM) ;
       ("Syntax",SYNTAX) ;

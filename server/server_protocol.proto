@@ -13,6 +13,7 @@ enum Status {
 enum Known {
 	AXIOMS = 0;
 	THEOREMS = 1;
+	FILES = 2;
 }
 message Notation_element {
 	oneof t {

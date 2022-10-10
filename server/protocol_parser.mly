@@ -26,6 +26,7 @@
 %token LIST
 %token AXIOMS
 %token THEOREMS
+%token FILES
 %token SHOW
 %token VERBOSE
 %token QUIT
@@ -124,5 +125,6 @@ info :
 | HISTORY { History }
 | LIST NEWLINE AXIOMS { List Axioms }
 | LIST NEWLINE THEOREMS { List Theorems }
+| LIST NEWLINE FILES { List Files }
 | SHOW NEWLINE
   IDENT { Show $3 }
