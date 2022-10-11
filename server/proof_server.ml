@@ -91,6 +91,7 @@ let session =
     history = [] ;
     axioms = [];
     theorems = [];
+    user = "";
   }
 
 let save_session mode file=
@@ -141,7 +142,7 @@ let send_answer oc answer =
         chars.(i) <- char_of_int @@ int_of_string ("0x" ^ (String.sub size_as_string (2*i) 2))
       done;
       for i = 0 to 3 do
-      	Stdlib.(print_int (int_of_char chars.(i)));
+        Stdlib.(print_int (int_of_char chars.(i)));
         output_char oc chars.(i)
       done;
       Stdlib.(print_newline();flush stdout)
@@ -369,9 +370,35 @@ and eval s out_channel =
         | Prop -> Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
                                                                  (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))
         | First_order -> failwith "Unimplemented"
-       end
+      end
     | List Files ->
-    Answer (String.concat ", " [(*TODO*)])
+      let answer = 
+        let dir = Unix.opendir session.user
+        in
+        let dir_list = ref []
+        in
+        begin try 
+            while true do
+              let entry = readdir dir
+              in
+              if entry <> "." && entry <> ".." then
+                dir_list := entry :: !dir_list
+            done
+          with End_of_file -> () 
+        end;
+        Answer (String.concat ", " !dir_list)
+      in answer
+    | User user -> 
+      begin 
+        (
+          try 
+            Unix.mkdir user 0o777
+          with
+          |  Unix.Unix_error(Unix.EEXIST, "mkdir", dir) when dir=user -> ()
+        );
+        session.user <- user;
+        Ok
+      end
   with
   | Failure s -> Answer s
 and repl in_channel out_channel  =
@@ -383,7 +410,7 @@ and repl in_channel out_channel  =
          * print
          * loop
          *)
-  
+
   let command_pattern = "\n\n"
   in
   let r = Str.regexp command_pattern

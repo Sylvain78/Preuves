@@ -69,7 +69,9 @@ message Command {
 		History history = 13;
 		string show = 14;
 		Known list = 15;
-		Quit quit = 16;
+		string user = 16;
+		Quit quit = 17;
+
 	}
 }
 

@@ -57,4 +57,5 @@ type 'formula session =
         Dyp.parser_pilot;*)
     mutable axioms : 'formula list;
     mutable theorems : 'formula list;
+    mutable user : string;
   }

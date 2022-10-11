@@ -15,4 +15,5 @@ type command =
   | History
   | Show of string
   | List of [`Axioms | `Theorems | `Files]
+  | User of string
   | Quit
