@@ -38,7 +38,7 @@
 %token<string> STRING
 %token<string> FORMULA
 %start phrase
-%type<Server_protocol_types.command> phrase
+%type<Server_protocol.Command.t> phrase
 
 %%
 
@@ -56,13 +56,13 @@ notation:
  PARAM NEWLINE ident_list NEWLINE 
  SYNTAX NEWLINE syntax_elt_list NEWLINE
  SEMANTICS NEWLINE syntax_elt_list NEWLINE
- END { Notation{name=$3 ; params=$7 ; syntax = $11 ; semantics=$15} }
+ END { `Notation{name=$3 ; params=$7 ; syntax = $11 ; semantics=$15} }
 ;
 
 axiom:
   AXIOM NEWLINE
   IDENT NEWLINE
-  FORMULA { Axiom{name=$3 ; formula=$5} }
+  FORMULA { `Axiom{name=$3 ; formula=$5} }
 ;
 
 theorem:
@@ -76,17 +76,17 @@ theorem:
  FORMULA NEWLINE
  DEMONSTRATION NEWLINE
  term_proof_list 
- END { Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17;status=Unverified} } 
+ END { `Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17;status=UNVERIFIED} } 
 ;
 
 mode:
-| VERBOSE NUMBER { Verbose $2 }
-| PROP { Prop }
-| FIRST_ORDER { First_order }
-| KEEP_NOTATIONS { Keep_notations}
-| EXPAND_NOTATIONS { Expand_notations }
-| COMPILED { Compiled }
-| INTERPRETED  { Interpreted  }
+| VERBOSE NUMBER { `Verbose $2 }
+| PROP { `Prop() }
+| FIRST_ORDER { `First_order() }
+| KEEP_NOTATIONS { `Keep_notations()}
+| EXPAND_NOTATIONS { `Expand_notations() }
+| COMPILED { `Compiled() }
+| INTERPRETED  { `Interpreted()  }
 ;
 
 ident_list:
@@ -100,8 +100,8 @@ syntax_elt_list:
 ;
 
 syntax_elt:
-| IDENT { Param $1 }
-| QUOTED_STRING {String $1 }
+| IDENT { `Param $1 }
+| QUOTED_STRING {`String $1 }
 ;
 
 formula_list :
@@ -115,17 +115,17 @@ term_proof_list:
 ;
 
 file_command :
-| SAVE NEWLINE BINARY NEWLINE QUOTED_STRING { Save({mode=Binary; filename=String.sub $5 1 ((String.length $5) - 2)}) }
-| SAVE NEWLINE TEXT NEWLINE QUOTED_STRING   { Save({mode=Text; filename=String.sub $5 1 ((String.length $5) - 2)}) }
-| LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { Load({mode=Binary; filename=String.sub $5 1 ((String.length $5) - 2)}) }
-| LOAD NEWLINE TEXT NEWLINE QUOTED_STRING   { Load({mode=Text; filename=String.sub $5 1 ((String.length $5) - 2)}) } 
+| SAVE NEWLINE BINARY NEWLINE QUOTED_STRING { `Save({mode=BINARY; filename=String.sub $5 1 ((String.length $5) - 2)}) }
+| SAVE NEWLINE TEXT NEWLINE QUOTED_STRING   { `Save({mode=TEXT; filename=String.sub $5 1 ((String.length $5) - 2)}) }
+| LOAD NEWLINE BINARY NEWLINE QUOTED_STRING { `Load({mode=BINARY; filename=String.sub $5 1 ((String.length $5) - 2)}) }
+| LOAD NEWLINE TEXT NEWLINE QUOTED_STRING   { `Load({mode=TEXT; filename=String.sub $5 1 ((String.length $5) - 2)}) } 
 ;
 
 info :
-| QUIT {Quit}
-| HISTORY { History }
-| LIST NEWLINE AXIOMS { List Axioms }
-| LIST NEWLINE THEOREMS { List Theorems }
-| LIST NEWLINE FILES { List Files }
-| SHOW NEWLINE IDENT { Show $3 }
-| USER NEWLINE IDENT { User $3 }
+| QUIT {`Quit()}
+| HISTORY { `History() }
+| LIST NEWLINE AXIOMS { `List AXIOMS }
+| LIST NEWLINE THEOREMS { `List THEOREMS }
+| LIST NEWLINE FILES { `List FILES }
+| SHOW NEWLINE IDENT { `Show $3 }
+| USER NEWLINE IDENT { `User $3 }

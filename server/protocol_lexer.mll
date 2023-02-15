@@ -4,6 +4,7 @@ let keywords = Hashtbl.create 17
 let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v) 
 [ 
       ("Prop",PROP) ;
+      ("First_order", FIRST_ORDER) ;
       ("Keep_Notations",KEEP_NOTATIONS);
       ("Expand_Notations",EXPAND_NOTATIONS);
       ("Compiled", COMPILED);
@@ -43,14 +44,18 @@ let newline = ('\013'* '\010')
 let lowercase = ['a'-'z']
 let uppercase = ['A'-'Z']
 let digit = ['0'-'9']
-let ident = (lowercase|uppercase)(lowercase|uppercase|digit)*
+let ident = (lowercase|uppercase)(lowercase|uppercase|digit|'_')*
 
 rule token = parse 
   | [' ' '\t']     { token lexbuf } 
   | newline { NEWLINE }
   | ident as id 
     {
-      try Hashtbl.find keywords id
+      try 
+      	let kw = Hashtbl.find keywords id
+      	in 
+        print_string ("found keyword " ^ id ^"XXX");flush stdout;
+      	kw
       with 
       | Not_found -> IDENT(Lexing.lexeme lexbuf)
     }
