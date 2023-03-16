@@ -20,7 +20,6 @@ module type F = module type of First_order.Formula
 type 'formula session =
   {
     mutable mode : mode ;
-    mutable speed : speed ;
     name : string;
     mutable history : string list;
     (*mutable parser : (unit,
