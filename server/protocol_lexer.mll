@@ -52,10 +52,7 @@ rule token = parse
   | ident as id 
     {
       try 
-      	let kw = Hashtbl.find keywords id
-      	in 
-        print_string ("found keyword " ^ id ^"XXX");flush stdout;
-      	kw
+        Hashtbl.find keywords id
       with 
       | Not_found -> IDENT(Lexing.lexeme lexbuf)
     }

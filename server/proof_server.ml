@@ -11,6 +11,7 @@ open Session
 open Util__Unix_tools
 module type SESSION = module type of Session
 
+let buffer_size = 65_536
 let socket_name =
   ref None
 let nb_session = 
@@ -93,9 +94,8 @@ let session =
   {
     mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Compiled };
     name = "Init";
-    speed = Session.Expand_notations;
     history = [] ;
-    axioms = [];
+    axioms = !Prop.Axioms_prop.axioms_prop;
     theorems = [];
     user = "";
   }
@@ -181,8 +181,6 @@ let rec load_session mode file out_channel =
   end;
   close_in ic
 and eval s out_channel =
-  print_endline ("eval : " ^ s ^"XXX"); 
-  Logs.info (fun m -> m "eval %s" s); 
   let log_number label lf=     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
   in
   log_number "theorems" session.theorems;
@@ -253,7 +251,7 @@ and eval s out_channel =
           print_newline();
           (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
           ignore @@ Prop_parser.notation_from_string (Buffer.contents buf);
-          Server_protocol.Answer.(make ~t:(`Answer (Buffer.contents buf)) ())
+          Server_protocol.Answer.(make ~t:(`Ok command) ())
         | First_order -> Server_protocol.Answer.(make ~t:(`Answer "Notation first_order : unimplemented") ())
       end
     | `Axiom { name ; formula } ->
@@ -301,9 +299,12 @@ and eval s out_channel =
             let error,verif =
               try
                 ("", 
-                 try
-                   (verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof)
-                 with _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+                 (*try*)
+                 let v = (verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof)
+                 in       
+                 Logs.info (fun m -> m "End verification of Theorem %s" name);
+                 v
+                 (*with _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"*))
               with
               | Prop.Verif.Invalid_demonstration(f,t) -> 
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
@@ -327,7 +328,7 @@ and eval s out_channel =
                     conclusion_prop = conclusion;
                   }
                   :: session.theorems;
-                Server_protocol.Answer.(make ~t:(`Answer ("Theorem " ^ name ^ " verified.")) ())
+                Server_protocol.Answer.(make ~t:(`Ok command) ()) 
               end
             else
               Server_protocol.Answer.(make ~t:(`Answer ("Theorem " ^ name ^ " not verified.\n" ^ error)) ())
@@ -426,24 +427,23 @@ and repl in_channel out_channel  =
   in
   let index_end_of_command = ref 0
   in
-  let command = Buffer.create 8192
+  let command = Buffer.create buffer_size
   in
   let nb_read = ref (-1)
   in
   while !nb_read != 0
   do
     (* read *)
-    let buffer = BytesLabels.make 8192 '\000'
-    in
-    nb_read := 
       (try 
+         let buffer = BytesLabels.make buffer_size '\000'
+         in
          Logs.info (fun m -> m "avant read (command size =%d, buffer size = %d" (Buffer.length command) (BytesLabels.length buffer));
-         input in_channel buffer 0 8192
+         nb_read := input in_channel buffer 0 buffer_size;
+         Logs.info (fun m -> m "apres read :%d lus" !nb_read);
+         Buffer.add_subbytes command buffer 0 !nb_read;
        with
        |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
       );
-    Logs.info (fun m -> m "lus %d bytes : \n%s" !nb_read (Bytes.to_string buffer));
-    Buffer.add_subbytes command buffer 0 !nb_read;
     let s = ref ""
     in
     while
@@ -518,8 +518,8 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
           then
           begin
           match getsockname sock_listen
-            with
-            | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
+          with
+          | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
           | _ -> ()
           end;
           listen sock_listen ~max:3;
@@ -536,23 +536,23 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
           in
           match pid with
           | 0 -> (*child*)
-                          let io_chan = io_channel_of_descr sock
-            in
-            begin
-                    try
-                            repl io_chan
+          let io_chan = io_channel_of_descr sock
+          in
+          begin
+          try
+          repl io_chan
           with
-              | End_of_file | Exit ->
-                              begin
-                                      Logs.info (fun m -> m "repl exited");
-                  close io_chan.io_fd;
-                  exit 0 (*child quit the loop*)
-                end
-            end
+          | End_of_file | Exit ->
+          begin
+          Logs.info (fun m -> m "repl exited");
+          close io_chan.io_fd;
+          exit 0 (*child quit the loop*)
+          end
+                      end
           | id -> (*father*)
-                    Unix.close sock; ignore(Unix.waitpid [] id) 
-          done;
-          (close_sock_listen());`Ok command ()
+          Unix.close sock; ignore(Unix.waitpid [] id) 
+                done;
+                        (close_sock_listen());`Ok command ()
    *)
    with
    | Prop.Verif.Invalid_demonstration(f,t) -> 
