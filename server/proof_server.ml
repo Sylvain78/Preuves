@@ -11,7 +11,7 @@ open Session
 open Util__Unix_tools
 module type SESSION = module type of Session
 
-let buffer_size = 65_536
+let buffer_size = 65536
 let socket_name =
   ref None
 let nb_session = 
@@ -137,31 +137,13 @@ let send_answer oc answer =
   (* Output size *)
   let size = String.length message
   in
-  (*TODO replace by htonl as soon as available in stdlib or unix lib*)
-  if (Sys.big_endian) 
-  then
-    output_binary_int oc size
-  else
-    begin
-      Logs.info (fun m -> m "little endian");
-      let format = format_of_string "%08x"
-      and chars = Array.make  4 ' '
-      in
-      let size_as_string = Printf.sprintf format size
-      in
-      for i = 0 to 3 do
-        chars.(i) <- char_of_int @@ int_of_string ("0x" ^ (String.sub size_as_string (2*i) 2))
-      done;
-      for i = 0 to 3 do
-        Stdlib.(print_int (int_of_char chars.(i)));
-        output_char oc chars.(i)
-      done;
-      Stdlib.(print_newline();flush stdout)
-    end;
+  output_binary_int oc size;
+  flush oc;
   (* Output the protobuf message to a file *) 
   Logs.info (fun m -> m "send protobuf = %d bytes" size);
   Stdlib.(flush stdout);
-  output_string oc message
+  output_string oc (message);
+  flush oc
 
 let rec load_session mode file out_channel =
   let ic = open_in file
@@ -181,7 +163,9 @@ let rec load_session mode file out_channel =
   end;
   close_in ic
 and eval s out_channel =
-  let log_number label lf=     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
+  Logs.info (fun m -> m "eval");
+  let log_number label lf =
+    Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
   in
   log_number "theorems" session.theorems;
   log_number "axioms" session.axioms;
@@ -299,12 +283,13 @@ and eval s out_channel =
             let error,verif =
               try
                 ("", 
-                 (*try*)
-                 let v = (verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof)
-                 in       
-                 Logs.info (fun m -> m "End verification of Theorem %s" name);
-                 v
-                 (*with _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"*))
+                 try
+                   let v = verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof
+                   in       
+                   Logs.info (fun m -> m "End verification of Theorem %s" name);
+                   v
+                 with 
+                 | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
               with
               | Prop.Verif.Invalid_demonstration(f,t) -> 
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
@@ -376,8 +361,8 @@ and eval s out_channel =
       begin
         match session.mode.order
         with
-        | Prop -> Server_protocol.Answer.(make ~t:(`Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
-                                                                                                   (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.theorems))) ())
+        | Prop -> Server_protocol.Answer.(make ~t:(`Answer (String.concat "\n" (List.map (fun t -> "$" ^ t.name_theorem_prop ^ " : " ^ 
+                                                                                                   (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ()) ^ "$") session.theorems))) ())
         | First_order -> failwith "Unimplemented"
       end
     | `List FILES ->
@@ -421,56 +406,63 @@ and repl in_channel out_channel  =
          * loop
          *)
 
-  let command_pattern = "\n\n"
+  let command_stack = Queue.create ()
+  and command_sem = Semaphore.Counting.make 0
+  and command_queue_mutex = Mutex.create()
+
   in
-  let r = Str.regexp command_pattern
-  in
-  let index_end_of_command = ref 0
-  in
-  let command = Buffer.create buffer_size
-  in
-  let nb_read = ref (-1)
-  in
-  while !nb_read != 0
+  (* read in_channel in a separate thread and put commands in a stack*)
+  ignore (Thread.create (fun ic -> 
+      let command = Buffer.create buffer_size
+      in
+      while true do
+        let must_read = ref true
+        in
+        while !must_read 
+        do 
+          Logs.debug (fun m -> m "avant read (command size =%d)" (Buffer.length command));
+          let s1 = 
+            (try 
+               input_line ic
+             with
+             |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
+            )
+          in
+          must_read := s1 <> String.empty;
+          if (!must_read )then begin
+            Buffer.add_string command s1;
+            Buffer.add_char command '\n';
+          end;
+        done;
+        Mutex.lock command_queue_mutex;
+        Queue.add  (Buffer.contents command) command_stack;
+        Mutex.unlock command_queue_mutex;
+
+        Logs.err (fun m-> m "push : %s" (String.sub (Buffer.contents command) 0 (min 20 (Buffer.length command))));
+        Semaphore.Counting.release command_sem;
+        Thread.yield();
+        Buffer.clear command
+      done
+    ) in_channel);
+
+  (*pop stack indefinitely*)
+  while true
   do
     (* read *)
-      (try 
-         let buffer = BytesLabels.make buffer_size '\000'
-         in
-         Logs.info (fun m -> m "avant read (command size =%d, buffer size = %d" (Buffer.length command) (BytesLabels.length buffer));
-         nb_read := input in_channel buffer 0 buffer_size;
-         Logs.info (fun m -> m "apres read :%d lus" !nb_read);
-         Buffer.add_subbytes command buffer 0 !nb_read;
-       with
-       |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
-      );
-    let s = ref ""
+    Semaphore.Counting.acquire command_sem;
+    Mutex.lock command_queue_mutex;
+    let com = Queue.take command_stack 
     in
-    while
-      s := (Buffer.contents command);
-      let test =
-        try
-          index_end_of_command := (Str.search_forward r !s 0);true
-        with Not_found -> false
-      in
-      test
-    do
-      let com = Str.string_before !s !index_end_of_command
-      in
-      session.history <- com :: session.history;
-      let command_next = Str.string_after !s (!index_end_of_command + (String.length command_pattern))    
-      in
-      Buffer.clear command;
-      Buffer.add_string command command_next;
-      (* eval *)
-      (*channels needed to be passed to  repl in case of executing a text file (load text)*)
-      let answer = eval com out_channel
-      in
-      (* print *)
-      send_answer out_channel answer;
-      flush out_channel
-      (* loop *)
-    done
+    Mutex.unlock command_queue_mutex;
+    session.history <- com :: session.history;
+    (* eval *)
+    (*channels needed to be passed to  repl in case of executing a text file (load text)*)
+    let answer = eval com out_channel
+    in
+    (* print *)
+    send_answer out_channel answer
+    (* loop *)
+    (*;flush out_channel*)
   done
 
 let main _ (*quiet*) socket_val (max_session : int option)  version=
