@@ -9,15 +9,14 @@ enum Status {
 	VERIFIED = 1;
 	UNTRUE = 2; //FALSE is reserved by SupportDefs.h on haiku ; TODO : use namespace ?
 }
-
 enum Known {
 	AXIOMS = 0;
 	THEOREMS = 1;
 	FILES = 2;
 }
-enum Latex_mode = {
+enum Latex_mode {
 	LTEXT = 0;
-	LMATH = 1
+	LMATH = 1;
 }
 message Notation_element {
 	oneof t {

@@ -198,16 +198,16 @@ and eval s out_channel =
       session.mode.evaluation <- Session.Interpreted;
       Server_protocol.Answer.(make ~t:(`Ok command) ())
     | `History() ->
-      Server_protocol.Answer.(make ~t:(`Answer(String.concat "\n" @@ List.rev @@ session.history)) ())
+      Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:(String.concat "\n" @@ List.rev @@ session.history) ())) ()))
     | `Save ({mode; filename=file}) ->
       begin
         save_session mode file;
-        Server_protocol.Answer.(make ~t:(`Answer ("Saved to file "^file)) ())
+        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:("Saved to file "^file) ())) ()))
       end
     | `Load ({mode; filename=file}) ->
       begin
         load_session mode file out_channel;
-        Server_protocol.Answer.(make ~t:(`Answer ("Loaded file "^file)) ())
+        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:("Loaded file "^file) ())) ()))
       end
     | `Notation n ->
       begin
