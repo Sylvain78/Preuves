@@ -14,7 +14,7 @@ module type SESSION = module type of Session
 let buffer_size = 65536
 let socket_name =
   ref None
-let nb_session = 
+let nb_session =
   ref 0
 let file_name = ref (None : string option)
 let version = "α"
@@ -39,7 +39,7 @@ let pp_header ppf (level, header) =
   let level = Logs.level_to_string (Some level)
   in
   Fmt.pf ppf "[%a][%a]"
-    (Fmt.styled level_style Fmt.string) level 
+    (Fmt.styled level_style Fmt.string) level
     (Fmt.option Fmt.string) ((*Option.map (pad 10)*) header)
 let reporter ppf =
   let report src level ~over k msgf =
@@ -54,7 +54,7 @@ let reporter ppf =
       *)
       Fmt.kpf k ppf
         ("%s %a %a: @[" ^^ fmt ^^ "@]@.")
-        (pad 8 
+        (pad 8
            (Mtime.Span.pp Stdlib.Format.str_formatter  (Mtime_clock.elapsed ());Stdlib.Format.flush_str_formatter())
         (*
         (if (dt <1_000.)
@@ -129,8 +129,8 @@ let send_answer oc answer =
   *)
   (* Create a Protobuf encoder and encode value *)
 
-  (*  let encoder = Ocaml_protoc_plugin.Writer.create () 
-      in 
+  (*  let encoder = Ocaml_protoc_plugin.Writer.create ()
+      in
   *)
   let message = Ocaml_protoc_plugin.Writer.contents (Server_protocol.Answer.(to_proto answer))
   in
@@ -139,7 +139,7 @@ let send_answer oc answer =
   in
   output_binary_int oc size;
   flush oc;
-  (* Output the protobuf message to a file *) 
+  (* Output the protobuf message to a file *)
   Logs.info (fun m -> m "send protobuf = %d bytes" size);
   Stdlib.(flush stdout);
   output_string oc (message);
@@ -181,16 +181,16 @@ and eval s out_channel =
       Logs.info(fun m -> m "Prop");
       session.mode.order<-Session.Prop;
       session.axioms <- !Prop.Axioms_prop.axioms_prop;
-      Server_protocol.Answer.(make ~t:(`Ok command) ()) 
+      Server_protocol.Answer.(make ~t:(`Ok command) ())
     | `First_order() ->
       session.mode.order<-Session.First_order;
-      Server_protocol.Answer.(make ~t:(`Ok command) ()) 
+      Server_protocol.Answer.(make ~t:(`Ok command) ())
     | `Keep_notations() ->
       session.mode.speed<- Session.Keep_notations;
-      Server_protocol.Answer.(make ~t:(`Ok command) ()) 
+      Server_protocol.Answer.(make ~t:(`Ok command) ())
     | `Expand_notations() ->
       session.mode.speed<- Session.Expand_notations;
-      Server_protocol.Answer.(make ~t:(`Ok command) ()) 
+      Server_protocol.Answer.(make ~t:(`Ok command) ())
     | `Compiled() ->
       session.mode.evaluation <- Session.Compiled;
       Server_protocol.Answer.(make ~t:(`Ok command) ())
@@ -236,7 +236,7 @@ and eval s out_channel =
           (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
           ignore @@ Prop_parser.notation_from_string (Buffer.contents buf);
           Server_protocol.Answer.(make ~t:(`Ok command) ())
-        | First_order -> Server_protocol.Answer.(make ~t:(`Answer "Notation first_order : unimplemented") ())
+        | First_order -> Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:"Notation first_order : unimplemented" ())) ()))
       end
     | `Axiom { name ; formula } ->
       if (session.mode.order = Session.Prop)
@@ -244,7 +244,7 @@ and eval s out_channel =
         begin
           if (List.exists (fun {name_theorem_prop; _} -> name=name_theorem_prop) session.axioms)
           then
-            Server_protocol.Answer.(make ~t:(`Answer ("Axiom " ^ name ^ " already defined")) ())
+            Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:("Axiom " ^ name ^ " already defined") ())) ()))
           else
             begin
               session.axioms <- { kind_prop=Axiom;
@@ -256,7 +256,7 @@ and eval s out_channel =
               Server_protocol.Answer.(make ~t:(`Ok command) ())
             end
         end
-      else Server_protocol.Answer.(make ~t:(`Answer("Axiom for first order unimplemented")) ())
+      else Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:"Axiom for first order unimplemented" ())) ()))
     | `Theorem ({name; params=_; premisses; conclusion; demonstration; status=_} as t) ->
       Logs.info (fun m -> m "Begin verification of Theorem %s" name);
       begin
@@ -267,7 +267,7 @@ and eval s out_channel =
             let verif_function =
               match session.mode.evaluation with
               | Session.Interpreted ->
-                Prop.Verif.prop_proof_verif 
+                Prop.Verif.prop_proof_verif
               | Session.Compiled ->
                 fun ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) _ ~proof->
                   let compiled_demo = Kernel_prop.Compile.compile_demonstration ~axioms ~theorems ~hypotheses  ~demo:proof ()
@@ -282,25 +282,25 @@ and eval s out_channel =
             in
             let error,verif =
               try
-                ("", 
+                ("",
                  try
                    let v = verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof
-                   in       
+                   in
                    Logs.info (fun m -> m "End verification of Theorem %s" name);
                    v
-                 with 
+                 with
                  | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
               with
-              | Prop.Verif.Invalid_demonstration(f,t) -> 
+              | Prop.Verif.Invalid_demonstration(f,t) ->
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
                 in
-                Logs.err (fun m -> m ~header:("Invalid demonstration") error_format 
-                             Prop.Verif.printer_formula_prop f 
-                             (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t 
+                Logs.err (fun m -> m ~header:("Invalid demonstration") error_format
+                             Prop.Verif.printer_formula_prop f
+                             (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t
                          );
-                ((Format.fprintf Format.str_formatter error_format 
-                    Prop.Verif.printer_formula_prop f 
-                    (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t; Format.flush_str_formatter()), 
+                ((Format.fprintf Format.str_formatter error_format
+                    Prop.Verif.printer_formula_prop f
+                    (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t; Format.flush_str_formatter()),
                  false)
             in
             if verif then
@@ -313,10 +313,10 @@ and eval s out_channel =
                     conclusion_prop = conclusion;
                   }
                   :: session.theorems;
-                Server_protocol.Answer.(make ~t:(`Ok command) ()) 
+                Server_protocol.Answer.(make ~t:(`Ok command) ())
               end
             else
-              Server_protocol.Answer.(make ~t:(`Answer ("Theorem " ^ name ^ " not verified.\n" ^ error)) ())
+              Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:("Theorem " ^ name ^ " not verified.\n" ^ error) ())) ()))
           end
         | Session.First_order ->
           failwith "Theorem First_order"
@@ -324,7 +324,7 @@ and eval s out_channel =
     | `Show theorem_name ->
       if (session.mode.order = Session.Prop)
       then
-        Server_protocol.Answer.(make ~t:(`Answer (
+        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LMATH ~answer:(
             List.filter (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
             |> List.map (fun {
                 kind_prop;
@@ -345,47 +345,88 @@ and eval s out_channel =
                      ") : " ^*)
                    (Prop.Verif.to_string_formula_prop conclusion_prop)
               )
-            |> String.concat "\n"
-          )) ())
+            |> String.concat "\n") ())) ()))
       else
         failwith "session mode not Prop"
     | `List AXIOMS ->
       begin
         match session.mode.order
         with
-        | Prop -> Server_protocol.Answer.(make ~t:(`Answer (String.concat "\n" (List.map (fun t -> t.name_theorem_prop ^ " : " ^ 
-                                                                                                   (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ())) session.axioms))) ())
+        | Prop ->
+          Server_protocol.(Answer.(make
+                                     ~t:(`Answer (Latex_answer.make
+                                                    ~mode:Latex_mode.LMATH
+                                                    ~answer:(String.concat
+                                                               "\n"
+                                                               (List.map
+                                                                  (fun t ->
+                                                                     t.name_theorem_prop ^
+                                                                     " : " ^
+                                                                     (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop;
+                                                                      Format.flush_str_formatter ())
+                                                                  )
+                                                                  session.axioms
+                                                               )
+                                                            )
+                                                    ()
+                                                 )
+                                        )
+                                     ()
+                                  )
+                          )
         | First_order -> failwith "Unimplemented"
       end
     | `List THEOREMS ->
       begin
         match session.mode.order
         with
-        | Prop -> Server_protocol.Answer.(make ~t:(`Answer (String.concat "\n" (List.map (fun t -> "$" ^ t.name_theorem_prop ^ " : " ^ 
-                                                                                                   (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop; Format.flush_str_formatter ()) ^ "$") session.theorems))) ())
+        | Prop -> Server_protocol.(Answer.(make
+                                             ~t:(`Answer (Latex_answer.make
+                                                            ~mode:Latex_mode.LMATH
+                                                            ~answer:("$" ^
+                                                                     (String.concat
+                                                                        "\\\\"
+                                                                        (List.map
+                                                                           (fun t ->
+                                                                              t.name_theorem_prop ^
+                                                                              " & : & " ^
+                                                                              (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop;
+                                                                               Format.flush_str_formatter ())
+                                                                           )
+                                                                           session.theorems
+                                                                        )
+                                                                     ) ^
+                                                                     "$"
+                                                                    )
+                                                            ()
+                                                         )
+                                                )
+                                             ()
+                                          )
+                                  )
         | First_order -> failwith "Unimplemented"
       end
     | `List FILES ->
-      let answer = 
+      let answer =
         let dir = Unix.opendir session.user
         in
         let dir_list = ref []
         in
-        begin try 
+        begin try
             while true do
               let entry = readdir dir
               in
               if entry <> "." && entry <> ".." then
                 dir_list := entry :: !dir_list
             done
-          with End_of_file -> () 
+          with End_of_file -> ()
         end;
-        Server_protocol.Answer.(make ~t:(`Answer (String.concat ", " !dir_list)) ())
+        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:(String.concat ", " !dir_list) ())) ()))
       in answer
-    | `User user -> 
-      begin 
+    | `User user ->
+      begin
         (
-          try 
+          try
             Unix.mkdir user 0o777
           with
           |  Unix.Unix_error(Unix.EEXIST, "mkdir", dir) when dir=user -> ()
@@ -395,7 +436,7 @@ and eval s out_channel =
       end
     | `not_set -> failwith "command not set"
   with
-  | Failure s -> Server_protocol.Answer.(make ~t:(`Answer s) ())
+  | Failure s -> Server_protocol.Answer.(make ~t:(`Error  (Error.make  ~error_message:s ())) ())
 and repl in_channel out_channel  =
   Logs.info (fun m -> m "Launching repl");
         (*
@@ -412,17 +453,17 @@ and repl in_channel out_channel  =
 
   in
   (* read in_channel in a separate thread and put commands in a stack*)
-  ignore (Thread.create (fun ic -> 
+  ignore (Thread.create (fun ic ->
       let command = Buffer.create buffer_size
       in
       while true do
         let must_read = ref true
         in
-        while !must_read 
-        do 
+        while !must_read
+        do
           Logs.debug (fun m -> m "avant read (command size =%d)" (Buffer.length command));
-          let s1 = 
-            (try 
+          let s1 =
+            (try
                input_line ic
              with
              |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
@@ -451,7 +492,7 @@ and repl in_channel out_channel  =
     (* read *)
     Semaphore.Counting.acquire command_sem;
     Mutex.lock command_queue_mutex;
-    let com = Queue.take command_stack 
+    let com = Queue.take command_stack
     in
     Mutex.unlock command_queue_mutex;
     session.history <- com :: session.history;
@@ -466,14 +507,14 @@ and repl in_channel out_channel  =
   done
 
 let main _ (*quiet*) socket_val (max_session : int option)  version=
-  if version 
+  if version
   then
     begin
       print_version_string ();
       exit 0;
     end;
   socket_name := Some socket_val;
-  nb_session := (match max_session with 
+  nb_session := (match max_session with
       | None -> -1
       | Some n -> n);
   let address = match !socket_name with
@@ -506,7 +547,7 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
      establish_server repl ~addr:socket_address
    (*     setsockopt sock_listen SO_REUSEADDR true;
           bind sock_listen ~addr:socket_address;
-          if socket_domain = PF_INET 
+          if socket_domain = PF_INET
           then
           begin
           match getsockname sock_listen
@@ -542,20 +583,20 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
           end
                       end
           | id -> (*father*)
-          Unix.close sock; ignore(Unix.waitpid [] id) 
+          Unix.close sock; ignore(Unix.waitpid [] id)
                 done;
                         (close_sock_listen());`Ok command ()
    *)
    with
-   | Prop.Verif.Invalid_demonstration(f,t) -> 
+   | Prop.Verif.Invalid_demonstration(f,t) ->
      begin
        close_sock_listen();
        Logs.err(fun m -> m "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
                                  (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
      end
-   | Stdlib.Exit -> 
+   | Stdlib.Exit ->
      begin
-       close_sock_listen();Logs.info (fun m -> m "In memoriam Alexandre Grothendieck, 1928 ̶ 2013") 
+       close_sock_listen();Logs.info (fun m -> m "In memoriam Alexandre Grothendieck, 1928 ̶ 2013")
      end
   )
 
@@ -570,7 +611,7 @@ let () =
     in
     Cmdliner.Arg.value (Cmdliner.Arg.opt Cmdliner.Arg.string default info)
   and max_session =
-    let info_max_session = 
+    let info_max_session =
       Cmdliner.Arg.info ["m"; "max-session"]
         ~docv:"MAX SESSION"
         ~doc:"maximum number of sessions accepted by the server before shutdown"
