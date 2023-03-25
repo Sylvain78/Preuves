@@ -1,5 +1,5 @@
 syntax = "proto3";
-
+package Server_Protocol;
 enum  File_mode {
 	TEXT = 0;
 	BINARY = 1;

@@ -16,7 +16,7 @@
   (name proof_server)
   (modes byte exe)
   (modules (:standard))
-  (libraries ocaml-protoc-plugin mtime mtime.clock.os cmdliner logs logs.cli logs.fmt fmt.cli str first_order util kernel_prop prop)
+  (libraries  threads ocaml-protoc-plugin mtime mtime.clock.os cmdliner logs logs.cli logs.fmt fmt.cli str first_order util kernel_prop prop)
 )
 ;;From https://github.com/issuu/ocaml-protoc-plugin
 (rule
@@ -29,4 +29,4 @@
  (deps
   (:proto server_protocol.proto))
  (action
-  (run protoc -I %{read-lines:google_include} -I .  "--ocaml_opt=annot=[@@deriving show { with_path = false }, eq]" --ocaml_out=. %{proto})))
+  (run protoc -I%{read-lines:google_include} -I.  "--ocaml_opt=annot=[@@deriving show { with_path = false }, eq]" --ocaml_out=. %{proto})))

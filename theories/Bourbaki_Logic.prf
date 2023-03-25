@@ -53,7 +53,7 @@ Demonstration
 $((\lnot (\lnot X_1)) \implies X_1)$
 $((\lnot (\lnot X_1)) \implies X_1) \implies (((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1))) \implies ((\lnot (\lnot X_1)) \implies X_1))$
 $((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1))) \implies ((\lnot (\lnot X_1)) \implies X_1)$
-$((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1)))  \implies (((\lnot (\lnot X_1)) \implies X_1) \implies ((\lnot (\lnot X_2)) \implies X_1))$
+$( (\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1)) )  \implies (((\lnot (\lnot X_1)) \implies X_1) \implies ((\lnot (\lnot X_2)) \implies X_1))$
 $(((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1)))  \implies (((\lnot (\lnot X_1)) \implies X_1) \implies ((\lnot (\lnot X_2)) \implies X_1))) \implies ((((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1))) \implies ((\lnot (\lnot X_1)) \implies X_1)) \implies (((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1))) \implies ((\lnot (\lnot X_2)) \implies X_1)))$
 $((((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1))) \implies ((\lnot (\lnot X_1)) \implies X_1)) \implies (((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1))) \implies ((\lnot (\lnot X_2)) \implies X_1)))$
 $((\lnot (\lnot X_2)) \implies (\lnot (\lnot X_1))) \implies ((\lnot (\lnot X_2)) \implies X_1)$

@@ -7,6 +7,7 @@ open Prop
 open Prop.Theorem_prop
 open Prop__Kind_prop
 open Protocol
+open Server_protocol
 open Session
 open Util__Unix_tools
 module type SESSION = module type of Session
@@ -105,9 +106,9 @@ let save_session mode file=
   in
   begin
     match mode with
-    | Server_protocol.File_mode.TEXT ->
+    | Server_Protocol.File_mode.TEXT ->
       List.iter (fun s -> Printf.fprintf oc "%s\n\n" s) (List.rev session.history);
-    | Server_protocol.File_mode.BINARY ->
+    | Server_Protocol.File_mode.BINARY ->
       (*TODO one day....
        * let (base,ext) = Filename.remove_extension file, Filename.extension file
        *
@@ -132,7 +133,7 @@ let send_answer oc answer =
   (*  let encoder = Ocaml_protoc_plugin.Writer.create ()
       in
   *)
-  let message = Ocaml_protoc_plugin.Writer.contents (Server_protocol.Answer.(to_proto answer))
+  let message = Ocaml_protoc_plugin.Writer.contents (Server_Protocol.Answer.(to_proto answer))
   in
   (* Output size *)
   let size = String.length message
@@ -150,9 +151,9 @@ let rec load_session mode file out_channel =
   in
   begin
     match mode with
-    | Server_protocol.File_mode.TEXT ->
+    | Server_Protocol.File_mode.TEXT ->
       repl ic out_channel
-    | Server_protocol.File_mode.BINARY ->
+    | Server_Protocol.File_mode.BINARY ->
       let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic)
       in
       session.mode <- session_loaded.mode;
@@ -172,42 +173,42 @@ and eval s out_channel =
   try
     let command = decode s
     in
-    match (command : Server_protocol.Command.t) with
+    match (command : Server_Protocol.Command.t) with
     | `Quit ()-> raise Exit
     | `Verbose level ->
       session.mode.verbose_level <- level;
-      Server_protocol.Answer.(make ~t:(`Ok command) ())
+      Server_Protocol.Answer.(make ~t:(`Ok command) ())
     | `Prop() ->
       Logs.info(fun m -> m "Prop");
       session.mode.order<-Session.Prop;
       session.axioms <- !Prop.Axioms_prop.axioms_prop;
-      Server_protocol.Answer.(make ~t:(`Ok command) ())
+      Server_Protocol.Answer.(make ~t:(`Ok command) ())
     | `First_order() ->
       session.mode.order<-Session.First_order;
-      Server_protocol.Answer.(make ~t:(`Ok command) ())
+      Server_Protocol.Answer.(make ~t:(`Ok command) ())
     | `Keep_notations() ->
       session.mode.speed<- Session.Keep_notations;
-      Server_protocol.Answer.(make ~t:(`Ok command) ())
+      Server_Protocol.Answer.(make ~t:(`Ok command) ())
     | `Expand_notations() ->
       session.mode.speed<- Session.Expand_notations;
-      Server_protocol.Answer.(make ~t:(`Ok command) ())
+      Server_Protocol.Answer.(make ~t:(`Ok command) ())
     | `Compiled() ->
       session.mode.evaluation <- Session.Compiled;
-      Server_protocol.Answer.(make ~t:(`Ok command) ())
+      Server_Protocol.Answer.(make ~t:(`Ok command) ())
     | `Interpreted() ->
       session.mode.evaluation <- Session.Interpreted;
-      Server_protocol.Answer.(make ~t:(`Ok command) ())
+      Server_Protocol.Answer.(make ~t:(`Ok command) ())
     | `History() ->
-      Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:(String.concat "\n" @@ List.rev @@ session.history) ())) ()))
+      Server_Protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:(String.concat "\n" @@ List.rev @@ session.history) ())) ()))
     | `Save ({mode; filename=file}) ->
       begin
         save_session mode file;
-        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:("Saved to file "^file) ())) ()))
+        Server_Protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:("Saved to file "^file) ())) ()))
       end
     | `Load ({mode; filename=file}) ->
       begin
         load_session mode file out_channel;
-        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:("Loaded file "^file) ())) ()))
+        Server_Protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:("Loaded file "^file) ())) ()))
       end
     | `Notation n ->
       begin
@@ -235,8 +236,8 @@ and eval s out_channel =
           print_newline();
           (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
           ignore @@ Prop_parser.notation_from_string (Buffer.contents buf);
-          Server_protocol.Answer.(make ~t:(`Ok command) ())
-        | First_order -> Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:"Notation first_order : unimplemented" ())) ()))
+          Server_Protocol.Answer.(make ~t:(`Ok command) ())
+        | First_order -> Server_Protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:"Notation first_order : unimplemented" ())) ()))
       end
     | `Axiom { name ; formula } ->
       if (session.mode.order = Session.Prop)
@@ -244,7 +245,7 @@ and eval s out_channel =
         begin
           if (List.exists (fun {name_theorem_prop; _} -> name=name_theorem_prop) session.axioms)
           then
-            Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:("Axiom " ^ name ^ " already defined") ())) ()))
+            Server_Protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:("Axiom " ^ name ^ " already defined") ())) ()))
           else
             begin
               session.axioms <- { kind_prop=Axiom;
@@ -253,10 +254,10 @@ and eval s out_channel =
                                   conclusion_prop=Prop.Prop_parser.formula_from_string formula
                                 }
                                 :: session.axioms;
-              Server_protocol.Answer.(make ~t:(`Ok command) ())
+              Server_Protocol.Answer.(make ~t:(`Ok command) ())
             end
         end
-      else Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:"Axiom for first order unimplemented" ())) ()))
+      else Server_Protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:"Axiom for first order unimplemented" ())) ()))
     | `Theorem ({name; params=_; premisses; conclusion; demonstration; status=_} as t) ->
       Logs.info (fun m -> m "Begin verification of Theorem %s" name);
       begin
@@ -313,10 +314,10 @@ and eval s out_channel =
                     conclusion_prop = conclusion;
                   }
                   :: session.theorems;
-                Server_protocol.Answer.(make ~t:(`Ok command) ())
+                Server_Protocol.Answer.(make ~t:(`Ok command) ())
               end
             else
-              Server_protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:("Theorem " ^ name ^ " not verified.\n" ^ error) ())) ()))
+              Server_Protocol.(Answer.(make ~t:(`Error (Error.make ~error_message:("Theorem " ^ name ^ " not verified.\n" ^ error) ())) ()))
           end
         | Session.First_order ->
           failwith "Theorem First_order"
@@ -324,7 +325,7 @@ and eval s out_channel =
     | `Show theorem_name ->
       if (session.mode.order = Session.Prop)
       then
-        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LMATH ~answer:(
+        Server_Protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LMATH ~answer:(
             List.filter (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
             |> List.map (fun {
                 kind_prop;
@@ -353,7 +354,7 @@ and eval s out_channel =
         match session.mode.order
         with
         | Prop ->
-          Server_protocol.(Answer.(make
+          Server_Protocol.(Answer.(make
                                      ~t:(`Answer (Latex_answer.make
                                                     ~mode:Latex_mode.LMATH
                                                     ~answer:(String.concat
@@ -380,23 +381,24 @@ and eval s out_channel =
       begin
         match session.mode.order
         with
-        | Prop -> Server_protocol.(Answer.(make
+        | Prop -> Server_Protocol.(Answer.(make
                                              ~t:(`Answer (Latex_answer.make
                                                             ~mode:Latex_mode.LMATH
-                                                            ~answer:("$" ^
+                                                            ~answer:("\\begin{eqnarray*}" ^
                                                                      (String.concat
                                                                         "\\\\"
                                                                         (List.map
                                                                            (fun t ->
+                                                                              "\\textrm{" ^
                                                                               t.name_theorem_prop ^
-                                                                              " & : & " ^
+                                                                              "} & : & " ^
                                                                               (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop;
                                                                                Format.flush_str_formatter ())
                                                                            )
                                                                            session.theorems
                                                                         )
                                                                      ) ^
-                                                                     "$"
+                                                                     "\\end{eqnarray*}"
                                                                     )
                                                             ()
                                                          )
@@ -421,7 +423,7 @@ and eval s out_channel =
             done
           with End_of_file -> ()
         end;
-        Server_protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:(String.concat ", " !dir_list) ())) ()))
+        Server_Protocol.(Answer.(make ~t:(`Answer (Latex_answer.make ~mode:Latex_mode.LTEXT ~answer:(String.concat ", " !dir_list) ())) ()))
       in answer
     | `User user ->
       begin
@@ -432,11 +434,11 @@ and eval s out_channel =
           |  Unix.Unix_error(Unix.EEXIST, "mkdir", dir) when dir=user -> ()
         );
         session.user <- user;
-        Server_protocol.Answer.(make ~t:(`Ok command) ())
+        Server_Protocol.Answer.(make ~t:(`Ok command) ())
       end
     | `not_set -> failwith "command not set"
   with
-  | Failure s -> Server_protocol.Answer.(make ~t:(`Error  (Error.make  ~error_message:s ())) ())
+  | Failure s -> Server_Protocol.Answer.(make ~t:(`Error  (Error.make  ~error_message:s ())) ())
 and repl in_channel out_channel  =
   Logs.info (fun m -> m "Launching repl");
         (*

@@ -38,7 +38,7 @@
 %token<string> STRING
 %token<string> FORMULA
 %start phrase
-%type<Server_protocol.Command.t> phrase
+%type<Server_protocol.Server_Protocol.Command.t> phrase
 
 %%
 
