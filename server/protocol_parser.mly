@@ -4,10 +4,12 @@
 %token NEWLINE
 %token PROP
 %token FIRST_ORDER
-%token KEEP_NOTATIONS
-%token EXPAND_NOTATIONS
-%token INTERPRETED
-%token COMPILED
+%token KEEP_NOTATIONS   // keep notations in condensed form at most possible
+%token EXPAND_NOTATIONS  //expand notations if needed
+%token INTERPRETED //Interpret line by line as string
+%token COMPILED    //Compile demo to AST + list of strings
+%token FAST       // accept instance of theorems
+%token PARANOID   // substitute theorems proofs with local hypothesis, and insert result in gloabl demo
 %token NOTATION
 %token PARAM
 %token SYNTAX
