@@ -1,0 +1,1 @@
+(cat theories/1Bourbaki_Options.prf theories/2Bourbaki_Notations.prf theories/3Bourbaki_Logic.prf theories/Bourbaki_S1.prf theories/Bourbaki_S2.prf theories/Bourbaki_S3.prf theories/Bourbaki_S4.prf ; echo -e "List\nTheorems\n\nQuit\n")  |nc localhost 5757

@@ -25,12 +25,14 @@ let verif_C8 =
     a =>. a;
   ]
   in
-  if (prop_proof_verif ~axioms:!axioms_prop (a=>. a) ~proof:(List.map (fun s -> s) demo))
+  let step_demo=(List.map (fun s -> Step s) demo)
+  in
+  if (prop_proof_verif ~axioms:!axioms_prop (a=>. a) ~proof:step_demo)
   then 
     theorems_prop := {
       kind_prop = Theorem;
       name_theorem_prop="[Bourbaki]C8";
-      proof_prop = demo;
+      proof_prop = step_demo;
       conclusion_prop=formula_from_string "X_1 \\implies X_1";
     }::!theorems_prop 
 
@@ -39,7 +41,7 @@ let add_chaining =
     formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   in
   let demo_chaining = 
-    List.map (fun s -> (formula_from_string s)) [
+    List.map (fun s -> Step (formula_from_string s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -85,7 +87,7 @@ let add_chaining =
 *)
 let verif =
   prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
-    ~proof:(List.map formula_from_string [
+    ~proof:(List.map (fun s -> Step (formula_from_string s)) [
 
         "((\\lnot (\\lnot X_1)) \\implies X_1)";
         "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
@@ -129,7 +131,7 @@ let  axioms () =
 ;;
 
 (* |   F ou F  \\implies  F *)
-let demo = (List.map (fun s -> (formula_from_string s)) [
+let demo = (List.map (fun s -> Step (formula_from_string s)) [
     "((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))";
     "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))";
     "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))  \\implies  ((((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A})))  \\implies  ((\\lnot \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))))";
@@ -580,5 +582,5 @@ let demo1 = demo @ [
     a_ou_b =>. c;];;
 
 let verif_S3 = 
-  (prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (a_ou_b=>. c) ~proof:(List.map (fun s -> s) demo1))
+  (prop_proof_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (a_ou_b=>. c) ~proof:(List.map (fun s -> Step s) demo1))
 ;;

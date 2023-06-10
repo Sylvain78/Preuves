@@ -3,7 +3,6 @@ open Formula_prop
 include Formula_tooling
 include Theorem_prop
 (*TODO open Substitution_prop*)
-
 include (Prop_parser : sig 
            val formula_from_string : string -> Formula_prop.formula_prop
            val notation_from_string : string -> Formula_prop.notation_prop
@@ -11,6 +10,7 @@ include (Prop_parser : sig
             * val save_parser : string -> unit
             * *)
          end)
+
 (*
 let (read_formule : string -> (formula_prop * string) list) = function s ->
         let lexbuf = Dyp.from_string (Prop_parser.pp ()) s
@@ -70,7 +70,7 @@ Printexc.register_printer (function
 let rec verif ?(axioms=[]) ?(theorems=[]) () ~hypotheses ~proved ~to_prove = 
   match to_prove with
   | [] -> true
-  | f_i::p ->  
+  | (Step f_i)::p ->  
     if (
       (*Formula is an hypothesis*)
       List.mem f_i hypotheses 
@@ -103,6 +103,8 @@ let rec verif ?(axioms=[]) ?(theorems=[]) () ~hypotheses ~proved ~to_prove =
         Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
         raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
       end
+  | Call(theorem, params) :: p -> (*TODO instantiate theorem with params and add it to proved*)
+        verif ~axioms ~theorems () ~hypotheses ~proved:(proved) ~to_prove:p
 
 let prop_proof_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) f ~proof:proof =
   (* f is at the end of the proof *)
@@ -110,7 +112,7 @@ let prop_proof_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) f ~proof:proof
     let rev_t = List.rev t
     in
     try
-      f = List.hd rev_t
+      Step f = List.hd rev_t
     with
     | Failure _ -> false
   in

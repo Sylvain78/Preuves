@@ -1,4 +1,3 @@
-type save = Text | Binary
 type order = Prop | First_order
 type speed = Keep_notations | Expand_notations (* expansion of notation *)
 type evaluation = Compiled | Interpreted (* Compilation of demonstration, or verification line by line*)
@@ -12,8 +11,17 @@ type evaluation = Compiled | Interpreted (* Compilation of demonstration, or ver
  * 4
  * 5
  * *)
-type mode = { mutable verbose_level : int; mutable order : order; mutable speed : speed; mutable evaluation : evaluation }
-type status = Unverified | Verified | False
+type mode = 
+  { 
+    mutable verbose_level : int; 
+    mutable order : order; 
+    mutable speed : speed; 
+    mutable evaluation : evaluation 
+  }
+type status = 
+  | Unverified 
+  | Verified 
+  | False
 module type P = module type of Prop.Verif
 module type F = module type of First_order.Formula
 

@@ -1,0 +1,1 @@
+(cat theories/1Bourbaki_Options.prf theories/2Bourbaki_Notations.prf  theories/Bourbaki_S4.prf ; echo -e "List\nTheorems\n\nQuit\n")  |nc localhost 5757 -v -v -o /tmp/nc.traf

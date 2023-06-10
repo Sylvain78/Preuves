@@ -1,0 +1,2 @@
+(cat theories/1Bourbaki_Options.prf theories/2Bourbaki_Notations.prf  ; echo -e "List\nTheorems\n\nQuit\n\n")  |nc localhost  5757
+

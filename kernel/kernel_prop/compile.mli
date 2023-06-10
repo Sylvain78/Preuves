@@ -6,6 +6,6 @@ val compile_demonstration :
   ?axioms:theorem_prop list ->
   ?theorems:theorem_prop list ->
   ?hypotheses:formula_prop list -> 
-  demo:formula_prop list ->
+  demo:step list ->
   unit ->
   kernel_proof

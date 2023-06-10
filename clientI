@@ -1,0 +1,2 @@
+echo -e "Interpreted\n\n Interpreted\n\n" | nc localhost 5757
+

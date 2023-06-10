@@ -17,7 +17,7 @@ let add_chaining =
     formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   in
   let demo_chaining = 
-    List.map (fun s -> (formula_from_string s)) [
+    List.map (fun s -> Step (formula_from_string s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -548,14 +548,14 @@ let demo =
           ];;
 let demo_S1 = 
   try 
-    compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo  ()
+    compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:(List.map (fun f -> Step f) demo)  ()
   with Invalid_demonstration(f,l) -> failwith (Printf.eprintf"\n";Printf.eprintf "\n";to_string_formula_prop f ^ (string_of_int @@ List.length @@ l) )
 
 let test_verif _ =
   assert_equal 
     (Ok ()) 
     (kernel_verif ~axioms:!axioms_prop ~theorems:!theorems_prop ~formula:(a_ou_b =>. (a_entraine_c=>.(b_entraine_c =>. c))) 
-       ~proof:(compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:demo ()).demonstration ())
+       ~proof:(compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:(List.map (fun f -> Step f) demo) ()).demonstration ())
 let verif_suite =
   "verif test" >:::
   [
