@@ -15,7 +15,7 @@ type answer =
   | Error of string
 
 let encode_answer = function
-  | Ok c -> Bytes.(cat  (of_string "Ok")(Protocol_commands.encode_command c))
+  | Ok c -> Bytes.(cat (of_string "Ok") (Protocol_commands.encode_command c))
 (*  | Answer (Latex, Some LMath, s) -> "" ^ s
   | Answer (Latex, Some LText, s) -> "12" ^ s
   | Answer (Latex, None, s) -> "13" ^ s
@@ -23,6 +23,6 @@ let encode_answer = function
   | Answer (Text, Some LText, s) -> "15" ^ s
   | Answer (Text, None, s) -> "16" ^ s
 *)
-  | Error s -> Bytes.(of_string ("Error"^s))
-
+  | Answer (Latex, Some LText, s) -> Bytes.(concat empty ( [of_string"Answer"; of_string"latex";Protocol_commands.encode_string s]))
+  | Error s -> Bytes.(cat (of_string ("Error")) (Protocol_commands.encode_string s))
   | _ -> failwith "unimplemented2"

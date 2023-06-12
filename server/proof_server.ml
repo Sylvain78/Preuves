@@ -427,6 +427,7 @@ and eval s out_channel =
           with
           |  Unix.Unix_error(Unix.EEXIST, "mkdir", dir) when dir=user -> ()
         );
+        Unix.chdir user;
         session.user <- user;
         Protocol.Ok command
       end
@@ -469,9 +470,10 @@ and repl in_channel out_channel  =
             begin
               Buffer.add_string command s1;
               Buffer.add_char command '\n';
-            end;
+            end
         done;
         Mutex.lock command_queue_mutex;
+        Buffer.truncate command ((Buffer.length command) - 1);
         Queue.add  (Buffer.contents command) command_stack;
         Mutex.unlock command_queue_mutex;
 

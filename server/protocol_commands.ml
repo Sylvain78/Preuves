@@ -23,14 +23,15 @@ type command =
   | User of string
   | Quit
 
-let encode_command = 
-  let encode_string s =
-    let l = String.length s
-    in
-    let b =Bytes.create(4 + l)
-    in
-    BytesLabels.(set_int32_be b 0 (Int32.of_int l);blit_string ~src:s ~src_pos:0 ~dst:b ~dst_pos:4 ~len:l);b
+let encode_string s =
+  let l = String.length s
   in
+  let b =Bytes.create(4 + l)
+  in
+  BytesLabels.(set_int32_be b 0 (Int32.of_int l);blit_string ~src:s ~src_pos:0 ~dst:b ~dst_pos:4 ~len:l);b
+
+let encode_command = 
+
   let encode_notation_element = function
     | Param p -> Bytes.cat (encode_string "Param") (encode_string p)
     | String s -> Bytes.cat (encode_string "Param") (encode_string s)

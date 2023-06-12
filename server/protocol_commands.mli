@@ -23,5 +23,6 @@ type command =
   | User of string
   | Quit
 
+val encode_string : string -> bytes
 val encode_command : command -> bytes
 
