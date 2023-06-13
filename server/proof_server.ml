@@ -202,7 +202,7 @@ and eval s out_channel =
     | Save (file_mode, file) ->
       begin
         save_session file_mode file;
-        Protocol.Answer (Latex, Some LText, ("Saved to file "^file))
+        Protocol.Answer (Text, Some LText, ("Saved to file "^file))
       end
     | Load (file_mode, file) ->
       begin
