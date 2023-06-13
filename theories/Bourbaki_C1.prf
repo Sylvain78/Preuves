@@ -1,0 +1,16 @@
+Theorem
+C1
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+Premisses
+$\mathbf{A}$
+$\mathbf{A} \implies \mathbf{B}$
+Conclusion
+$\mathbf{B}$
+Demonstration
+$\mathbf{A}$
+$\mathbf{A} \implies \mathbf{B}$
+$\mathbf{B}$
+End
+
