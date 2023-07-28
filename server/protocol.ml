@@ -23,7 +23,8 @@ let encode_answer = function
   | Answer (Text, Some LText, s) -> "15" ^ s
   | Answer (Text, None, s) -> "16" ^ s
 *)
-  | Answer (Latex, Some LText, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "latex";Protocol_commands.encode_string s]))
-  | Answer (Text, Some LText, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "text";Protocol_commands.encode_string s]))
+  | Answer (Latex, Some LMath, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "latex";of_string "math"; Protocol_commands.encode_string s]))
+  | Answer (Latex, Some LText, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "latex"; of_string "text";  Protocol_commands.encode_string s]))
+  | Answer (Text, Some LText, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "text"; Protocol_commands.encode_string s]))
   | Error s -> Bytes.(cat (of_string ("Error")) (Protocol_commands.encode_string s))
   | _ -> failwith "unimplemented2"
