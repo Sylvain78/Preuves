@@ -70,7 +70,7 @@ let reporter ppf =
     in
     msgf @@ fun ?header ?tags fmt ->
     match header with
-    | None -> with_src_and_stamp (Some(string_of_int (Unix.getpid()))) tags k fmt
+    | None -> with_src_and_stamp (Some(string_of_int (Unix.getpid()) |> String.cat @@ string_of_int (Thread.id (Thread.self())))) tags k fmt
     | Some _ -> with_src_and_stamp header tags k fmt
   in
   { Logs.report = report }
@@ -145,13 +145,21 @@ let send_answer oc answer =
   output_bytes oc (message);
   flush oc
 
-let rec load_session mode file out_channel =
+let rec command_stack = Queue.create ()
+and command_sem = Semaphore.Counting.make 0
+and command_queue_mutex = Mutex.create()
+and  load_session mode file out_channel =
   let ic = open_in file
   in
   begin
     match mode with
     | Modes.Text ->
-      repl ic out_channel
+      begin 
+        try 
+          repl ic out_channel
+        with
+        | _ -> ()
+      end
     | Modes.Binary ->
       let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic)
       in
@@ -163,7 +171,7 @@ let rec load_session mode file out_channel =
   end;
   close_in ic
 and eval s out_channel =
-  Logs.info (fun m -> m "eval");
+  Logs.info (fun m -> m "eval %d" (Thread.id (Thread.self())));
   let log_number label lf =
     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
   in
@@ -176,7 +184,7 @@ and eval s out_channel =
     | Quit -> raise Exit
     | Verbose level ->
       session.mode.verbose_level <- level;
-      Protocol.Answer (Text, None, "Ok")
+      Protocol.Ok(command)
     | Prop ->
       Logs.info(fun m -> m "Prop");
       session.mode.order<-Session.Prop;
@@ -443,13 +451,8 @@ and repl in_channel out_channel  =
          * loop
          *)
 
-  let command_stack = Queue.create ()
-  and command_sem = Semaphore.Counting.make 0
-  and command_queue_mutex = Mutex.create()
-
-  in
   (* read in_channel in a separate thread and put commands in a stack*)
-  ignore (Thread.create (fun ic ->
+  let read_thread = (Thread.create (fun ic ->
       let command = Buffer.create buffer_size
       in
       while true do
@@ -461,6 +464,7 @@ and repl in_channel out_channel  =
             (try
                input_line ic
              with
+             | End_of_file -> Logs.info (fun m -> m "end of file") ;Thread.exit ();""
              |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
             )
           in
@@ -473,21 +477,22 @@ and repl in_channel out_channel  =
             end
         done;
         Mutex.lock command_queue_mutex;
-        Buffer.truncate command ((Buffer.length command) - 1);
+        Buffer.truncate command (max 0 ((Buffer.length command) - 1));
         Queue.add  (Buffer.contents command) command_stack;
         Mutex.unlock command_queue_mutex;
 
-        Logs.err (fun m-> m "push : %s" (String.sub (Buffer.contents command) 0 (min 20 (Buffer.length command))));
+        Logs.err (fun m-> m "[thid =%d] push : %s" (Thread.id (Thread.self())) (String.sub (Buffer.contents command) 0  (Buffer.length command)));
         Semaphore.Counting.release command_sem;
-        Thread.yield();
         Buffer.clear command
       done
-    ) in_channel);
+    ) in_channel)
+in Thread.join read_thread;
 
   (*pop stack indefinitely*)
   while true
   do
     (* read *)
+    Logs.err (fun m -> m "command_sem = %d, queue size = %d" (Semaphore.Counting.get_value command_sem) (Queue.length command_stack ));
     Semaphore.Counting.acquire command_sem;
     Mutex.lock command_queue_mutex;
     let com = Queue.take command_stack
