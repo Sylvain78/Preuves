@@ -86,6 +86,7 @@ let setup_logs style_renderer level =
     | None -> true
   in
   quiet
+
 let setup_logs =
   Cmdliner.Term.(const setup_logs $ Fmt_cli.style_renderer () $ Logs_cli.level ())
 
@@ -140,7 +141,7 @@ let send_answer oc answer =
   output_binary_int oc size;
   flush oc;
   (* Output the protobuf message to a file *)
-  Logs.info (fun m -> m "send response = %d bytes" size);
+  Logs.info (fun m -> m "send response = %s" (Bytes.to_string message));
   Stdlib.(flush stdout);
   output_bytes oc (message);
   flush oc
@@ -171,7 +172,7 @@ and  load_session mode file out_channel =
   end;
   close_in ic
 and eval s out_channel =
-  Logs.info (fun m -> m "eval %d" (Thread.id (Thread.self())));
+  Logs.debug (fun m -> m "eval %s" s);
   let log_number label lf =
     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
   in
@@ -210,12 +211,12 @@ and eval s out_channel =
     | Save (file_mode, file) ->
       begin
         save_session file_mode file;
-        Protocol.Answer (Text, Some LText, ("Saved to file "^file))
+        Protocol.Answer (Text, None, ("Saved to file "^file))
       end
     | Load (file_mode, file) ->
       begin
         load_session file_mode file out_channel;
-        Protocol.Answer (Latex, Some LText, "Loaded file "^file)
+        Protocol.Answer (Text, None, "Loaded file "^file)
       end
     | Notation n ->
       begin
@@ -450,69 +451,74 @@ and repl in_channel out_channel  =
          * print
          * loop
          *)
+  let command = Buffer.create buffer_size
+  in
 
-  (* read in_channel and put commands in a stack*)
-  let read_and_enqueue_commands in_channel =
-          Logs.info (fun m -> m "read_and_enqueue_commands\n");
-    let command = Buffer.create buffer_size
+  (* read in_channel and put one command in a stack*)
+  let read_and_enqueue_command in_channel =
+    Logs.info (fun m -> m "read_and_enqueue_commands\n");
+    let must_read = ref true
     in
-    while true do
-      let must_read = ref true
-      in
-      while !must_read
-      do
-        let s1 =
-          (try
-             input_line in_channel
-           with
-           | End_of_file -> Logs.info (fun m -> m "end of file") ;Thread.exit ();""
-           |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
-          )
-        in
-        must_read := s1 <> String.empty;
-        if (!must_read)
-        then 
-          begin
-            Buffer.add_string command s1;
-            Buffer.add_char command '\n';
-          end
-      done;
-      Mutex.lock command_queue_mutex;
-      Buffer.truncate command (max 0 ((Buffer.length command) - 1));
-      Queue.add  (Buffer.contents command) command_stack;
-      Mutex.unlock command_queue_mutex;
-
-      Logs.err (fun m-> m "[thid =%d] push : %s" (Thread.id (Thread.self())) (String.sub (Buffer.contents command) 0  (Buffer.length command)));
-      Semaphore.Counting.release command_sem;
-      Buffer.clear command
-    done
-  and eval_commands command_stack = 
-    (*pop stack indefinitely*)
-    while true
+    while !must_read
     do
-      (* read *)
-      Logs.err (fun m -> m "command_sem = %d, queue size = %d" (Semaphore.Counting.get_value command_sem) (Queue.length command_stack ));
-      Semaphore.Counting.acquire command_sem;
-      Mutex.lock command_queue_mutex;
-      let com = Queue.take command_stack
+      let s1 =
+        (try
+           input_line in_channel
+         with
+         | End_of_file -> 
+           begin 
+             Logs.info (fun m -> m "end of file") ;
+             raise Stdlib.Exit 
+           end
+         |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
+        )
       in
-      Mutex.unlock command_queue_mutex;
-      session.history <- com :: session.history;
-      (* eval *)
-      (*channels needed to be passed to  repl in case of executing a text file (load text)*)
-      let answer = eval com out_channel
-      in
-      (* print *)
-      send_answer out_channel answer
-      (* loop *)
-      (*;flush out_channel*)
-    done 
+      must_read := s1 <> String.empty;
+      if (!must_read)
+      then 
+        begin
+          Buffer.add_string command s1;
+          Buffer.add_char command '\n'
+        end
+    done;
+    if (Buffer.length command > 0) then 
+      begin 
+        Mutex.lock command_queue_mutex;
+        Buffer.truncate command (max 0 ((Buffer.length command) - 1));
+        Queue.add  (Buffer.contents command) command_stack;
+        Mutex.unlock command_queue_mutex;
+      end;
+    Semaphore.Counting.release command_sem;
+    Buffer.clear command
+  and eval_commands command_stack = 
+    (*pop stack *)
+    (* read *)
+    Semaphore.Counting.acquire command_sem;
+    Mutex.lock command_queue_mutex;
+    let com = 
+      try
+        Queue.take command_stack
+      with Queue.Empty -> 
+        begin
+          Mutex.unlock command_queue_mutex;raise Stdlib.Exit
+        end
+    in
+    Mutex.unlock command_queue_mutex;
+    session.history <- com :: session.history;
+    (* eval *)
+    (*channels needed to be passed to  repl in case of executing a text file (load text)*)
+    let answer = eval com out_channel
+    in
+    (* print *)
+    send_answer out_channel answer
+    (* loop *)
+    (*;flush out_channel*)
   in
-  let t = Thread.create eval_commands command_stack
-  in
-  read_and_enqueue_commands in_channel;
-  Thread.join t
-
+  while true
+  do
+    read_and_enqueue_command in_channel;
+    eval_commands command_stack
+  done
 
 
 let main _ (*quiet*) socket_val (max_session : int option)  version=
@@ -525,89 +531,90 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
   socket_name := Some socket_val;
   nb_session := (match max_session with
       | None -> -1
-        | Some n -> n);
-    let address = match !socket_name with
-        Some x -> x
-      | None ->
-        match Sys.os_type with
-          "Win32" ->
-          (Unix.string_of_inet_addr Unix.inet_addr_loopback)^ ":"^ (string_of_int (1_0000 + ((Unix.getpid ()) mod 1_0000)))
-        | _ -> Filename.concat (Filename.get_temp_dir_name ())
-                 ("student_socket" ^ (string_of_int (Unix.getpid ())))
-    in
-    let socket_domain,socket_address = convert_address address
-    in
-    file_name :=
-      (match socket_address with
-       | ADDR_UNIX file ->
-         Some file
-       | _ ->
-         None);
-    let sock_listen = socket ~cloexec:true ~domain:socket_domain ~kind:SOCK_STREAM ~protocol:0
-    in
-    let close_sock_listen () =
-      match !file_name
-      with
-      | Some file -> unlink file
-      | None -> close sock_listen
-    in
-    (try
-       Logs.app (fun m -> m "Listening on %s" address);
-       establish_server repl ~addr:socket_address
-     (*     setsockopt sock_listen SO_REUSEADDR true;
-            bind sock_listen ~addr:socket_address;
-            if socket_domain = PF_INET
-            then
-            begin
-            match getsockname sock_listen
-            with
-            | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
-            | _ -> ()
-            end;
-            listen sock_listen ~max:3;
-            while (Printf.printf "nb session : %d\n" !nb_session;!nb_session <> 0)
+      | Some n -> n);
+  let address = match !socket_name with
+      Some x -> x
+    | None ->
+      match Sys.os_type with
+        "Win32" ->
+        (Unix.string_of_inet_addr Unix.inet_addr_loopback)^ ":"^ (string_of_int (1_0000 + ((Unix.getpid ()) mod 1_0000)))
+      | _ -> Filename.concat (Filename.get_temp_dir_name ())
+               ("student_socket" ^ (string_of_int (Unix.getpid ())))
+  in
+  let socket_domain,socket_address = convert_address address
+  in
+  file_name :=
+    (match socket_address with
+     | ADDR_UNIX file ->
+       Some file
+     | _ ->
+       None);
+  let sock_listen = socket ~cloexec:true ~domain:socket_domain ~kind:SOCK_STREAM ~protocol:0
+  in
+  let close_sock_listen () =
+    match !file_name
+    with
+    | Some file -> unlink file
+    | None -> close sock_listen
+  in
+  (try
+     Logs.app (fun m -> m "Listening on %s" address);
+     establish_server repl ~addr:socket_address
+   (*     setsockopt sock_listen SO_REUSEADDR true;
+          bind sock_listen ~addr:socket_address;
+          if socket_domain = PF_INET
+          then
+          begin
+          match getsockname sock_listen
+          with
+          | ADDR_INET(_,port) -> Logs.app (fun m -> m "port = %d" port)
+          | _ -> ()
+          end;
+          listen sock_listen ~max:3;
+          while (Printf.printf "nb session : %d\n" !nb_session;!nb_session <> 0)
 
-            do
-            let (sock, _) = accept sock_listen
-            in
-            Logs.info (fun m -> m "sock rcv timeout =%f" (Unix.getsockopt_float sock SO_RCVTIMEO));
-            Logs.info (fun m -> m "sock snd timeout =%f" (Unix.getsockopt_float sock SO_SNDTIMEO));
+          do
+          let (sock, _) = accept sock_listen
+          in
+          Logs.info (fun m -> m "sock rcv timeout =%f" (Unix.getsockopt_float sock SO_RCVTIMEO));
+          Logs.info (fun m -> m "sock snd timeout =%f" (Unix.getsockopt_float sock SO_SNDTIMEO));
 
-            decr nb_session;
-            let pid = fork()
-            in
-            match pid with
-            | 0 -> (*child*)
-            let io_chan = io_channel_of_descr sock
-            in
-            begin
-            try
-            repl io_chan
-            with
-            | End_of_file | Exit ->
-            begin
-            Logs.info (fun m -> m "repl exited");
-            close io_chan.io_fd;
-            exit 0 (*child quit the loop*)
-            end
-                        end
-            | id -> (*father*)
-            Unix.close sock; ignore(Unix.waitpid [] id)
-                  done;
-                          (close_sock_listen());Ok command ()
-     *)
-     with
-     | Prop.Verif.Invalid_demonstration(f,t) ->
-       begin
-         close_sock_listen();
-         Logs.err(fun m -> m "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
-                                   (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
-       end
-     | Stdlib.Exit ->
-       begin
-         close_sock_listen();Logs.info (fun m -> m "In memoriam Alexandre Grothendieck, 1928 ̶ 2013")
-       end
-    )
+          decr nb_session;
+          let pid = fork()
+          in
+          match pid with
+          | 0 -> (*child*)
+          let io_chan = io_channel_of_descr sock
+          in
+          begin
+          try
+          repl io_chan
+          with
+          | End_of_file | Exit ->
+          begin
+          Logs.info (fun m -> m "repl exited");
+          close io_chan.io_fd;
+          exit 0 (*child quit the loop*)
+          end
+                      end
+          | id -> (*father*)
+          Unix.close sock; ignore(Unix.waitpid [] id)
+                done;
+                        (close_sock_listen());Ok command ()
+   *)
+   with
+   | Prop.Verif.Invalid_demonstration(f,t) ->
+     begin
+       close_sock_listen();
+       Logs.err(fun m -> m "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
+                                 (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
+     end
+   | Stdlib.Exit ->
+     begin
+       close_sock_listen();
+       Logs.info (fun m -> m "In memoriam Alexandre Grothendieck, 1928 ̶ 2013")
+     end
+  )
 
 let () =
   let socket =
