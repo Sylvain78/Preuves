@@ -70,7 +70,7 @@ let kernel_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) ~formula:f ~proof 
     proof;
   (*verify formula is at the end of the proof*)
   begin
-    Logs.err (fun m -> m ~header:("compare f and hd stack" )  "%a <?> %a" 
+    Logs.info (fun m -> m ~header:("compare f and hd stack" )  "%a <?> %a"
                  Prop.Verif.printer_formula_prop (expand_all_notations f)
                  Prop.Verif.printer_formula_prop (List.hd !formula_stack))
 
