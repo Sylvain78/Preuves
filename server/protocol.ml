@@ -13,6 +13,7 @@ type answer =
   | Ok of Protocol_commands.command
   | Answer of output * (latex_output option) * string
   | Error of string
+  | Quit
 
 let encode_answer = function
   | Ok c -> Bytes.(cat (of_string "Ok") (Protocol_commands.encode_command c))
@@ -25,6 +26,7 @@ let encode_answer = function
 *)
   | Answer (Latex, Some LMath, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "latex";of_string "math"; Protocol_commands.encode_string s]))
   | Answer (Latex, Some LText, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "latex"; of_string "text";  Protocol_commands.encode_string s]))
-  | Answer (Text, Some LText, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "text"; Protocol_commands.encode_string s]))
+  | Answer (Text, None, s) -> Bytes.(concat empty ( [of_string "Answer"; of_string "text"; Protocol_commands.encode_string s]))
   | Error s -> Bytes.(cat (of_string ("Error")) (Protocol_commands.encode_string s))
+  | Quit -> Bytes.(concat empty ( [of_string "Quit"]))
   | _ -> failwith "unimplemented2"
