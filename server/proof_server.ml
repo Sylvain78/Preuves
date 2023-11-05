@@ -9,6 +9,7 @@ open Prop__Kind_prop
 open Protocol
 open Session
 open Util__Unix_tools
+
 module type SESSION = module type of Session
 
 let buffer_size = 65536
@@ -149,7 +150,9 @@ let send_answer oc answer =
 let rec command_stack = Queue.create ()
 and command_sem = Semaphore.Counting.make 0
 and command_queue_mutex = Mutex.create()
-and  load_session mode file out_channel =
+and session_level = ref 0
+and load_session mode file out_channel =
+  incr session_level;
   let ic = open_in file
   in
   begin
@@ -165,6 +168,7 @@ and  load_session mode file out_channel =
       let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic)
       in
       session.mode <- session_loaded.mode;
+      (*TODO tree of history by session ?*)
       session.history <- session_loaded.history;
       (*session.parser <- session_loaded.parser;*)
       session.axioms <- session_loaded.axioms;
@@ -215,8 +219,10 @@ and eval s out_channel =
       end
     | Load (file_mode, file) ->
       begin
+        send_answer out_channel (Protocol.Answer (Text, None, "Load file "^file));
         load_session file_mode file out_channel;
-        Protocol.Answer (Text, None, "Loaded file "^file)
+        decr session_level;
+        Protocol.Answer (Text, None, "# Loaded file "^file)
       end
     | Notation n ->
       begin
@@ -442,7 +448,7 @@ and eval s out_channel =
       end
   with
   | Failure s -> Protocol.Error s
-and repl in_channel out_channel  =
+and repl in_channel out_channel =
   Logs.info (fun m -> m "Launching repl");
         (*
          * init
@@ -453,7 +459,6 @@ and repl in_channel out_channel  =
          *)
   let command = Buffer.create buffer_size
   in
-
   (* read in_channel and put one command in a stack*)
   let read_and_enqueue_command in_channel =
     Logs.info (fun m -> m "read_and_enqueue_commands\n");
@@ -504,7 +509,9 @@ and repl in_channel out_channel  =
         end
     in
     Mutex.unlock command_queue_mutex;
-    session.history <- com :: session.history;
+    if (!session_level = 0) 
+    then
+      (session.history <- com :: session.history);
     (* eval *)
     (*channels needed to be passed to  repl in case of executing a text file (load text)*)
     let answer = eval com out_channel
