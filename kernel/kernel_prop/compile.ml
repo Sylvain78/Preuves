@@ -39,7 +39,7 @@ let is_instance_of_axiom_aux axioms f =
         let pp ppf i =
           Fmt.pf ppf "%a%a" Fmt.(styled `Cyan (styled `Bold string)) "Ax" Fmt.(parens int) i;
         in
-        Logs.info (fun m -> m "%a" ~header:"Ax" pp i);
+        Logs.debug (fun m -> m "%a" ~header:"Ax" pp i);
         Some(Ax(i,subst'))
       with
       | Not_found -> None
@@ -69,7 +69,7 @@ and is_instance_of_theorem_aux theorems  f =
         let pp ppf i =
           Fmt.pf ppf "%a%a" Fmt.(styled `Cyan (styled `Bold string)) "Th" Fmt.(parens int) i;
         in
-        Logs.info (fun m -> m "%a" ~header:"Th" pp i);
+        Logs.debug (fun m -> m "%a" ~header:"Th" pp i);
         Some(Th(i,subst'))
       with
       | Not_found -> None
@@ -97,14 +97,14 @@ let is_cut_aux demo f =
   let pp ppf f =
     Fmt.pf ppf "%a" Fmt.(styled `Red  (styled `Bold string)) (Prop.Formula_tooling.to_string_formula_prop f);
   in
-  Logs.info (fun m -> m "%a" pp f);
-  Logs.info (fun m -> m "%s" "[");
-  List.iter (function f -> Logs.info (fun m -> m "%a\n" pp f)) demo;
-  Logs.info (fun m -> m "%s" "]");
+  Logs.debug (fun m -> m "%a" pp f);
+  Logs.debug (fun m -> m "%s" "[");
+  List.iter (function f -> Logs.debug (fun m -> m "%a\n" pp f)) demo;
+  Logs.debug (fun m -> m "%s" "]");
   let find_cut f1 l =
     let rec search_impl i  = function
       | PImpl(g,h) :: l1  when f1=h ->
-        Logs.info (fun m -> m "%a" pp g);
+        Logs.debug (fun m -> m "%a" pp g);
         let left = find_index g l 
         in
         begin
@@ -126,7 +126,7 @@ let is_cut_aux demo f =
     let pp ppf (i,j) =
       Fmt.pf ppf "%a%a" Fmt.(styled `Green (styled `Bold string)) "Cut" Fmt.(parens (pair ~sep:Fmt.comma int int)) (i,j);
     in
-    Logs.info (fun m -> m "%a" pp (li,ri));
+    Logs.debug (fun m -> m "%a" pp (li,ri));
     Some(Cut(li,ri))
   with
   | Not_found -> None
