@@ -1,7 +1,5 @@
--- refactor the load file interaction with the read stack process
 --Add logs and formatting in pretty boxes.
 --remove old specs/usage in proof_server.ml
--- Better loading/saving of session
 -- Adding more units test to prop
 --Finish the first_order layer once prop is finished
 --Clean the session to be able to marshal them
