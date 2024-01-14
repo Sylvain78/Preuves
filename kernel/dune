@@ -1,0 +1,8 @@
+(env
+ (dev
+  (flags (:standard -warn-error -27-32))))
+
+(library 
+  (name kernel)
+  (instrumentation (backend bisect_ppx))
+  (modules (:standard)))

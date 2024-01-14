@@ -1,0 +1,7 @@
+(env
+ (dev
+  (flags (:standard -warn-error -27-32))))
+
+(tests (names test_compile test_compile_S1)
+ (libraries kernel_prop_interp kernel_prop_compile ounit2)
+)
