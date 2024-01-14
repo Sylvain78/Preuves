@@ -1,4 +1,4 @@
 (library 
- (name util)
+ (name utilities)
  (modules (:standard \ curry_howard))
  (libraries unix))
