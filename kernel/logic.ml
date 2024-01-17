@@ -22,12 +22,12 @@ module type LOGIC = sig
   val trans :step list -> demonstration
   val string_to_formula : string -> formula
   val formula_to_string : formula -> string
-  val is_instance_axiom : formula -> bool
+  val is_instance_axiom : formula ->  axiom:theorem -> bool
   val verif :
-    ?is_axiom:(formula -> bool) ->
-    ?theorems:theorem list ->
-    ?hypotheses:formula list ->
+    is_axiom:(formula -> bool) ->
+    theorems:theorem list ->
+    hypotheses:formula list ->
     formula:formula ->
     proof:demonstration ->
-    unit -> (unit, string) result
+    (unit, string) result
 end
