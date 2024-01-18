@@ -4,8 +4,8 @@ module type LOGIC = sig
     | Theorem
     | Assumed
   type formula
-      type notation
-      type demonstration
+  type notation
+  type demonstration
   type theorem = {
     kind : kind; 
     name : string; 
@@ -24,9 +24,8 @@ module type LOGIC = sig
   val string_to_formula : string -> formula
   val formula_to_string : formula -> string
   val string_to_notation : string -> notation
-  val is_instance_axiom : formula ->  axiom:theorem -> bool
+  val is_instance_axiom : formula -> bool
   val verif :
-    is_axiom:(formula -> bool) ->
     theorems:theorem list ->
     hypotheses:formula list ->
     formula:formula ->
