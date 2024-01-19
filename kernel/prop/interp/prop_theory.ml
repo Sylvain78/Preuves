@@ -1,7 +1,12 @@
 open Kernel.Logic
 open Formula_prop
 
-module Prop:( LOGIC with type formula = formula_prop and type demonstration = formula_prop list) =
+module Prop:(LOGIC 
+             with type formula = formula_prop 
+              and type notation = notation_prop
+              and type demonstration = formula_prop list 
+              and type kind = Kind_prop.kind 
+              and type theorem = Theorem_prop.theorem_prop) =
 struct
 
 
@@ -65,12 +70,12 @@ Prop_parser.formule lexbuf
 
   let theorems_prop = ref []
 
-  exception Invalid_demonstration of formula_prop * formula_prop list;;
+  exception Invalid_demonstration of formula_prop * theorem_prop list * formula_prop list * formula_prop list;;
   Printexc.register_printer (function 
-      | Invalid_demonstration(f,t) -> 
+      | Invalid_demonstration(f,t,h,d) -> 
         Printexc.print_backtrace stdout; flush stdout;
         Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
-             (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n") 
+             (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  d) ^ "]]\n") 
       | _ -> None)
   ;;
 
@@ -112,7 +117,7 @@ Prop_parser.formule lexbuf
       else 
         begin
           Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
-          raise (Invalid_demonstration (f_i,List.rev (f_i::proved)))
+          raise (Invalid_demonstration (f_i, theorems, hypotheses, List.rev (f_i::proved)))
         end
 
   let kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof =
@@ -128,9 +133,9 @@ Prop_parser.formule lexbuf
     if not (is_end_proof f proof)
     then Error "Formula is not at the end of the proof"
     else
-      if verif_prop ~theorems ~hypotheses ~proved:[] ~to_prove:proof
-      then Ok()
-      else Error "not proved"
+    if verif_prop ~theorems ~hypotheses ~proved:[] ~to_prove:proof
+    then Ok()
+    else Error "not proved"
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
@@ -335,15 +340,16 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     demonstration : demonstration;
     conclusion : formula;
   }
-
+  let axioms = !axioms_prop
+  let theorems = theorems_prop
   type step =  
     | Single of formula 
     | Call of {theorem : theorem; params :  formula list}
   let string_to_formula = formula_from_string
   let formula_to_string = to_string_formula_prop
   let string_to_notation = notation_from_string
-    
-  let verif ~theorems ~hypotheses ~formula:f ~proof:(proof:demonstration) = 
+
+  let verif ?(theorems=[]) ?(hypotheses=[]) () ~formula:f ~proof:(proof:demonstration) = 
     kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof
   let rec trans = function 
     | Single f :: l -> f :: (trans l)
