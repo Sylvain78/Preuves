@@ -17,69 +17,91 @@ let a11 = Prop_parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_
 
 let axioms_prop = ref [
     {
-      kind_prop=Axiom;
-      name_theorem_prop="A1";
-      proof_prop=[];
-      conclusion_prop=a1;
+      kind=Axiom;
+      name="A1";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a1;
     };
     {
-      kind_prop=Axiom;
-      name_theorem_prop="A2";
-      proof_prop=[];
-      conclusion_prop=a2;
+      kind=Axiom;
+      name="A2";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a2;
     };
     {
-      kind_prop=Axiom;
-      name_theorem_prop="A3";
-      proof_prop=[];
-      conclusion_prop=a3;
+      kind=Axiom;
+      name="A3";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a3;
     };
     {
-      kind_prop=Axiom;
-    name_theorem_prop="A4";
-    proof_prop=[];
-    conclusion_prop=a4;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A5";
-    proof_prop=[];
-    conclusion_prop=a5;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A6";
-    proof_prop=[];
-    conclusion_prop=a6;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A7";
-    proof_prop=[];
-    conclusion_prop=a7;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A8";
-    proof_prop=[];
-    conclusion_prop=a8;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A9";
-    proof_prop=[];
-    conclusion_prop=a9;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A10";
-    proof_prop=[];
-    conclusion_prop=a10;
-  };
-  {
-    kind_prop=Axiom;
-    name_theorem_prop="A11";
-    proof_prop=[];
-    conclusion_prop=a11;
-  };
-];;
+      kind=Axiom;
+      name="A4";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a4;
+    };
+    {
+      kind=Axiom;
+      name="A5";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a5;
+    };
+    {
+      kind=Axiom;
+      name="A6";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a6;
+    };
+    {
+      kind=Axiom;
+      name="A7";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a7;
+    };
+    {
+      kind=Axiom;
+      name="A8";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a8;
+    };
+    {
+      kind=Axiom;
+      name="A9";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a9;
+    };
+    {
+      kind=Axiom;
+      name="A10";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a10;
+    };
+    {
+      kind=Axiom;
+      name="A11";
+      params= [];
+      premisses=[];
+      demonstration=[];
+      conclusion=a11;
+    };
+  ];;

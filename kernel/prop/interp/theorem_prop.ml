@@ -2,8 +2,10 @@ open Formula_prop
 
 type theorem_prop = 
   {
-    kind_prop : Kind_prop.kind;
-    name_theorem_prop : string;
-    proof_prop : formula_prop list;
-    conclusion_prop: formula_prop;
+    kind : Kind_prop.kind;
+    name : string;
+    params : formula_prop list;
+    premisses : formula_prop list;
+    demonstration : formula_prop list;
+    conclusion : formula_prop;
   }
