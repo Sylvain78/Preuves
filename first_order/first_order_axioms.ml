@@ -1,6 +1,6 @@
 open Signature 
-open Prop.Formula_prop
-open Prop.Verif
+open Kernel_prop_interp.Formula_prop
+open Kernel_prop_interp.Prop_theory.Prop
 open First_order_parser
 
 module Axioms (Sig:SIGNATURE)=
@@ -50,19 +50,19 @@ struct
     in
     List.exists (fun a ->
         let is_instance = 
-          try (instance_aux [] f a.conclusion_prop) <> []
+          try (instance_aux [] f a.conclusion) <> []
           with Failed_Unification _ -> false 
         in
         if (is_instance)
         then
           begin
-            print_string a.name_theorem_prop;
+            print_string a.name;
             print_string " : ";printer_first_order_formula Format.std_formatter f;Format.print_newline();
             true;
           end
         else
           false
-      ) !axioms_prop
+      ) axioms
 
   (** Independance axiom on a quantified variable not free *)
   let is_independance_quantifier f =
