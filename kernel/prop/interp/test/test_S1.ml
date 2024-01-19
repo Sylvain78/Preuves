@@ -1,4 +1,4 @@
-open Kernel_prop_interp.Verif
+ module P = Kernel_prop_interp.Prop_theory.Prop
 open Kernel_prop_interp.Formula_prop
 
 let neg p = PNeg p
@@ -25,21 +25,25 @@ let verif_C8 =
     a =>. a;
   ]
   in
-  if (kernel_prop_interp_verif ~axioms:!axioms_prop (a=>. a) ~proof:demo)
-  then 
-    theorems_prop := {
-      kind_prop = Theorem;
-      name_theorem_prop="[Bourbaki]C8";
-      proof_prop = demo;
-      conclusion_prop=formula_from_string "X_1 \\implies X_1";
-    }::!theorems_prop 
+  match (P.verif  ~formula:(a=>. a) ~proof:(demo: P.demonstration) ())
+  with 
+  |Ok() ->  
+    P.theorems := {
+      kind = Theorem;
+      name="[Bourbaki]C8";
+      params = [];
+      premisses = [];
+      demonstration = demo;
+      conclusion = P.string_to_formula  "X_1 \\implies X_1";
+    }::!P.theorems 
+ | Error _ -> ()
 
 let add_chaining =
   let chaining =
-    formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
+    P.string_to_formula "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   in
   let demo_chaining = 
-    List.map (fun s -> formula_from_string s) [
+    List.map (fun s -> P.string_to_formula s) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -63,17 +67,20 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (kernel_prop_interp_verif ~axioms:!axioms_prop chaining ~proof:demo_chaining)          
-  in
-  if verif then
-    theorems_prop :=
+  match (P.verif  ~formula:chaining ~proof:demo_chaining ())          
+  with
+  | Ok () -> 
+    P.theorems :=
       {
-        kind_prop = Kernel_prop_interp.Kind_prop.Theorem;
-        name_theorem_prop = "C6";
-        proof_prop = demo_chaining;
-        conclusion_prop = chaining;
+        kind = Kernel_prop_interp.Prop_theory.Prop.Theorem;
+        name = "C6";
+        params = [];
+        premisses = [];
+        demonstration = demo_chaining;
+        conclusion = chaining;
       }
-      :: !theorems_prop
+      :: !P.theorems
+  | Error _ -> ()
 ;;
 (*non A  \\implies  non B |   B  \\implies  A*)
 (* TODO : delete once they are not needed anymore
@@ -83,9 +90,9 @@ let add_chaining =
    and (X_2 \\implies \\lnot (\\lnot X_2))=	(X_2 \\implies \\lnot (\\lnot X_2))
    in
 *)
-let verif =
-  kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
-    ~proof:(List.map (fun s -> formula_from_string s) [
+match
+  P.verif  ~theorems:!P.theorems ~formula:(P.string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))") ()
+    ~proof:(List.map (fun s -> P.string_to_formula s) [
 
         "((\\lnot (\\lnot X_1)) \\implies X_1)";
         "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
@@ -111,25 +118,23 @@ let verif =
         "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
         "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
       ])
-in 
-if verif then 
-  theorems_prop := {
-    kind_prop = Assumed;
-    name_theorem_prop="contraposition";
-    proof_prop = [];
-    conclusion_prop=formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
-    ::!theorems_prop
+with 
+| Ok() ->  
+  P.theorems := {
+    kind = Kernel_prop_interp.Kind_prop.Assumed;
+    name ="contraposition";
+    params = [];
+    premisses = [];
+    demonstration = [];
+    conclusion = P.string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
+    ::!P.theorems
+| Error _ -> ()
 ;;
 
 
-let  axioms () =
-  print_string "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-  List.iter (fun th -> print_string th.name_theorem_prop; print_newline() ; flush Stdlib.stdout) (!axioms_prop @ !theorems_prop);
-  print_string "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";flush Stdlib.stdout
-;;
 
 (* |   F ou F  \\implies  F *)
-let demo = (List.map (fun s -> formula_from_string s) [
+let demo = (List.map (fun s -> P.string_to_formula s) [
     "((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))";
     "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))";
     "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))  \\implies  ((((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A})))  \\implies  ((\\lnot \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))))";
@@ -143,15 +148,19 @@ let demo = (List.map (fun s -> formula_from_string s) [
     "(\\mathbf{A}\\lor \\mathbf{A})  \\implies  \\mathbf{A}";
   ])
 in
-if kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
-    ~proof:demo then
-  theorems_prop := {
-    kind_prop = Assumed;
-    name_theorem_prop="[Bourbaki]S1";
-    proof_prop = demo;
-    conclusion_prop=formula_from_string "(X_1 \\lor X_1) \\implies X_1";
-  }::!theorems_prop 
-
+match P.verif  ~theorems:!P.theorems ~formula:(P.string_to_formula "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
+    ~proof:demo ()
+with 
+| Ok() ->
+  P.theorems := {
+    kind = Assumed;
+    name="[Bourbaki]S1";
+    params = [];
+    premisses = [];
+    demonstration = demo;
+    conclusion=P.string_to_formula "(X_1 \\lor X_1) \\implies X_1";
+  }::!P.theorems 
+| Error _ -> ()
 
 let demo = 
   let x1,x2 = PVar 1, PVar 2
@@ -580,5 +589,5 @@ let demo1 = demo @ [
     a_ou_b =>. c;];;
 
 let verif_S3 = 
-  (kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (a_ou_b=>. c) ~proof:demo1)
+  (P.verif  ~theorems:!P.theorems ~formula:(a_ou_b=>. c) ~proof:demo1 ())
 ;;

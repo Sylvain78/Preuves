@@ -1,5 +1,5 @@
 open OUnit2
-open Kernel_prop_interp.Verif
+open Kernel_prop_interp.Prop_theory.Prop
 
 let _ = print_endline "avant notation";;
 
@@ -11,10 +11,10 @@ let notation = Kernel_prop_interp.Prop_parser.notation_from_string "Notation\nim
 *)
 let add_chaining =
   let chaining =
-    formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
+    string_to_formula "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   in
   let demo_chaining = 
-    List.map (fun s -> formula_from_string s) [
+    List.map (fun s -> string_to_formula s) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -38,24 +38,28 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (print_endline "avant verif chaining";kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop chaining ~proof:demo_chaining)          
+  let verif = (print_endline "avant verif chaining";verif ~theorems:!theorems () ~formula:chaining ~proof:demo_chaining)          
   in
   print_endline "apres verif chaining ";
-  if verif then
-    theorems_prop :=
+  match verif with 
+  | Ok() -> 
+    theorems :=
       {
-        kind_prop = Kernel_prop_interp.Kind_prop.Theorem;
-        name_theorem_prop = "C6";
-        proof_prop = demo_chaining;
-        conclusion_prop = chaining;
+        kind = Kernel_prop_interp.Prop_theory.Prop.Theorem;
+        name = "C6";
+        params = [];
+        premisses = [];
+        demonstration = demo_chaining;
+        conclusion = chaining;
       }
-      :: !theorems_prop
+      :: !theorems
+  | Error _ -> ()
 ;;
 print_endline "apres C6";;
 let add_idem =
-  let idem = (formula_from_string "X_1 \\implies X_1") 
+  let idem = (string_to_formula "X_1 \\implies X_1") 
   and demo_idem = 
-    (List.map (fun s -> formula_from_string s) [
+    (List.map (fun s -> string_to_formula s) [
         "(X_1  \\implies ((X_1  \\implies  X_1) \\implies X_1))  \\implies 
     (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
         "X_1 \\implies ((X_1 \\implies X_1) \\implies X_1)";
@@ -63,23 +67,28 @@ let add_idem =
         "X_1 \\implies (X_1 \\implies X_1)";
         "X_1 \\implies X_1"
       ]) in
-  let verif = (kernel_prop_interp_verif ~axioms:!axioms_prop idem ~theorems:!theorems_prop ~proof:demo_idem)          
+  let verif = (verif  ~formula:idem ~theorems:!theorems ~proof:demo_idem ())
   in
-  if verif then
-    theorems_prop :=
+  match verif 
+  with 
+  | Ok() ->
+    theorems :=
       {
-        kind_prop = Kernel_prop_interp.Kind_prop.Theorem;
-        name_theorem_prop = "C8";
-        proof_prop = demo_idem;
-        conclusion_prop = idem;
+        kind = Kernel_prop_interp.Kind_prop.Theorem;
+        name = "C8";
+        params = [];
+        premisses = [];
+        demonstration = demo_idem;
+        conclusion = idem;
       }
-      :: !theorems_prop
+      :: !theorems
+  | Error _ -> ()
 ;;
 
 (*non A  \\implies  non B  \\implies   B  \\implies  A*)
 let verif =
-  kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop (formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
-    ~proof:(List.map (fun s -> formula_from_string s) [
+  verif  ~theorems:!theorems ~formula:(string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
+    ~proof:(List.map (fun s -> string_to_formula s) [
 
         "((\\lnot (\\lnot X_1)) \\implies X_1)";
         "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
@@ -104,20 +113,25 @@ let verif =
         "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
         "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
         "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
-      ])
+      ]) ()
 in 
-if verif then 
-  theorems_prop := {
-    kind_prop = Assumed;
-    name_theorem_prop="contraposition";
-    proof_prop = [];
-    conclusion_prop=formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
-    ::!theorems_prop
+match verif 
+with 
+| Ok() ->
+  theorems := {
+    kind = Assumed;
+    name ="contraposition";
+    params = [];
+    premisses = [];
+    demonstration = [];
+    conclusion=string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
+    ::!theorems
+| Error _ -> ()
 ;;
 
-let f() = kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop
-    (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}")
-    ~proof:(List.map (fun s -> formula_from_string s) [
+let f() = verif  ~theorems:!theorems
+    ~formula:(string_to_formula "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}")
+    ~proof:(List.map (fun s -> string_to_formula s) [
         "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))";
         "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
         "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies ((((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
@@ -129,11 +143,11 @@ let f() = kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop
         "((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A})))";
         "((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})";
         "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}";
-      ])
+      ]) ()
 
-let g() = kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop
-    (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}")
-    ~proof:(List.map (fun s -> formula_from_string s) [
+let g() = verif  ~theorems:!theorems
+    ~formula:(string_to_formula "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}")
+    ~proof:(List.map (fun s -> string_to_formula s) [
         "((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))";
         "((\\lnot \\mathbf{A}) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}))";
         "((\\lnot \\mathbf{A}) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A})) => ((((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => ((\\lnot \\mathbf{A}) => ((\\lnot \\mathbf{A}) => \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
@@ -145,14 +159,14 @@ let g() = kernel_prop_interp_verif ~axioms:!axioms_prop ~theorems:!theorems_prop
         "((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A})))";
         "((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A})";
         "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}";
-      ])
+      ]) ()
 
 
 let test_without_notation _ =
-  assert_bool "without notation : failed" (f())
+  assert_equal (Error "without notation : failed") (f())
 
 let test_with_notation _ =
-  assert_bool "with notation : failed" (g())
+  assert_equal (Error "with notation : failed") (g())
 
 let notation_suite =
   "Notation">:::
