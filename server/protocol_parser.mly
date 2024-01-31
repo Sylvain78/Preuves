@@ -115,7 +115,7 @@ formula_list :
 term_proof_list:
 | { [] }
 | FORMULA NEWLINE term_proof_list { Step $1::$3 }
-| IDENT formula_list  NEWLINE term_proof_list { Big_step ($1,$2)::$4 }
+| IDENT formula_list  NEWLINE term_proof_list { Call ($1,$2)::$4 }
 ;
 
 file_command :

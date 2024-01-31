@@ -1,4 +1,4 @@
-open Util
+open Utilities.Util
 open Signature
 open Base_term
 

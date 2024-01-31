@@ -62,7 +62,7 @@ struct
           end
         else
           false
-      ) axioms
+      ) !axioms
 
   (** Independance axiom on a quantified variable not free *)
   let is_independance_quantifier f =

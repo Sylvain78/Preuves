@@ -41,19 +41,19 @@ let kernel_prop_compile_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) ~form
       (theorems:Kernel_prop_interp.Theorem_prop.theorem_prop list) 
       (hypotheses:Kernel_prop_interp.Formula_prop.formula_prop list) = function
     | Hyp i -> (List.nth hypotheses (i-1))
-    | Known i -> (List.nth theorems (i-1)).conclusion_prop
+    | Known i -> (List.nth theorems (i-1)).conclusion
     | Ax (i,subst) ->
       let axiom = List.nth axioms (i-1)
       in
       let  lv,lt = List.split subst
       in
-      Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop (List.map (fun i -> PVar i) lv) lt axiom.conclusion_prop
+      Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop (List.map (fun i -> PVar i) lv) lt axiom.conclusion
     | Th (i,subst) ->
       let theorem = List.nth theorems (i-1)
       in
       let  lv,lt = List.split subst
       in
-      Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop lv lt theorem.conclusion_prop
+      Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop lv lt theorem.conclusion
     | Cut(j,k) -> 
       let rev_stack = List.rev !formula_stack
       in
@@ -71,8 +71,8 @@ let kernel_prop_compile_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) ~form
   (*verify formula is at the end of the proof*)
   begin
     Logs.info (fun m -> m ~header:("compare f and hd stack" )  "%a <?> %a"
-                 Kernel_prop_interp.Verif.printer_formula_prop (expand_all_notations f)
-                 Kernel_prop_interp.Verif.printer_formula_prop (List.hd !formula_stack))
+                 Kernel_prop_interp.Formula_tooling.printer_formula_prop (expand_all_notations f)
+                 Kernel_prop_interp.Formula_tooling.printer_formula_prop (List.hd !formula_stack))
 
   end;
 

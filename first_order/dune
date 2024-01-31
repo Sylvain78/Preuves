@@ -6,7 +6,7 @@
  (name first_order)
  (instrumentation (backend bisect_ppx))
  (modules (:standard))
- (libraries prop util dyp))
+ (libraries kernel_prop_interp utilities dyp))
 
 (rule
  (targets first_order_parser.ml)

@@ -1,5 +1,6 @@
 open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Verif
+open Kernel_prop_interp.Formula_tooling
+open Kernel_prop_interp.Prop_theory.Prop
 open Kernel_prop_compile.Compile
 open Kernel_prop_compile.Verif
 open Kernel_prop_compile.Step
@@ -16,10 +17,10 @@ let notation = Kernel_prop_interp.Prop_parser.notation_from_string "Notation\nim
 *)
 let add_chaining =
   let chaining =
-    formula_from_string "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
+    string_to_formula "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   in
   let demo_chaining = 
-    List.map (fun s -> (formula_from_string s)) [
+    List.map (fun s -> (string_to_formula s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -43,17 +44,20 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (kernel_prop_interp_verif ~axioms:!axioms_prop chaining ~proof:demo_chaining)          
+  let verif = (verif  ~formula:chaining ~proof:demo_chaining ())          
   in
-  if verif then
-      theorems_prop :=
-        {
-          kind_prop = Kernel_prop_interp.Kind_prop.Theorem;
-          name_theorem_prop = "C6";
-          proof_prop = demo_chaining;
-          conclusion_prop = chaining;
-        }
-        :: !theorems_prop
+  match verif with | Ok() ->
+    theorems :=
+      {
+        kind = Kernel_prop_interp.Prop_theory.Prop.Theorem;
+        name = "C6";
+        params = [];
+        premisses = [];
+        demonstration = demo_chaining;
+        conclusion = chaining;
+      }
+      :: !theorems
+                   | Error _ -> ()
 ;;
 let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 let a,b,c=x1,x2,x3
@@ -550,14 +554,14 @@ let demo =
           ];;
 let demo_S1 = 
   try 
-    compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:(List.map (fun f -> Step f) demo)  ()
-  with Invalid_demonstration(f,l) -> failwith (Printf.eprintf"\n";Printf.eprintf "\n";to_string_formula_prop f ^ (string_of_int @@ List.length @@ l) )
+    compile_demonstration ~theorems:!theorems ~demo:(List.map (fun f -> Step f) demo)  ()
+  with Invalid_demonstration(f, theorems, [], l) -> failwith (Printf.eprintf"\n";Printf.eprintf "\n";to_string_formula_prop f ^ (string_of_int @@ List.length @@ l) )
 
 let test_verif _ =
   assert_equal 
     (Ok ()) 
-    (kernel_prop_compile_verif ~axioms:!axioms_prop ~theorems:!theorems_prop ~formula:(a_ou_b =>. (a_entraine_c=>.(b_entraine_c =>. c))) 
-       ~proof:(compile_demonstration ~axioms:!axioms_prop ~theorems:!theorems_prop ~demo:(List.map (fun f -> Step f) demo) ()).demonstration ())
+    (kernel_prop_compile_verif ~theorems:!theorems ~formula:(a_ou_b =>. (a_entraine_c=>.(b_entraine_c =>. c))) 
+       ~proof:(compile_demonstration ~theorems:!theorems ~demo:(List.map (fun f -> Step f) demo) ()).demonstration ())
 let verif_suite =
   "verif test" >:::
   [

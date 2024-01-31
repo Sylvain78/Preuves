@@ -3,12 +3,9 @@
  * Logging reporter from https://github.com/dinosaure/docteur/blob/main/bin/verify.ml
  **)
 open UnixLabels
-open Prop
-open Prop.Theorem_prop
-open Prop__Kind_prop
 open Protocol
 open Session
-open Util__Unix_tools
+open Utilities.Unix_tools
 
 module type SESSION = module type of Session
 
@@ -22,10 +19,12 @@ let version = "α"
 let print_version_string () =
   print_string "proof-server, version ";
   print_endline version
-
-let stamp_tag : Mtime.span Logs.Tag.def =
-  Logs.Tag.def "stamp" ~doc:"Relative monotonic time stamp" Mtime.Span.pp
-let stamp c = Logs.Tag.(empty |> add stamp_tag (Mtime_clock.count c))
+let start_time = Unix.gettimeofday()
+(*
+let stamp_tag : float  Logs.Tag.def =
+  Logs.Tag.def "stamp" ~doc:"Relative monotonic time stamp" (fun ff -> Format.fprintf ff "%f")
+let stamp  = Logs.Tag.(empty |> add stamp_tag (Sys.time ()))
+*)
 let pad n x =
   if String.length x > n then x else x ^ String.make (n - String.length x) ' '
 let pp_header ppf (level, header) =
@@ -49,14 +48,11 @@ let reporter ppf =
       k ()
     in
     let with_src_and_stamp h _ k fmt =
-      (*
-      let dt = Mtime.Span.to_uint64_ns (Mtime_clock.elapsed ())
-      in
-      *)
       Fmt.kpf k ppf
         ("%s %a %a: @[" ^^ fmt ^^ "@]@.")
         (pad 8
-           (Mtime.Span.pp Stdlib.Format.str_formatter  (Mtime_clock.elapsed ());Stdlib.Format.flush_str_formatter())
+           (Format.fprintf Stdlib.Format.str_formatter  "%f" (Unix.gettimeofday() -. start_time);Stdlib.Format.flush_str_formatter())
+
         (*
         (if (dt <1_000.)
                 then Fmt.str "%#4.0fµs" dt
@@ -94,11 +90,10 @@ let setup_logs =
 
 let session =
   {
-    mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Compiled };
+    mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Interpreted };
     name = "Init";
     history = [] ;
-    axioms = !Prop.Axioms_prop.axioms_prop;
-    theorems = [];
+    theory = (module Kernel_prop_interp.Prop_theory.Prop : Kernel.Logic.LOGIC);
     user = "";
   }
 
@@ -116,10 +111,10 @@ let save_session mode file=
 
         in
        * print_endline ("Save parser to : "^"\""^base^"_parser"^ext^"\"");
-       * Prop.Prop_parser.save_parser ("\""^base^"_parser"^ext^"\"");
+       * Kernel_prop_interp.Kernel_prop_interp_parser.save_parser ("\""^base^"_parser"^ext^"\"");
       *)
       Marshal.to_channel oc
-        (session: Prop.Theorem_prop.theorem_prop Session.session)
+        (session : Session.session)
         []
   end;
   close_out oc
@@ -165,14 +160,12 @@ and load_session mode file out_channel =
         | _ -> ()
       end
     | Modes.Binary ->
-      let (session_loaded : Prop.Theorem_prop.theorem_prop Session.session) = (Marshal.from_channel ic)
+      let (session_loaded : Session.session) = (Marshal.from_channel ic)
       in
       session.mode <- session_loaded.mode;
       (*TODO tree of history by session ?*)
       session.history <- session_loaded.history;
       (*session.parser <- session_loaded.parser;*)
-      session.axioms <- session_loaded.axioms;
-      session.theorems <- session_loaded.theorems;
   end;
   close_in ic
 and eval s out_channel =
@@ -180,8 +173,9 @@ and eval s out_channel =
   let log_number label lf =
     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
   in
-  log_number "theorems" session.theorems;
-  log_number "axioms" session.axioms;
+  let module Th = (val session.theory)
+  in
+  log_number "theorems" !Th.theorems;
   try
     let command = decode s
     in
@@ -191,9 +185,8 @@ and eval s out_channel =
       session.mode.verbose_level <- level;
       Protocol.Ok(command)
     | Prop ->
-      Logs.info(fun m -> m "Prop");
+      Logs.info(fun m -> m "Kernel_prop_interp");
       session.mode.order<-Session.Prop;
-      session.axioms <- !Prop.Axioms_prop.axioms_prop;
       Protocol.Ok (command)
     | First_order ->
       session.mode.order<-Session.First_order;
@@ -249,7 +242,7 @@ and eval s out_channel =
           Buffer.add_string buf "End";
           print_newline();
           (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
-          ignore @@ Prop_parser.notation_from_string (Buffer.contents buf);
+          ignore @@ Kernel_prop_interp.Prop_parser.notation_from_string (Buffer.contents buf);
           Protocol.Ok command
         | First_order -> Protocol.Error "Notation first_order : unimplemented"
       end
@@ -257,133 +250,134 @@ and eval s out_channel =
       if (session.mode.order = Session.Prop)
       then
         begin
-          if (List.exists (fun {name_theorem_prop; _} -> name=name_theorem_prop) session.axioms)
+          let module Th = (val session.theory) 
+          in
+          if (List.exists (fun ({name=name_th; _}:Th.theorem) -> name=name_th) !Th.axioms)
           then
             Protocol.Error ("Axiom " ^ name ^ " already defined")
           else
             begin
-              session.axioms <- { kind_prop=Axiom;
-                                  proof_prop=[];
-                                  name_theorem_prop = name;
-                                  conclusion_prop=Prop.Prop_parser.formula_from_string formula
-                                }
-                                :: session.axioms;
+              Th.add_axiom { kind=Axiom;
+                             demonstration=Th.trans [];
+                             params = [];
+                             premisses = [];
+                             name = name;
+                             conclusion=Th.string_to_formula formula
+                           };
               Protocol.Ok command
             end
         end
       else Protocol.Error "Axiom for first order unimplemented"
-    | Theorem ({name; params=_; premisses; conclusion; demonstration; status=_} as t) ->
+    | Theorem ({name; params; premisses; conclusion; demonstration; status=_} as t) ->
       Logs.info (fun m -> m "Begin verification of Theorem %s" name);
       begin
+        Logs.info (fun m -> m "%s" ((function Prop -> "Prop" | First_order -> "First_order") session.mode.order));
         match session.mode.order
         with
         | Session.Prop ->
           begin
-            let verif_function =
-              match session.mode.evaluation with
-              | Session.Interpreted ->
-                Prop.Verif.prop_proof_verif
-              | Session.Compiled ->
-                fun ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) _ ~proof->
-                  let compiled_demo = Kernel_prop.Compile.compile_demonstration ~axioms ~theorems ~hypotheses ~demo:proof ()
-                  in
-                  match Kernel_prop.Verif.kernel_verif ~axioms ~theorems ~hypotheses ~formula:compiled_demo.theorem ~proof:compiled_demo.demonstration ()
-                  with
-                  | Ok _ -> true
-                  | Error _ -> false
+            Logs.info (fun m -> m "%s" ((function Compiled -> "Compiled" | Interpreted -> "Interpreted") session.mode.evaluation));
+            let verif_function = Th.verif
             in
-            let proof =(List.map 
-                          (function 
-                            | Protocol_commands.Step s -> Prop.Verif.Step (Prop.Verif.formula_from_string s)
-                            | Big_step (th, params) -> Prop.Verif.Call(th, List.map Prop.Verif.formula_from_string params)
-                          ) 
-                          demonstration)
-            and conclusion = Prop.Verif.formula_from_string conclusion
+            let proof =Th.trans (List.map 
+                                   (function 
+                                     | Protocol_commands.Step s -> 
+                                       Th.(Single (string_to_formula s))
+                                     | Protocol_commands.Call (th, params) ->
+                                       Th.Call {theorem=List.find (fun (theorem:Th.theorem) -> theorem.name =  th) !Th.theorems; 
+                                                params=List.map Th.string_to_formula params}
+                                   ) 
+                                   demonstration)
+            and conclusion = Th.string_to_formula conclusion
             in
-            let error,verif =
+            let (verif : (unit, string) result) =
               try
-                ("",
-                 try
-                   let v = verif_function ~axioms:session.axioms ~theorems:session.theorems ~hypotheses:(List.map Prop.Verif.formula_from_string premisses) conclusion ~proof:proof
-                   in
-                   Logs.info (fun m -> m "End verification of Theorem %s" name);
-                   v
-                 with
-                 | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+                (
+                  try
+                    let v = verif_function ~theorems:!Th.theorems 
+                        ~hypotheses:(List.map Th.string_to_formula premisses) () ~formula:conclusion ~proof:proof
+                    in
+                    Logs.info (fun m -> m "End verification of Theorem %s" name);
+                    v
+                  with
+                  | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
               with
-              | Prop.Verif.Invalid_demonstration(f,t) ->
+              | Th.Invalid_demonstration(f,_,_,d) ->
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
                 in
                 Logs.err (fun m -> m ~header:("Invalid demonstration") error_format
-                             Prop.Verif.printer_formula_prop f
-                             (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t
+                             Th.printer_formula f
+                             Th.printer_demonstration d
                          );
-                ((Format.fprintf Format.str_formatter error_format
-                    Prop.Verif.printer_formula_prop f
-                    (Format.pp_print_list ~pp_sep:Format.pp_print_newline Prop.Verif.printer_formula_prop) t; Format.flush_str_formatter()),
-                 false)
+                Error (let ff = Format.str_formatter
+                       in
+                       Format.fprintf ff  error_format
+                         (Th.printer_formula ) f
+                         (Th.printer_demonstration ) d; Format.flush_str_formatter())
+
             in
-            if verif then
+            match verif with 
+            | Ok () -> 
               begin
-                session.theorems <-
-                  {
-                    kind_prop = Kind_prop.Theorem;
-                    name_theorem_prop = t.name;
-                    proof_prop = proof;
-                    conclusion_prop = conclusion;
-                  }
-                  :: session.theorems;
+                Th.theorems := {
+                  kind = Th.Theorem;
+                  name = t.name;
+                  params = List.map Th.string_to_formula params;
+                  premisses = List.map Th.string_to_formula premisses;
+                  demonstration = proof;
+                  conclusion = conclusion;
+                }
+                  :: !Th.theorems;
                 Protocol.Ok command
               end
-            else
+            | Error error -> 
               Protocol.Error ("Theorem " ^ name ^ " not verified.\n" ^ error)
           end
-        | Session.First_order ->
-          failwith "Theorem First_order"
+        | First_order -> failwith "unimplemented"
       end
     | Show theorem_name ->
       if (session.mode.order = Session.Prop)
       then
         Protocol.Answer(Latex, Some LMath,(
-            List.filter (fun th -> th.name_theorem_prop = theorem_name) (session.axioms @ session.theorems)
-            |> List.map (fun {
-                kind_prop;
-                name_theorem_prop;
-                conclusion_prop;
+            List.filter (fun (th : Th.theorem) -> th.name = theorem_name) (!Th.axioms @ !Th.theorems)
+            |> List.map (fun ({
+                kind;
+                name;
+                conclusion;
                 _
-              } -> (kind_to_string kind_prop) ^ " " ^
-                   name_theorem_prop ^
-                   ":" ^
-                   (*TODO "(" ^
-                     (String.concat ", " @@
-                     List.map (function
-                             | PMetaVar s -> s
-                     | PVar i -> if i>0 && i<10
-                                then "X_"^ (string_of_int i)
-                     else "X_{"^ (string_of_int i) ^ "}")
-                     parameters_prop) ^
-                     ") : " ^*)
-                   (Prop.Verif.to_string_formula_prop conclusion_prop)
+              }:Th.theorem) -> (Th.kind_to_string kind) ^ " " ^
+                               name ^
+                               ":" ^
+                               (*TODO "(" ^
+                                 (String.concat ", " @@
+                                 List.map (function
+                                         | PMetaVar s -> s
+                                 | PVar i -> if i>0 && i<10
+                                            then "X_"^ (string_of_int i)
+                                 else "X_{"^ (string_of_int i) ^ "}")
+                                 parameters_prop) ^
+                                 ") : " ^*)
+                               (Th.formula_to_string conclusion)
               )
             |> String.concat "\n"))
       else
-        failwith "session mode not Prop"
+        failwith "session mode not Kernel_prop_interp.Prop"
     | List `Axioms ->
       begin
         match session.mode.order
         with
-        | Prop ->
+        | Session.Prop ->
           Protocol.Answer (Latex, Some LMath,
                            (String.concat
                               "\n"
                               (List.map
-                                 (fun t ->
-                                    t.name_theorem_prop ^
+                                 (fun (t:Th.theorem) ->
+                                    t.name ^
                                     " : " ^
-                                    (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop;
+                                    (Th.printer_formula Format.str_formatter t.conclusion;
                                      Format.flush_str_formatter ())
                                  )
-                                 session.axioms
+                                 !Th.axioms
                               )
                            )
                           )
@@ -397,24 +391,24 @@ and eval s out_channel =
       begin
         match session.mode.order
         with
-        | Prop -> Protocol.Answer(Latex, Some LMath,
-                                  ("\\begin{eqnarray*}" ^
-                                   (String.concat
-                                      "\\\\"
-                                      (List.map
-                                         (fun t ->
-                                            "\\textrm{" ^
-                                            t.name_theorem_prop ^
-                                            "} & : & " ^
-                                            (Formula_tooling.printer_formula_prop Format.str_formatter t.conclusion_prop;
-                                             Format.flush_str_formatter ())
+        | Session.Prop -> Protocol.Answer(Latex, Some LMath,
+                                          ("\\begin{eqnarray*}" ^
+                                           (String.concat
+                                              "\\\\"
+                                              (List.map
+                                                 (fun (t:Th.theorem) ->
+                                                    "\\textrm{" ^
+                                                    t.name ^
+                                                    "} & : & " ^
+                                                    (Th.printer_formula Format.str_formatter t.conclusion;
+                                                     Format.flush_str_formatter ())
+                                                 )
+                                                 !Th.theorems
+                                              )
+                                           ) ^
+                                           "\\end{eqnarray*}"
+                                          )
                                          )
-                                         session.theorems
-                                      )
-                                   ) ^
-                                   "\\end{eqnarray*}"
-                                  )
-                                 )
         | First_order -> failwith "Unimplemented"
       end
     | List `Files ->
@@ -610,13 +604,12 @@ let main _ (*quiet*) socket_val (max_session : int option)  version=
                         (close_sock_listen());Ok command ()
    *)
    with
-   | Prop.Verif.Invalid_demonstration(f,t) ->
+   (*| Error error ->
      begin
        close_sock_listen();
-       Logs.err(fun m -> m "%s" ("Invalid demonstration: " ^ (Prop.Verif.to_string_formula_prop f) ^ "\n[[\n" ^
-                                 (List.fold_left  (fun acc f1-> acc ^ (Prop.Verif.to_string_formula_prop f1) ^ "\n") ""  t) ^ "]]\n"))
+       Logs.err(fun m -> m "%s" ("Invalid demonstration: " ^ error))
      end
-   | Stdlib.Exit ->
+   *)| Stdlib.Exit ->
      begin
        close_sock_listen();
        Logs.info (fun m -> m "In memoriam Alexandre Grothendieck, 1928 ̶ 2013")

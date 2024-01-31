@@ -15,7 +15,8 @@ module type LOGIC = sig
     conclusion : formula; 
   }
 
-  val axioms : theorem list
+  val axioms : theorem list ref
+  val add_axiom : theorem -> unit
   val theorems : theorem list ref
 
   type step =  
@@ -25,9 +26,6 @@ module type LOGIC = sig
         params :  formula list
       }
   val trans : step list -> demonstration
-  val string_to_formula : string -> formula
-  val formula_to_string : formula -> string
-  val string_to_notation : string -> notation
   val is_instance_axiom : formula -> bool
   val verif :
     ?theorems:theorem list -> 
@@ -36,4 +34,10 @@ module type LOGIC = sig
     proof:demonstration ->
     (unit, string) result
   exception Invalid_demonstration of formula * theorem list * formula list * demonstration
-    end
+  val kind_to_string : kind -> string
+  val string_to_formula : string -> formula
+  val formula_to_string : formula -> string
+  val printer_formula : Format.formatter -> formula -> unit
+  val string_to_notation : string -> notation
+  val printer_demonstration : Format.formatter -> demonstration -> unit
+end

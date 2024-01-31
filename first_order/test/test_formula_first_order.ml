@@ -1,7 +1,7 @@
 open OUnit2
 open First_order.Formula
 open First_order.Signature
-open Util
+open Utilities.Util
 
 module FormulaTest = struct
   include Formula(SignatureMinimal)

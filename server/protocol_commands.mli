@@ -2,7 +2,7 @@ type notation_element = Param of string | String of string
 
 type demonstration_step =
   | Step of string
-  | Big_step of string * (string list)
+  | Call of string * (string list)
 
 type command =
   | Verbose of int

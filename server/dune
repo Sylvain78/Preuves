@@ -16,5 +16,5 @@
   (name proof_server)
   (modes byte exe)
   (modules (:standard))
-  (libraries threads mtime mtime.clock.os cmdliner logs logs.cli logs.fmt fmt.cli str first_order util kernel_prop prop)
+  (libraries threads cmdliner logs logs.cli logs.fmt fmt.cli str first_order utilities kernel_prop_interp kernel_prop_compile)
 )

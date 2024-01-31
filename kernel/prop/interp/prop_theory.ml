@@ -340,14 +340,12 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     demonstration : demonstration;
     conclusion : formula;
   }
-  let axioms = !axioms_prop
+  let axioms = axioms_prop
+  let add_axiom ax = axioms := ax :: !axioms
   let theorems = theorems_prop
   type step =  
     | Single of formula 
     | Call of {theorem : theorem; params :  formula list}
-  let string_to_formula = formula_from_string
-  let formula_to_string = to_string_formula_prop
-  let string_to_notation = notation_from_string
 
   let verif ?(theorems=[]) ?(hypotheses=[]) () ~formula:f ~proof:(proof:demonstration) = 
     kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof
@@ -355,4 +353,12 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     | Single f :: l -> f :: (trans l)
     | Call {theorem; params} :: l -> []
     | [] -> []
+
+  let kind_to_string = Kind_prop.kind_to_string
+  let string_to_formula = formula_from_string
+  let formula_to_string = to_string_formula_prop
+  let printer_formula = printer_formula_prop
+  let string_to_notation = notation_from_string
+ let printer_demonstration ff d=
+   (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d
 end

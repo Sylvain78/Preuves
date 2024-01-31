@@ -1,6 +1,7 @@
 open Kernel_prop_interp.Formula_prop
 open Kernel_prop_interp.Formula_tooling
 open Kernel_prop_interp.Theorem_prop
+module P = Kernel_prop_interp.Prop_theory.Prop
 open Step
 open Verif
 
@@ -18,7 +19,7 @@ let find_index_instance f list_props =
     match l with
       [] -> None
     | prop :: list_props' ->
-      try Some (index,instance f prop.conclusion_prop )
+      try Some (index,instance f prop.conclusion )
       with Failed_Unification _ -> find_aux (index+1) list_props'
   in
   find_aux 1 list_props
@@ -54,7 +55,7 @@ and is_instance_of_theorem_aux theorems  f =
       match l with
         [] -> None
       | th :: list_theorems' ->
-        try Some (index,instance f th.conclusion_prop )
+        try Some (index,instance f th.conclusion )
         with Failed_Unification _ -> find_aux (index+1) list_theorems'
     in
     find_aux 1 list_theorems
@@ -82,7 +83,7 @@ let is_known_theorem_aux theorems f =
   let rec find_aux i f l=
     match l with
     | [] -> None
-    | f1::_ when f=f1.conclusion_prop -> Some(Known i)
+    | f1::_ when f=f1.conclusion -> Some(Known i)
     | _::l1 -> find_aux (i+1) f l1
   in find_aux 1 f theorems
 
@@ -132,14 +133,14 @@ let is_cut_aux demo f =
   with
   | Not_found -> None
 
-let compile_demonstration ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) ~demo () =
+let compile_demonstration  ?(theorems=[]) ?(hypotheses=[]) ~demo () =
   let rec compile_demo_aux ~demo ~proof ~proved =
     match demo with
     | [] ->List.hd proved, proof
     | (Step f) :: demo_tail ->Logs.debug (fun m -> m "formule expansée : %s" (Kernel_prop_interp.Formula_tooling.to_string_formula_prop (expand_all_notations f)));
       let  proof_term = List.find_map (fun func -> func (expand_all_notations f)) 
           [ 
-            is_instance_of_axiom_aux axioms; 
+            is_instance_of_axiom_aux !P.axioms; 
             is_cut_aux (List.rev proved);
             is_hypothesis hypotheses; 
             is_known_theorem_aux theorems; 
@@ -153,7 +154,7 @@ let compile_demonstration ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) ~demo () 
           compile_demo_aux ~demo:demo_tail ~proved:(f::proved)  ~proof:(step :: proof)
         | None -> 
           Logs.err (fun m -> pp_formula Fmt.stdout f;m "compile: Invalid_demonstration ");
-          raise (Kernel_prop_interp.Verif.Invalid_demonstration (f, List.rev (f::proved)))
+          raise (Kernel_prop_interp.Prop_theory.Prop.Invalid_demonstration (f, theorems, hypotheses, List.rev (f::proved)))
       end
     | Call(theorem, params) ::demo_tail -> (*TODO instantiate theorem with params and add it to proved and proof*)
       compile_demo_aux ~demo:demo_tail ~proved:(proved)  ~proof:( proof)

@@ -3,5 +3,5 @@
   (flags (:standard -warn-error -27-32))))
 
 (tests (names test_formula_first_order test_schemas_first_order)
- (libraries ounit2 prop first_order)
+ (libraries ounit2 kernel_prop_interp first_order)
 )

@@ -22,47 +22,44 @@ type status =
   | Unverified 
   | Verified 
   | False
-module type P = module type of Prop.Verif
-module type F = module type of First_order.Formula
 
-type 'formula session =
+type session =
   {
     mutable mode : mode ;
     name : string;
     mutable history : string list;
     (*mutable parser : (unit,
                       (string * string * string * string * string * string *
-                       Prop.Formula_prop.notation_prop_element list * string * string *
-                       string * Prop.Formula_prop.notation_prop_element list * string *
-                       string * string * Prop.Formula_prop.notation_prop_element list *
-                       string * string, Prop.Formula_prop.notation_prop, unit, unit,
-                       unit, Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.formula_prop, Prop.Formula_prop.formula_prop,
-                       Prop.Formula_prop.notation_prop, Prop.Formula_prop.notation_prop,
-                       Prop.Formula_prop.notation_prop_element,
-                       Prop.Formula_prop.notation_prop_element list, unit,
-                       Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.notation_prop_element)
-                        Prop.Prop_parser.obj, unit, unit,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list * string * string *
+                       string * Kernel_prop_interp.Formula_prop.notation_prop_element list * string *
+                       string * string * Kernel_prop_interp.Formula_prop.notation_prop_element list *
+                       string * string, Kernel_prop_interp.Formula_prop.notation_prop, unit, unit,
+                       unit, Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.formula_prop, Kernel_prop_interp.Formula_prop.formula_prop,
+                       Kernel_prop_interp.Formula_prop.notation_prop, Kernel_prop_interp.Formula_prop.notation_prop,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list, unit,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element)
+                        Kernel_prop_interp.Prop_parser.obj, unit, unit,
                       (string * string * string * string * string * string *
-                       Prop.Formula_prop.notation_prop_element list * string * string *
-                       string * Prop.Formula_prop.notation_prop_element list * string *
-                       string * string * Prop.Formula_prop.notation_prop_element list *
-                       string * string, Prop.Formula_prop.notation_prop, unit, unit,
-                       unit, Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.formula_prop, Prop.Formula_prop.formula_prop,
-                       Prop.Formula_prop.notation_prop, Prop.Formula_prop.notation_prop,
-                       Prop.Formula_prop.notation_prop_element,
-                       Prop.Formula_prop.notation_prop_element list, unit,
-                       Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.notation_prop_element list,
-                       Prop.Formula_prop.notation_prop_element)
-                        Prop.Prop_parser.obj Dyp.dyplexbuf)
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list * string * string *
+                       string * Kernel_prop_interp.Formula_prop.notation_prop_element list * string *
+                       string * string * Kernel_prop_interp.Formula_prop.notation_prop_element list *
+                       string * string, Kernel_prop_interp.Formula_prop.notation_prop, unit, unit,
+                       unit, Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.formula_prop, Kernel_prop_interp.Formula_prop.formula_prop,
+                       Kernel_prop_interp.Formula_prop.notation_prop, Kernel_prop_interp.Formula_prop.notation_prop,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list, unit,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element list,
+                       Kernel_prop_interp.Formula_prop.notation_prop_element)
+                        Kernel_prop_interp.Prop_parser.obj Dyp.dyplexbuf)
         Dyp.parser_pilot;*)
-    mutable axioms : 'formula list;
-    mutable theorems : 'formula list;
+    mutable theory : (module Kernel.Logic.LOGIC);
     mutable user : string;
   }

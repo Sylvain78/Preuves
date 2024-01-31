@@ -4,7 +4,6 @@ open Step
 open Verif
 
 val compile_demonstration :
-  ?axioms:theorem_prop list ->
   ?theorems:theorem_prop list ->
   ?hypotheses:formula_prop list -> 
   demo:step list ->
