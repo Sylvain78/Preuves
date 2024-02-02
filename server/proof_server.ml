@@ -290,7 +290,7 @@ and eval s out_channel =
                                    demonstration)
             and conclusion = Th.string_to_formula conclusion
             in
-            let (verif : (unit, string) result) =
+            let (verif : (unit, string * exn) result) =
               try
                 (
                   try
@@ -300,21 +300,17 @@ and eval s out_channel =
                     Logs.info (fun m -> m "End verification of Theorem %s" name);
                     v
                   with
-                  | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+                  | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                )
               with
-              | Th.Invalid_demonstration(f,_,_,d) ->
+              | Th.Invalid_demonstration(f,_,_,d) as ex ->
                 let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
                 in
                 Logs.err (fun m -> m ~header:("Invalid demonstration") error_format
                              Th.printer_formula f
                              Th.printer_demonstration d
                          );
-                Error (let ff = Format.str_formatter
-                       in
-                       Format.fprintf ff  error_format
-                         (Th.printer_formula ) f
-                         (Th.printer_demonstration ) d; Format.flush_str_formatter())
-
+                Error ("Invalid demonstration", ex)
             in
             match verif with 
             | Ok () -> 
@@ -330,8 +326,8 @@ and eval s out_channel =
                   :: !Th.theorems;
                 Protocol.Ok command
               end
-            | Error error -> 
-              Protocol.Error ("Theorem " ^ name ^ " not verified.\n" ^ error)
+            | Error (msg, exc) -> 
+              Protocol.Error ("Theorem " ^ name ^ " not verified.\n" ^ msg ^ (match Th.print_invalid_demonstration exc with None -> "" | Some s -> s))
           end
         | First_order -> failwith "unimplemented"
       end
