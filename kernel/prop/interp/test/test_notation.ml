@@ -163,10 +163,10 @@ let g() = verif  ~theorems:!theorems
 
 
 let test_without_notation _ =
-  assert_equal (Error "without notation : failed") (f())
+  assert_equal ~printer:(function Ok () -> "Ok" | Error (error,_) -> error) (Ok()) (f())
 
 let test_with_notation _ =
-  assert_equal (Error "with notation : failed") (g())
+  assert_equal ~printer:(function Ok () -> "Ok" | Error (error,_) -> error) (Ok()) (g())
 
 let notation_suite =
   "Notation">:::
