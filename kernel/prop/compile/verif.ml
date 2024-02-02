@@ -34,7 +34,7 @@ type kernel_proof =
     demonstration : kernel_proof_term  list ;
   }
 
-let kernel_prop_compile_verif ?(axioms=[]) ?(theorems=[]) ?(hypotheses=[]) ~formula:f ~proof () =
+let kernel_prop_compile_verif  ?(theorems=[]) ?(hypotheses=[]) ~formula:f ~proof () =
   let formula_stack = ref []
   in
   let formula_from_proof_term (axioms:Kernel_prop_interp.Theorem_prop.theorem_prop list) 

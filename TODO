@@ -1,3 +1,4 @@
+--Remove axioms in kernel/prop/compile/verif.ml
 --Add logs and formatting in pretty boxes.
 --remove old specs/usage in proof_server.ml
 -- Adding more units test to prop
