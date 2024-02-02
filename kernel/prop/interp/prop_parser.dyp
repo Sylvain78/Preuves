@@ -115,7 +115,7 @@ let notation_from_string s =
   in
   let lexbuf = Dyp.from_string pp s
   in
-  match phrase  lexbuf
+  match phrase lexbuf
   with 
   | [ (N n,_) ] -> n
   | _ -> failwith "notation : multiple interpretations"
