@@ -32,8 +32,9 @@ module type LOGIC = sig
     ?hypotheses:formula list -> unit ->
     formula:formula ->
     proof:demonstration ->
-    (unit, string) result
+    (unit, string * exn) result
   exception Invalid_demonstration of formula * theorem list * formula list * demonstration
+  val print_invalid_demonstration : exn -> string option
   val kind_to_string : kind -> string
   val string_to_formula : string -> formula
   val formula_to_string : formula -> string
