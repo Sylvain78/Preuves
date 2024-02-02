@@ -71,20 +71,20 @@ Prop_parser.formule lexbuf
   let theorems_prop = ref []
 
   exception Invalid_demonstration of formula_prop * theorem_prop list * formula_prop list * formula_prop list;;
-  Printexc.register_printer (function 
+  let print_invalid_demonstration =  (function 
       | Invalid_demonstration(f,t,h,d) -> 
-        Printexc.print_backtrace stdout; flush stdout;
+        (*Printexc.print_backtrace stderr; flush stderr;*)
         Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
              (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  d) ^ "]]\n") 
-      | _ -> None)
-  ;;
+      | _ -> None);;
+  Printexc.register_printer (print_invalid_demonstration)
 
   let is_instance_axiom f = 
     List.exists (function axiom -> try ignore (instance f axiom.conclusion);true  with Failed_Unification _ -> false) !axioms_prop
 
   let rec verif_prop ~theorems ~hypotheses ~proved ~to_prove = 
     match to_prove with
-    | [] -> true
+    | [] -> Ok()
     | f_i::p ->  
       if (
         (*Formula is an hypothesis*)
@@ -117,7 +117,7 @@ Prop_parser.formule lexbuf
       else 
         begin
           Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
-          raise (Invalid_demonstration (f_i, theorems, hypotheses, List.rev (f_i::proved)))
+          Error ("Invalid demonstration", Invalid_demonstration (f_i, theorems, hypotheses, List.rev (f_i::proved)))
         end
 
   let kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof =
@@ -131,11 +131,9 @@ Prop_parser.formule lexbuf
       | Failure _ -> false
     in
     if not (is_end_proof f proof)
-    then Error "Formula is not at the end of the proof"
+    then Error ("Formula is not at the end of the proof", Invalid_demonstration(f,theorems, hypotheses, proof))
     else
-    if verif_prop ~theorems ~hypotheses ~proved:[] ~to_prove:proof
-    then Ok()
-    else Error "not proved"
+      verif_prop ~theorems ~hypotheses ~proved:[] ~to_prove:proof
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
@@ -359,6 +357,6 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop
   let string_to_notation = notation_from_string
- let printer_demonstration ff d=
-   (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d
+  let printer_demonstration ff d=
+    (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d
 end
