@@ -22,7 +22,7 @@ and notation_prop =
   }  
 
 type phrase = 
-  | E of formula_prop
+  | F of formula_prop
   | N of notation_prop
 
 (*SKE Example of notation

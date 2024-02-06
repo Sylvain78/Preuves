@@ -12,7 +12,7 @@ struct
 
 
   include Axioms_prop
-  include Formula_tooling
+  include Instance_notation_printers
   include Theorem_prop
   (*TODO open Substitution_prop*)
   include (Prop_parser : sig 

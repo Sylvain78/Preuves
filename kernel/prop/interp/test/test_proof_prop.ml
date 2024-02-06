@@ -1,6 +1,6 @@
 open OUnit2
 open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Prop_theory.Prop
+open Kernel_prop_interp.Theory.Prop
 
 let x1,x2 = PVar 1,PVar 2
 

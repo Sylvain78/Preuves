@@ -1,5 +1,5 @@
 open OUnit2
-open Kernel_prop_interp.Prop_theory.Prop
+open Kernel_prop_interp.Theory.Prop
 
 let _ = print_endline "avant notation";;
 
@@ -45,7 +45,7 @@ let add_chaining =
   | Ok() -> 
     theorems :=
       {
-        kind = Kernel_prop_interp.Prop_theory.Prop.Theorem;
+        kind = Kernel_prop_interp.Theory.Prop.Theorem;
         name = "C6";
         params = [];
         premisses = [];

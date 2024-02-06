@@ -1,4 +1,4 @@
- module P = Kernel_prop_interp.Prop_theory.Prop
+ module P = Kernel_prop_interp.Theory.Prop
 open Kernel_prop_interp.Formula_prop
 
 let neg p = PNeg p
@@ -72,7 +72,7 @@ let add_chaining =
   | Ok () -> 
     P.theorems :=
       {
-        kind = Kernel_prop_interp.Prop_theory.Prop.Theorem;
+        kind = Kernel_prop_interp.Theory.Prop.Theorem;
         name = "C6";
         params = [];
         premisses = [];

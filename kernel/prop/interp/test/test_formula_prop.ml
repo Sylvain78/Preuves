@@ -1,7 +1,7 @@
 open OUnit2
 open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Formula_tooling
-open Kernel_prop_interp.Prop_theory.Prop
+open Kernel_prop_interp.Instance_notation_printers
+open Kernel_prop_interp.Theory.Prop
 
 let notation = string_to_notation  "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 let () = 

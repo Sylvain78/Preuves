@@ -3,7 +3,7 @@ open Formula_prop
 let parser = ref None;;
 let rec notation_elements_to_regexp = function
   | [] -> []
-  | Param _ ::l -> (Dyp.Non_ter("expr1", Dyp.No_priority)) :: notation_elements_to_regexp l
+  | Param _ ::l -> (Dyp.Non_ter("formula1", Dyp.No_priority)) :: notation_elements_to_regexp l
   | String s ::l -> Dyp.Regexp(Dyp.RE_String s) :: notation_elements_to_regexp l
 
 let string_without_quote s = ( String.sub s 1 (String.length s - 2))
@@ -23,24 +23,24 @@ let any_string = '"' (['\000'-'\033'] | ['\035'-'\255'])* '"'
 %parser
 
 phrase :
-     | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.Dyp.pp_dev] } expr { E $2 }
+     | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.Dyp.pp_dev] } formula { F $2 }
      | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.Dyp.pp_dev] } notation { N $2 } 
 
-expr :
-     | expr1 eof { $1 }
+formula :
+     | formula1 eof { $1 }
 
 notation :
      | notation1 eof { $1 }
 
-expr1:
+formula1:
     | "X_" ['0'-'9']+  { PVar (int_of_string $2) }
     | "X_{" ['0'-'9']+ "}" { PVar (int_of_string $2) }
     | "\\mathbf{" ['a'-'z''A'-'Z'] "}" { PMetaVar ($2) }
-    | "(" expr1 ")" { $2 }
-    | "\\lnot" expr1 { PNeg($2) }
-    | expr1 "\\implies" expr1 { PImpl($1,$3) }
-    | expr1 "\\land" expr1 { PAnd($1,$3) }
-    | expr1 "\\lor" expr1 { POr($1,$3) }
+    | "(" formula1 ")" { $2 }
+    | "\\lnot" formula1 { PNeg($2) }
+    | formula1 "\\implies" formula1 { PImpl($1,$3) }
+    | formula1 "\\land" formula1 { PAnd($1,$3) }
+    | formula1 "\\lor" formula1 { POr($1,$3) }
 
 /*SKE Example of notation
 "
@@ -70,9 +70,9 @@ notation1:
                notation_prop_semantique = $15;
             }
         in
-        let rule       = ("expr1", notation_elements_to_regexp $11, "default_priority",[])
-        and action _ l = Obj_expr1 (PApply_notation({apply_notation_prop = notation;
-						    apply_notation_prop_params = List.filter_map  (function Obj_expr1 e -> Some e | _ -> None) l
+        let rule       = ("formula1", notation_elements_to_regexp $11, "default_priority",[])
+        and action _ l = Obj_formula1 (PApply_notation({apply_notation_prop = notation;
+						    apply_notation_prop_params = List.filter_map  (function Obj_formula1 e -> Some e | _ -> None) l
 						   })),
 			 []
         in
@@ -105,7 +105,7 @@ let formula_from_string s =
   in
   match phrase lexbuf
   with 
-  |  [ (E f,_) ] -> f
+  |  [ (F f,_) ] -> f
   | _ -> failwith "formula : multiple interpretations"
 
 let notation_from_string s = 
