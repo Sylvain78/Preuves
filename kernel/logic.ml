@@ -1,20 +1,26 @@
+type kind = 
+  | Axiom
+  | Theorem
+  | Assumed
+let kind_to_string = function
+  | Axiom -> "Axiom"
+  | Theorem -> "Theorem"
+  | Assumed -> "Assumed"
+
+type ('formula, 'demonstration) theorem_logic = {
+  kind : kind; 
+  name : string; 
+  params : 'formula list;
+  premisses : 'formula list;
+  demonstration : 'demonstration;
+  conclusion : 'formula; 
+}
+
 module type LOGIC = sig
-  type kind = 
-    | Axiom
-    | Theorem
-    | Assumed
   type formula
   type notation
   type demonstration
-  type theorem = {
-    kind : kind; 
-    name : string; 
-    params : formula list;
-    premisses : formula list;
-    demonstration : demonstration;
-    conclusion : formula; 
-  }
-
+  type theorem = (formula, demonstration) theorem_logic
   val axioms : theorem list ref
   val add_axiom : theorem -> unit
   val theorems : theorem list ref
@@ -25,7 +31,7 @@ module type LOGIC = sig
         theorem : theorem;
         params :  formula list
       }
-  val trans : step list -> demonstration
+  (*val trans : step list -> demonstration*)
   val is_instance_axiom : formula -> bool
   val verif :
     ?theorems:theorem list -> 
@@ -35,7 +41,6 @@ module type LOGIC = sig
     (unit, string * exn) result
   exception Invalid_demonstration of formula * theorem list * formula list * demonstration
   val print_invalid_demonstration : exn -> string option
-  val kind_to_string : kind -> string
   val string_to_formula : string -> formula
   val formula_to_string : formula -> string
   val printer_formula : Format.formatter -> formula -> unit
