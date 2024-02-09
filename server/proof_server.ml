@@ -115,7 +115,7 @@ let save_session mode file=
       *)
       Marshal.to_channel oc
         (session : Session.session)
-        []
+        [Closures]
   end;
   close_out oc
 
