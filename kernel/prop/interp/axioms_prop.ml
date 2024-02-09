@@ -1,4 +1,5 @@
 open Theorem_prop
+open Kernel.Logic
 
 let a1 = Prop_parser.formula_from_string "X_1 \\implies (X_2 \\implies X_1)";;
 let a2 = Prop_parser.formula_from_string "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";;
@@ -15,7 +16,7 @@ let a9  = Prop_parser.formula_from_string "X_1 \\implies (X_1 \\lor X_2)";;
 let a10 = Prop_parser.formula_from_string "X_2 \\implies (X_1 \\lor X_2)";;
 let a11 = Prop_parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_2) \\implies X_2)";;
 
-let axioms_prop = ref [
+let (axioms_prop: theorem_prop list ref) = ref [
     {
       kind=Axiom;
       name="A1";

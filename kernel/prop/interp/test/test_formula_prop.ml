@@ -28,7 +28,7 @@ let verif_tauto =
     begin
       theorems :=
         {
-          kind = Kernel_prop_interp.Kind_prop.Theorem;
+          kind = Kernel.Logic.Theorem;
           name = "tauto";
           params = [];
           premisses = [];
@@ -101,7 +101,7 @@ let add_chaining =
     print_endline "C6 verified";
     theorems :=
       {
-        kind = Kernel_prop_interp.Kind_prop.Theorem;
+        kind = Kernel.Logic.Theorem;
         name = "C6";
         params = [];
         premisses = [];

@@ -1,12 +1,12 @@
 open Kernel.Logic
 open Formula_prop
+open Theorem_prop
 
 module Prop:(LOGIC 
              with type formula = formula_prop 
               and type notation = notation_prop
-              and type demonstration = formula_prop list 
-              and type kind = Kind_prop.kind 
-              and type theorem = Theorem_prop.theorem_prop) =
+              and type demonstration = demonstration_prop
+            ) =
 struct
 
 
@@ -326,33 +326,25 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     conclusion=formula_from_string "(X_1 \\lor \\lnot X_1)";
   }::!theorems_prop;;
 
-  type kind = Kind_prop.kind = |Axiom |Theorem | Assumed
   type formula = formula_prop
   type notation = notation_prop
-  type demonstration = formula list
-  type theorem = theorem_prop = {
-    kind : kind;
-    name : string;
-    params : formula list;
-    premisses : formula list;
-    demonstration : demonstration;
-    conclusion : formula;
-  }
+  type demonstration = demonstration_prop
   let axioms = axioms_prop
   let add_axiom ax = axioms := ax :: !axioms
   let theorems = theorems_prop
+  type theorem = (formula, demonstration) Kernel.Logic.theorem_logic 
   type step =  
     | Single of formula 
-    | Call of {theorem : theorem; params :  formula list}
+    | Call of {theorem : theorem; params : formula list}
 
   let verif ?(theorems=[]) ?(hypotheses=[]) () ~formula:f ~proof:(proof:demonstration) = 
     kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof
   let rec trans = function 
     | Single f :: l -> f :: (trans l)
-    | Call {theorem; params} :: l -> []
+    | Call _ :: _ -> []
     | [] -> []
 
-  let kind_to_string = Kind_prop.kind_to_string
+  let kind_to_string = Kernel.Logic.kind_to_string
   let string_to_formula = formula_from_string
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop

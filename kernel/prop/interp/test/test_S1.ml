@@ -72,7 +72,7 @@ let add_chaining =
   | Ok () -> 
     P.theorems :=
       {
-        kind = Kernel_prop_interp.Theory.Prop.Theorem;
+        kind = Kernel.Logic.Theorem;
         name = "C6";
         params = [];
         premisses = [];
@@ -121,7 +121,7 @@ match
 with 
 | Ok() ->  
   P.theorems := {
-    kind = Kernel_prop_interp.Kind_prop.Assumed;
+    kind = Kernel.Logic.Assumed;
     name ="contraposition";
     params = [];
     premisses = [];

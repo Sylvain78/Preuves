@@ -45,7 +45,7 @@ let add_chaining =
   | Ok() -> 
     theorems :=
       {
-        kind = Kernel_prop_interp.Theory.Prop.Theorem;
+        kind = Kernel.Logic.Theorem;
         name = "C6";
         params = [];
         premisses = [];
@@ -74,7 +74,7 @@ let add_idem =
   | Ok() ->
     theorems :=
       {
-        kind = Kernel_prop_interp.Kind_prop.Theorem;
+        kind = Kernel.Logic.Theorem;
         name = "C8";
         params = [];
         premisses = [];
