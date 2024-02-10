@@ -72,10 +72,17 @@ Prop_parser.formule lexbuf
 
   exception Invalid_demonstration of formula_prop * theorem_prop list * formula_prop list * formula_prop list;;
   let print_invalid_demonstration =  (function 
-      | Invalid_demonstration(f,t,h,d) -> 
+      | Invalid_demonstration(f,theorems,hypotheses,demo) -> 
         (*Printexc.print_backtrace stderr; flush stderr;*)
-        Some("Invalid demonstration: " ^ (to_string_formula_prop f) ^ "\n[[\n" ^
-             (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  d) ^ "]]\n") 
+        Some("Invalid demonstration of " ^ (to_string_formula_prop f) ^ "\n" ^ 
+             "theorems:(" ^
+             (List.fold_right (fun th s -> th.name^","^s) theorems "") ^
+             ")" ^
+             "hypotheses:(" ^
+             (List.fold_right (fun hyp s -> (to_string_formula_prop hyp)^","^s) hypotheses "") ^
+             ")" ^
+             "demosntration:[[\n" ^
+             (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  demo) ^ "]]\n") 
       | _ -> None);;
   Printexc.register_printer (print_invalid_demonstration)
 
@@ -339,12 +346,14 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
 
   let verif ?(theorems=[]) ?(hypotheses=[]) () ~formula:f ~proof:(proof:demonstration) = 
     kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof
-  let rec trans = function 
-    | Single f :: l -> f :: (trans l)
-    | Call _ :: _ -> []
+  let rec compile ~speed = function 
     | [] -> []
-
-  let kind_to_string = Kernel.Logic.kind_to_string
+    | Single f :: l -> f :: (compile ~speed l)
+    | Call {theorem ; params } :: l ->
+      match speed with
+      | Fast -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion) :: (compile ~speed l)
+      | Paranoid -> (List.map (function step -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params step)) theorem.demonstration) 
+                    @ (compile ~speed l)
   let string_to_formula = formula_from_string
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop

@@ -1,3 +1,7 @@
+type speed =
+  | Fast
+  | Paranoid
+
 type kind = 
   | Axiom
   | Theorem
@@ -27,12 +31,16 @@ module type LOGIC = sig
 
   type step =  
     | Single of formula 
-    | Call of {
-        theorem : theorem;
-        params :  formula list
-      }
+    | Call of 
+        {
+          theorem : theorem;
+          params :  formula list
+        }
+
   (*val trans : step list -> demonstration*)
   val is_instance_axiom : formula -> bool
+  val compile :
+    speed:speed -> step list -> demonstration 
   val verif :
     ?theorems:theorem list -> 
     ?hypotheses:formula list -> unit ->
