@@ -1,9 +1,8 @@
 open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Formula_tooling
-open Kernel_prop_interp.Prop_theory.Prop
+open Kernel_prop_interp.Instance_notation_printers
+open Kernel_prop_interp.Theory.Prop
 open Kernel_prop_compile.Compile
 open Kernel_prop_compile.Verif
-open Kernel_prop_compile.Step
 
 open OUnit2
 
@@ -49,7 +48,7 @@ let add_chaining =
   match verif with | Ok() ->
     theorems :=
       {
-        kind = Kernel_prop_interp.Prop_theory.Prop.Theorem;
+        kind = Kernel.Logic.Theorem;
         name = "C6";
         params = [];
         premisses = [];
