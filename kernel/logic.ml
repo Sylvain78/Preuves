@@ -3,10 +3,12 @@ type speed =
   | Paranoid
 
 type kind = 
+  | Invalid
   | Axiom
   | Theorem
   | Assumed
 let kind_to_string = function
+  | Invalid -> "Invalid"
   | Axiom -> "Axiom"
   | Theorem -> "Theorem"
   | Assumed -> "Assumed"
@@ -36,22 +38,18 @@ module type LOGIC = sig
           theorem : theorem;
           params :  formula list
         }
-
-  (*val trans : step list -> demonstration*)
+  type theorem_unproved = (formula, step list) theorem_logic
   val is_instance_axiom : formula -> bool
   val compile :
-    speed:speed -> step list -> demonstration 
-  val verif :
-    ?theorems:theorem list -> 
-    ?hypotheses:formula list -> unit ->
-    formula:formula ->
-    proof:demonstration ->
-    (unit, string * exn) result
-  exception Invalid_demonstration of formula * theorem list * formula list * demonstration
+    speed:speed -> ?hypotheses:formula list -> demonstration:step list -> unit-> demonstration 
+  val verif : speed:speed -> theorem_unproved -> 
+    (theorem, string * exn) result
+  exception Invalid_demonstration of theorem_unproved
   val print_invalid_demonstration : exn -> string option
   val string_to_formula : string -> formula
   val formula_to_string : formula -> string
   val printer_formula : Format.formatter -> formula -> unit
   val string_to_notation : string -> notation
   val printer_demonstration : Format.formatter -> demonstration -> unit
+  val printer_step : Format.formatter -> step -> unit
 end

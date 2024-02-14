@@ -1,10 +1,11 @@
+open Kernel.Logic
 open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Prop_theory.Prop
+open Kernel_prop_interp.Theory.Prop
 open OUnit2
 
+open Kernel_prop_compile.Ast
 open Kernel_prop_compile.Compile
 open Kernel_prop_compile.Verif
-open Kernel_prop_compile.Step
 
 let x1,x2,x3 = PVar 1,PVar 2, PVar 3
 let (=>) a b = PImpl(a,b)
@@ -54,7 +55,7 @@ let add_chaining =
   | Ok() -> 
     theorems :=
       {
-        kind = Kernel_prop_interp.Kind_prop.Theorem;
+        kind = Kernel.Logic.Theorem;
         name = "C6";
         params = [];
         premisses = [];

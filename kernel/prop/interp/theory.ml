@@ -70,19 +70,47 @@ Prop_parser.formule lexbuf
 
   let theorems_prop = ref []
 
-  exception Invalid_demonstration of formula_prop * theorem_prop list * formula_prop list * formula_prop list;;
+  type formula = formula_prop
+  type notation = notation_prop
+  type demonstration = demonstration_prop
+  let axioms = axioms_prop
+  let add_axiom ax = axioms := ax :: !axioms
+  let theorems = theorems_prop
+  type theorem = (formula, demonstration) Kernel.Logic.theorem_logic 
+  type step =  
+    | Single of formula 
+    | Call of {theorem : theorem; params : formula list}
+  let string_to_formula = formula_from_string
+  let formula_to_string = to_string_formula_prop
+  let printer_formula = printer_formula_prop
+  let string_to_notation = notation_from_string
+  let printer_demonstration ff d=
+    (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d
+  let printer_step ff = function
+    | Single f -> Format.fprintf ff "Single(%a)" printer_formula f
+    | Call{theorem; params} -> Format.fprintf ff "Call(%s,%a)" theorem.name 
+                                 (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',')
+                                     printer_formula out l) params
+  exception Invalid_demonstration of formula_prop * theorem_prop list * formula_prop list * step list;;
+
   let print_invalid_demonstration =  (function 
       | Invalid_demonstration(f,theorems,hypotheses,demo) -> 
         (*Printexc.print_backtrace stderr; flush stderr;*)
-        Some("Invalid demonstration of " ^ (to_string_formula_prop f) ^ "\n" ^ 
+        Some(
+Format.fprintf Format.str_formatter "Invalid demonstrion of %a\n\ntheorems\n:%a\n\nhypotheses:%a" printer_formula f
+(fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') (fun out t -> Format.pp_print_string out t.name) out l) theorems
+(fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_formula  out l) hypotheses; Format.flush_str_formatter())
+(*
+
+          "Invalid demonstration of " ^ (to_string_formula_prop f) ^ "\n" ^ 
              "theorems:(" ^
              (List.fold_right (fun th s -> th.name^","^s) theorems "") ^
              ")" ^
              "hypotheses:(" ^
              (List.fold_right (fun hyp s -> (to_string_formula_prop hyp)^","^s) hypotheses "") ^
              ")" ^
-             "demosntration:[[\n" ^
-             (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  demo) ^ "]]\n") 
+             "demonstration:[[\n" ^
+             (List.fold_left  (fun acc f1-> acc ^ (to_string_formula_prop f1) ^ "\n") ""  demo) ^ "]]\n"*)
       | _ -> None);;
   Printexc.register_printer (print_invalid_demonstration)
 
@@ -333,31 +361,19 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     conclusion=formula_from_string "(X_1 \\lor \\lnot X_1)";
   }::!theorems_prop;;
 
-  type formula = formula_prop
-  type notation = notation_prop
-  type demonstration = demonstration_prop
-  let axioms = axioms_prop
-  let add_axiom ax = axioms := ax :: !axioms
-  let theorems = theorems_prop
-  type theorem = (formula, demonstration) Kernel.Logic.theorem_logic 
-  type step =  
-    | Single of formula 
-    | Call of {theorem : theorem; params : formula list}
 
   let verif ?(theorems=[]) ?(hypotheses=[]) () ~formula:f ~proof:(proof:demonstration) = 
     kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof
-  let rec compile ~speed = function 
+  let rec compile ~speed ?(hypotheses=[]) ~demonstration () = 
+    match demonstration 
+    with 
     | [] -> []
-    | Single f :: l -> f :: (compile ~speed l)
+    | Single f :: l -> f :: (compile ~speed ~hypotheses ~demonstration:l ())
     | Call {theorem ; params } :: l ->
       match speed with
-      | Fast -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion) :: (compile ~speed l)
+      | Fast -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion) :: (compile ~speed ~hypotheses ~demonstration:l ())
       | Paranoid -> (List.map (function step -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params step)) theorem.demonstration) 
-                    @ (compile ~speed l)
-  let string_to_formula = formula_from_string
-  let formula_to_string = to_string_formula_prop
-  let printer_formula = printer_formula_prop
-  let string_to_notation = notation_from_string
-  let printer_demonstration ff d=
-    (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d
+                    @ (compile ~speed ~hypotheses ~demonstration:l ())
+
+
 end

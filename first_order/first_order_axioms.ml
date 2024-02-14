@@ -1,6 +1,6 @@
 open Signature 
 open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Prop_theory.Prop
+open Kernel_prop_interp.Theory.Prop
 open First_order_parser
 
 module Axioms (Sig:SIGNATURE)=
