@@ -1,4 +1,5 @@
 open OUnit2
+open Kernel.Logic
 open Kernel_prop_interp.Formula_prop
 open Kernel_prop_interp.Instance_notation_printers
 open Kernel_prop_interp.Theory.Prop
@@ -12,7 +13,7 @@ let () =
 (* |- F  \\implies  F *)
 let verif_tauto = 
   let demo_tauto=
-    (List.map (fun s -> string_to_formula s) [
+    (List.map (fun s -> Single (string_to_formula s)) [
         "(X_1  \\implies  ((X_1  \\implies  X_1)  \\implies  X_1))   \\implies  
          (( X_1  \\implies  (X_1  \\implies  X_1))  \\implies  (X_1  \\implies  X_1))";
         "X_1  \\implies ((X_1  \\implies  X_1)  \\implies  X_1)";
@@ -21,57 +22,51 @@ let verif_tauto =
         "X_1  \\implies  X_1"
       ])
   in
-  match (verif  ~formula:(string_to_formula "X_1  \\implies   X_1") 
-        ~proof:demo_tauto ())
+  let theorem_unproved = {kind=Kernel.Logic.Theorem; name="tautologie" ; params=[]; premisses=[]; conclusion=(string_to_formula "X_1  \\implies   X_1"); demonstration=demo_tauto}
+  in
+  match (verif ~speed:Paranoid theorem_unproved )
   with
-  | Ok() ->
+  | Ok theorem->
     begin
       theorems :=
-        {
-          kind = Kernel.Logic.Theorem;
-          name = "tauto";
-          params = [];
-          premisses = [];
-          demonstration = demo_tauto;
-          conclusion = (string_to_formula "X_1  \\implies  X_1");  
-        }
-        :: !theorems;
+        theorem :: !theorems;
       true
     end
   | Error _ ->  false
 ;;
 
 (* |- (F  \\implies  G)  \\implies  (G  \\implies  H)  \\implies  (F  \\implies  H)*)
-let verif_cut = verif ~formula:(string_to_formula "(X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))")
-    ~proof: (List.map (fun s -> string_to_formula s) [
-        "(X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))";
-        "((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
-        "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
-        "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies (X_2  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
-        "(((X_2  \\implies  X_3)  \\implies  (X_1  \\implies (X_2  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
-        "((X_2  \\implies  X_3)  \\implies   (X_1  \\implies (X_2  \\implies  X_3)))";
-        "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))";
-        "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
-        "(((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
-        "(((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))  \\implies  ((X_1  \\implies  X_2)  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))";    
-        "((X_1  \\implies  X_2)  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))";
-
-        (*k*)
-        "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))";
-
-        (*s*)
-        "((X_1  \\implies  X_2)  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))   \\implies  
+let modus_ponens_unproved = 
+  let modus_ponens = string_to_formula"((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))"
+  and modus_ponens_demo = (List.map (fun s -> Single(string_to_formula s)) [
+      "(X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))";
+      "((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
+      "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
+      "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies (X_2  \\implies  X_3))  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies (X_2  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
+      "(((X_2  \\implies  X_3)  \\implies  (X_1  \\implies (X_2  \\implies  X_3)))  \\implies  ((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3))))";
+      "((X_2  \\implies  X_3)  \\implies   (X_1  \\implies (X_2  \\implies  X_3)))";
+      "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))";
+      "((X_2  \\implies  X_3)  \\implies  ((X_1  \\implies  X_2)  \\implies  (X_1  \\implies  X_3)))  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
+      "(((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
+      "(((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))  \\implies  ((X_1  \\implies  X_2)  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))";    
+      "((X_1  \\implies  X_2)  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))";
+      (*k*)
+      "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))";
+      (*s*)
+      "((X_1  \\implies  X_2)  \\implies  (((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2))  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))   \\implies  
     (((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))  \\implies  ((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))))";
+      "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))  \\implies  ((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
+      "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))"
+    ]) 
+  in
+  {kind = Unproved;name="modus ponens";params=[];premisses=[];conclusion=modus_ponens;demonstration=modus_ponens_demo}
+let verif_cut = verif ~speed:Paranoid modus_ponens_unproved
 
-        "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_2)))  \\implies  ((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))";
-        "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))"
-      ]) ();;
 let add_chaining =
   let chaining =
     string_to_formula "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
-  in
-  let demo_chaining = 
-    List.map (fun s -> string_to_formula s) [
+  and demo_chaining = 
+    List.map (fun s -> Single(string_to_formula s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -95,209 +90,178 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  match (verif ~formula:chaining ~proof:demo_chaining ())          
+  let  chaining_unproved =
+    {
+      kind = Kernel.Logic.Unproved;
+      name = "C6";
+      params = [];
+      premisses = [];
+      demonstration = demo_chaining;
+      conclusion = chaining;
+    }
+  in
+  match (verif ~speed:Paranoid chaining_unproved )          
   with
-  | Ok () ->
+  | Ok theorem ->
     print_endline "C6 verified";
-    theorems :=
-      {
-        kind = Kernel.Logic.Theorem;
-        name = "C6";
-        params = [];
-        premisses = [];
-        demonstration = demo_chaining;
-        conclusion = chaining;
-      }
-      :: !theorems
+    theorems := {theorem with kind=Theorem} :: !theorems
   | Error _ -> ();;
 
-(*non A  \\implies  non B |- B  \\implies  A*)
-let verif_contraposee = 
-  (*TODO delete when not needed anymore
-    let h = ((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))    
-    and (X_1 \\lor X_2) =((\\lnot (\\lnot X_1))  \\implies   X_1)
-    and i = ((\\lnot (\\lnot X_2))  \\implies   X_1)    
-    and a2=    (X_2  \\implies  \\lnot (\\lnot X_2))
-    in
-  *)
-  verif  ~theorems:!theorems ~formula:(string_to_formula "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))")
-    ~proof:(List.map (fun s -> string_to_formula s) [
-        "((\\lnot (\\lnot X_1))  \\implies   X_1)";
-        "((\\lnot (\\lnot X_1))  \\implies   X_1)  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1))";
-        "((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1)";
-        "((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (((\\lnot (\\lnot X_1))  \\implies   X_1)  \\implies ((\\lnot (\\lnot X_2))  \\implies   X_1))";
-        "(((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (((\\lnot (\\lnot X_1))  \\implies   X_1)  \\implies ((\\lnot (\\lnot X_2))  \\implies   X_1)))  \\implies  ((((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1))  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies ((\\lnot (\\lnot X_2))  \\implies   X_1)))";
-        "((((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((\\lnot (\\lnot X_1))  \\implies   X_1))  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies ((\\lnot (\\lnot X_2))  \\implies   X_1)))";
-        "((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies ((\\lnot (\\lnot X_2))  \\implies   X_1)";
-        "(X_2  \\implies  \\lnot (\\lnot X_2))";
-        "(X_2  \\implies  \\lnot (\\lnot X_2))  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  \\lnot (\\lnot X_2)))";
-        "((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  \\lnot (\\lnot X_2))";
-        "(X_2  \\implies  \\lnot (\\lnot X_2))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1))";
-        "((X_2  \\implies  \\lnot (\\lnot X_2))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1)))  \\implies   (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((X_2  \\implies  \\lnot (\\lnot X_2))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1))))";
-        "(((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((X_2  \\implies  \\lnot (\\lnot X_2))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1))))";
-        "(((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  ((X_2  \\implies  \\lnot (\\lnot X_2))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1))))  \\implies  ((((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  \\lnot (\\lnot X_2)))  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1))))";
-        "(((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  \\lnot (\\lnot X_2)))  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1)))";
-        "((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1))";
-        "(((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (((\\lnot (\\lnot X_2))  \\implies   X_1)  \\implies  (X_2  \\implies  X_1)))  \\implies  ((((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies ((\\lnot (\\lnot X_2))  \\implies   X_1))  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  X_1)))";
-        "(((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies ((\\lnot (\\lnot X_2))  \\implies   X_1))  \\implies  (((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  X_1))";
-        "((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  X_1)";
-        "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies   ((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1))))";
-        "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies   ((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1))))  \\implies  ((((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  X_1))  \\implies  (((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1)))";
-        "((((\\lnot (\\lnot X_2))  \\implies  (\\lnot (\\lnot X_1)))  \\implies  (X_2  \\implies  X_1))  \\implies  (((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1)))";
-        "(((\\lnot X_1)  \\implies  (\\lnot X_2))  \\implies  (X_2  \\implies  X_1))";
-      ]) ();;
-
 (*non A  \\implies  non B  \\implies   B  \\implies  A*)
-let verif =
-  verif  ~theorems:!theorems ~formula:(string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
-    ~proof:(List.map (fun s -> string_to_formula s) [
-
-        "((\\lnot (\\lnot X_1)) \\implies X_1)";
-        "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
-        "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)";
-        "(X_2 \\implies \\lnot (\\lnot X_2))";
-        "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2)))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))";
-        "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
-        "((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies  (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))  \\implies  ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1)))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)";
-        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))))";
-        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
-        "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
-        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
-      ]) ()
-in 
-match verif 
+let contraposition = string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))"
+and  contraposition_demo = (List.map (fun s -> Single(string_to_formula s)) [
+    "((\\lnot (\\lnot X_1)) \\implies X_1)";
+    "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)";
+    "(X_2 \\implies \\lnot (\\lnot X_2))";
+    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))";
+    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+    "((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies  (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))  \\implies  ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))))";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
+  ])  
+let contraposition_unproved = {
+  kind = Assumed;
+  name ="contraposition";
+  params = [];
+  premisses  = [];
+  demonstration = contraposition_demo;
+  conclusion =contraposition;}
+let verif_contraposee = verif ~speed:Paranoid contraposition_unproved
+;;
+match verif_contraposee 
 with 
-| Ok() ->  theorems := {
-    kind = Assumed;
-    name ="contraposition";
-    params = [];
-    premisses  = [];
-    demonstration = [];
-    conclusion = string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
-    ::!theorems
+| Ok theorem ->  
+  theorems := {theorem with kind=Theorem} :: !theorems
 | Error _ -> ()
 ;;
 
 (*|- A ou \\lnot A*)
+let tiers_exclus = (string_to_formula "X_1 \\lor \\lnot X_1")
+let tiers_exclus_demo = (List.map (fun s -> Single(string_to_formula s)) [
+
+    "(X_1  \\implies  X_1)";
+    "(X_1  \\implies  X_1)  \\implies  (\\lnot (\\lnot (X_1  \\implies  X_1)))"; 
+    "\\lnot (\\lnot (X_1  \\implies  X_1))";(*OK*)
+
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
+
+    "X_1  \\implies  (X_1 \\lor \\lnot X_1)";
+    "(X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1  \\implies  (X_1 \\lor \\lnot X_1)))";
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1  \\implies ((X_1 \\lor \\lnot X_1)))";(*OK*)
+
+    "((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))"; 
+    "((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   ((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1))))"; 
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))"; (*OK*)
+
+    "(X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)";
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)";
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1))";
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1))";(*OK*)
+
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))  \\implies  (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))";
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1))";
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)";(*OK*)
+
+    "(\\lnot X_1)  \\implies   (X_1 \\lor \\lnot X_1)";
+    "((\\lnot X_1)  \\implies   (X_1 \\lor \\lnot X_1))  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies   (X_1 \\lor \\lnot X_1)))";
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  ((X_1 \\lor \\lnot X_1)))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  ((X_1 \\lor \\lnot X_1))))  \\implies  (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (\\lnot X_1))  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (X_1 \\lor \\lnot X_1)))";
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (\\lnot X_1))  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (X_1 \\lor \\lnot X_1))";
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1 \\lor \\lnot X_1))";(*OK*)
+
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
+
+    "((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))";
+    "(((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))))  \\implies  
+    ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))))";
+
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))))  \\implies  
+    (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1))))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1 \\lor \\lnot X_1)  \\implies  (\\lnot (X_1  \\implies  X_1)))))";
+    "(((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1))))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1 \\lor \\lnot X_1)  \\implies  (\\lnot (X_1  \\implies  X_1)))))";
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))))  \\implies  
+    (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1  \\implies  X_1))))";
+    "(((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1  \\implies  X_1))))";
+    "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))";(*OK*)
+    "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot(\\lnot (X_1 \\lor \\lnot X_1))))";(*OK*)
+    "(\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot(\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
+    "(\\lnot(\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  ((X_1 \\lor \\lnot X_1))";(*OK*)
+    "\\lnot(\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
+    "(X_1 \\lor \\lnot X_1)"
+  ])
+let tiers_exclus_unproved={kind=Unproved;name="tiers exclus"; params=[];premisses=[];conclusion=tiers_exclus;demonstration=tiers_exclus_demo}
 let verif_tiers_exclus =
   (*let z = X_1 \\lor \\lnot X_1
     and tout = \\lnot (X_1  \\implies  X_1)
     in
   *)
-  verif  ~theorems:!theorems ~formula:(string_to_formula "X_1 \\lor \\lnot X_1")
-    ~proof:(List.map (fun s -> string_to_formula s) [
-
-        "(X_1  \\implies  X_1)";
-        "(X_1  \\implies  X_1)  \\implies  (\\lnot (\\lnot (X_1  \\implies  X_1)))"; 
-        "\\lnot (\\lnot (X_1  \\implies  X_1))";(*OK*)
-
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
-
-        "X_1  \\implies  (X_1 \\lor \\lnot X_1)";
-        "(X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1  \\implies  (X_1 \\lor \\lnot X_1)))";
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1  \\implies ((X_1 \\lor \\lnot X_1)))";(*OK*)
-
-        "((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))"; 
-        "((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   ((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1))))"; 
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))"; (*OK*)
-
-        "(X_1  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)";
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)";
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1)  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  \\lnot X_1))";
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1))";(*OK*)
-
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))  \\implies  (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)))";
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1))";
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot X_1)";(*OK*)
-
-        "(\\lnot X_1)  \\implies   (X_1 \\lor \\lnot X_1)";
-        "((\\lnot X_1)  \\implies   (X_1 \\lor \\lnot X_1))  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies   (X_1 \\lor \\lnot X_1)))";
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  ((X_1 \\lor \\lnot X_1)))";(*OK*)
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  ((X_1 \\lor \\lnot X_1))))  \\implies  (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (\\lnot X_1))  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (X_1 \\lor \\lnot X_1)))";
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (\\lnot X_1))  \\implies   ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (X_1 \\lor \\lnot X_1))";
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1 \\lor \\lnot X_1))";(*OK*)
-
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
-
-        "((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))";
-        "(((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))))  \\implies  
-    ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies   (((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))))";
-
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))))";(*OK*)
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))))  \\implies  
-    (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1))))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1 \\lor \\lnot X_1)  \\implies  (\\lnot (X_1  \\implies  X_1)))))";
-        "(((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot (X_1 \\lor \\lnot X_1))))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((X_1 \\lor \\lnot X_1)  \\implies  (\\lnot (X_1  \\implies  X_1)))))";
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))";(*OK*)
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (((X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))))  \\implies  
-    (((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1  \\implies  X_1))))";
-        "(((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  (\\lnot (X_1  \\implies  X_1))))";
-        "(\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1)))";(*OK*)
-        "((\\lnot (X_1 \\lor \\lnot X_1))  \\implies  ((\\lnot (X_1  \\implies  X_1))))  \\implies  ((\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot(\\lnot (X_1 \\lor \\lnot X_1))))";(*OK*)
-        "(\\lnot (\\lnot (X_1  \\implies  X_1)))  \\implies  (\\lnot(\\lnot (X_1 \\lor \\lnot X_1)))";(*OK*)
-        "(\\lnot(\\lnot (X_1 \\lor \\lnot X_1)))  \\implies  ((X_1 \\lor \\lnot X_1))";(*OK*)
-        "\\lnot(\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
-        "(X_1 \\lor \\lnot X_1)"
-      ]) ();;
+  verif ~speed:Paranoid tiers_exclus_unproved 
 
 (* |- (A  \\implies  C)  \\implies  (A  \\implies  (B  \\implies  C))*)
+let rajout = (string_to_formula "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))")
+and rajout_demo =  (List.map (fun s -> Single(string_to_formula s)) [
+    (*((S (K (S (K K)))) I)*)    
+    "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)";(*i*)
+    "X_3  \\implies  (X_2  \\implies  X_3)"; (*k*)
+    "(X_3  \\implies  (X_2  \\implies  X_3))  \\implies  (X_1  \\implies  (X_3  \\implies  (X_2  \\implies  X_3)))"; 
+    "(X_1  \\implies  (X_3  \\implies  (X_2  \\implies  X_3)))"; (*k k*)
+    "(X_1  \\implies  (X_3  \\implies  (X_2  \\implies  X_3)))  \\implies  
+    ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))"; 
+    "((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))"; (*s (k k)*)
+    "((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))";
+    "((X_1  \\implies  X_3)  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))"; (*k (s (k k))*)
+    "((X_1  \\implies  X_3)  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))  \\implies  
+    (((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))";
+    "(((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))";(*s (k (s (k k)))*)
+    "((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))"; (*(s (k (s (k k)))) i*)
+  ])
+let rajout_demo_unproved={kind=Unproved;name="rajout"; params=[];premisses=[]; conclusion=rajout;demonstration=rajout_demo}
 let verif_rajout_hypothese =
   (*TODO to delete when not needed anymore
     let 
     X_1,b,X_3=X_1,X_2,X_3
     in
     let (X_1  \\implies  X_3) = (X_1  \\implies  X_3)
-    and (X_2  \\implies  X_3) = (b  \\implies  X_3)
-    in*)
-  verif  ~theorems:!theorems ~formula:(string_to_formula "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))")
-    ~proof:(List.map (fun s -> string_to_formula s) [
-        (*((S (K (S (K K)))) I)*)    
-        "(X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)";(*i*)
-        "X_3  \\implies  (X_2  \\implies  X_3)"; (*k*)
-        "(X_3  \\implies  (X_2  \\implies  X_3))  \\implies  (X_1  \\implies  (X_3  \\implies  (X_2  \\implies  X_3)))"; 
-        "(X_1  \\implies  (X_3  \\implies  (X_2  \\implies  X_3)))"; (*k k*)
-        "(X_1  \\implies  (X_3  \\implies  (X_2  \\implies  X_3)))  \\implies  
-    ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))"; 
-        "((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))"; (*s (k k)*)
-        "((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))";
-        "((X_1  \\implies  X_3)  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))"; (*k (s (k k))*)
-        "((X_1  \\implies  X_3)  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))  \\implies  
-    (((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))";
-        "(((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))";(*s (k (s (k k)))*)
-        "((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))"; (*(s (k (s (k k)))) i*)
-      ]) ();;
+    and (X_2  \\implies  X_3) = (b  \\implies  X_3)*)
+  verif ~speed:Paranoid rajout_demo_unproved
 
 (* |- F ou F  \\implies  F *)
-let verif_ou_idempotent =
-  verif  ~theorems:!theorems ~formula:(string_to_formula "(X_1 \\lor X_1)  \\implies  X_1")
-    ~proof:(List.map (fun s -> string_to_formula s) [
-        "((X_1 \\lor X_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))";
-        "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))";
-        "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))  \\implies  ((((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies  ((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))))";
-        "((((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies  ((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))))";
-        "((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))";
-        "((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies   (((\\lnot X_1)  \\implies  (\\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1))))";
-        "((\\lnot X_1)  \\implies  (\\lnot X_1))";
-        "(((\\lnot X_1)  \\implies  (\\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1))))";
-        "((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1)))";
-        "((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1)))  \\implies   ((X_1\\lorX_1)   \\implies  X_1)";
-        "(X_1\\lor X_1)  \\implies  X_1";
-      ]) ();;
+let ou_idempotent = (string_to_formula "(X_1 \\lor X_1)  \\implies  X_1")
+and ou_idempotent_demo = (List.map (fun s -> Single(string_to_formula s)) [
+    "((X_1 \\lor X_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))";
+    "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))";
+    "((\\lnot X_1)  \\implies   ((X_1 \\lor X_1)  \\implies  X_1))  \\implies  ((((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies  ((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))))";
+    "((((X_1 \\lorX_1)  \\implies  X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies  ((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1))))";
+    "((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))";
+    "((\\lnot X_1)  \\implies  ((\\lnot X_1)  \\implies  \\lnot (X_1\\lorX_1)))  \\implies   (((\\lnot X_1)  \\implies  (\\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1))))";
+    "((\\lnot X_1)  \\implies  (\\lnot X_1))";
+    "(((\\lnot X_1)  \\implies  (\\lnot X_1))  \\implies  ((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1))))";
+    "((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1)))";
+    "((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1)))  \\implies   ((X_1\\lorX_1)   \\implies  X_1)";
+    "(X_1\\lor X_1)  \\implies  X_1";
+  ])
+let ou_idempotent_unproved = {kind=Unproved;name="ou idempotent";params=[];premisses=[];conclusion=ou_idempotent;demonstration=ou_idempotent_demo}
+let verif_ou_idempotent = verif ~speed:Paranoid ou_idempotent_unproved
 
 (* |- (A ou B)  \\implies  (A  \\implies  C)  \\implies  (B  \\implies  C)  \\implies  C*)
-let verif_ou_diamant =
-
+let ou_diamant = (string_to_formula "(X_1 \\lor X_2)  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3))")
+and ou_diamant_demo = 
   let neg p = PNeg p
   and (=>.) a b = PImpl(a,b)
   and (||.) a b = POr(a,b)
@@ -313,503 +277,517 @@ let verif_ou_diamant =
   in 
   let diamond =  (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)))
   in 
-  let demo = 
-    let taut x =
-      [
-        (x =>. ((x =>. x) =>. x)) =>. ((x =>. (x =>. x)) =>. (x =>. x));
-        x =>. ((x =>. x) =>. x);
-        (x =>. (x =>. x)) =>. (x =>. x);
-        x =>. (x =>. x);
-        x =>. x;
-      ]
-    and cut x1 x2 x3 =
-      [
-        (x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3));
-        ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3))) =>. ((x2 =>. x3) =>. ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
-        ((x2 =>. x3) =>. ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
-        ((x2 =>. x3) =>. ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3)))) =>. (((x2 =>. x3) =>. (x1 =>. (x2 =>. x3))) =>. ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
-        (((x2 =>. x3) =>. (x1 =>. (x2 =>. x3))) =>. ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
-        ((x2 =>. x3) =>.  (x1 =>. (x2 =>. x3)));
-        ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3)));
-        ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3))) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
-        (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
-        (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))) =>. ((x1 =>. x2) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))));  
-        ((x1 =>. x2) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))));
-        ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x2)));
-        ((x1 =>. x2) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))))  =>.  (((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x2))) =>. ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x3))));
-        ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x2))) =>. ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
-        ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
-      ] 
-    in
-    let neg_contraposition x1 x2 =
-      [
-        (*138*)      ((neg  (neg  x1))  =>.x1);
-        ((neg  (neg  x1))  =>.x1)  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1));
-        ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1);
-        (*155*)    ]@ (cut (neg (neg x2)) (neg (neg x1)) x1) @[
-        ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x1))  =>.x1)  =>.((neg  (neg  x2))  =>.x1));
-        (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x1))  =>.x1)  =>.((neg  (neg  x2))  =>.x1)))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1)));
-        ((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1)));
-        ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1);
-        (*160*)      (x2  =>.neg  (neg  x2));
-        (x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)));
-        ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2));
-        (*163*)]@cut x2 (neg (neg x2)) x1@[
-        (x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1));
-        (*165*)      ((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
-        (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
-        (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
-        (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)));
-        ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1));
-        (*170*)      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1)));
-        (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1));
-        ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1);
-        (*187*) (((neg  x1)  =>.(neg  x2))  =>.((neg  (neg  x2))  =>.(neg  (neg  x1))));
-        (*188*)] @ 
-      (cut ((neg  x1)  =>.(neg  x2)) ((neg  (neg  x2))  =>.(neg  (neg  x1))) (x2=>.x1))
-      @ [
-        (((neg  x1)  =>.(neg  x2))  =>.((neg  (neg  x2))  =>.(neg  (neg  x1))))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1))  =>.(((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1)));
-        ((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1))  =>.(((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1)));
-        (((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1));
-      ]
-    in 
-    (*05*)  (taut a) @ [
-        (a =>. a) =>. (neg tout);
-        (*neg tout*)
-        (neg tout);
-        (neg tout)=>.(b_entraine_c=>. neg tout);
-        (b_entraine_c=>. neg tout);
-        (*10*)   (b_entraine_c=>. neg tout)=>.(a_entraine_c=>.(b_entraine_c=>. neg tout));
-        (a_entraine_c=>.(b_entraine_c=>. neg tout));
-        (a_entraine_c=>.(b_entraine_c=>. neg tout))=>.  (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>. neg tout)));
-        (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>. neg tout)));
-
-        (*a_ou_b;*)
-        (*a_ou_b=>.((neg c)=>.a_ou_b);*)
-        a_ou_b=>.((neg c)=>.a_ou_b);
-
-        (*((neg c)=>.a_ou_b);*)
-        (*15*)    ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b));
-
-        (((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))=>. 
-        (a_ou_b =>.( ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
-
-        (a_ou_b =>.( ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
-        ((a_ou_b =>.( ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))))=>.
-        ((a_ou_b =>. ((neg c) =>. a_ou_b))=>. (a_ou_b =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
-
-        (a_ou_b=>.((neg c)=>.a_ou_b))=>.  (a_ou_b=>.(b_entraine_c=>.((neg c)=>.a_ou_b)));
-
-        (*20*)  (a_ou_b=>.(b_entraine_c=>.((neg c)=>.a_ou_b)));
-
-        ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
-        ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))) =>. (a_ou_b =>. ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
-        (a_ou_b =>. ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
-        (a_ou_b =>. ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))))) =>. ((a_ou_b =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))) =>. (a_ou_b =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
-        (*25*)    ((a_ou_b =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))) =>. (a_ou_b =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
-
-        (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.a_ou_b))));
-
-        (*a_entraine_c;*)
-        (*27*)    a_entraine_c=>.((neg c)=>.a_entraine_c);
-        (*((neg c)=>.a_entraine_c);*)
-        (*32*)  ] @ (taut (neg c)) @ [
-              ((neg c)=>.(neg c))=>.(a_entraine_c=>.((neg c)=>.(neg c)));
-              (a_entraine_c=>.((neg c)=>.(neg c)));
-              (*35*)    ((a_entraine_c)=>.((neg c)=>.(neg a)));
-              ((a_entraine_c)=>.((neg c)=>.(neg a)))=>.((neg c)=>.((a_entraine_c)=>.((neg c)=>.(neg a))));
-              ((neg c)=>.((a_entraine_c)=>.((neg c)=>.(neg a))));
-              ((neg c)=>.((a_entraine_c)=>.((neg c)=>.(neg a))))=>.
-              (((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a))));
-              (((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a))));
-              (((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a))))=>.
-              (*40*)    (a_entraine_c=>.(((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a)))));
-              (a_entraine_c=>.(((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a)))));
-              (a_entraine_c=>.(((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a)))))=>.
-              ((a_entraine_c=>.((neg c)=>.a_entraine_c))=>.(a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a)))));
-              ((a_entraine_c=>.((neg c)=>.a_entraine_c))=>.(a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a)))));
-              a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a)));
-              (*45*)    ((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)));
-
-              (((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a))))=>.
-              (a_entraine_c=>.(((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
-              (a_entraine_c=>.(((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
-              (a_entraine_c=>.(((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))))=>.
-              ((a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
-              ((a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
-              (*50*)    a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)));
-              (a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a))))=>.
-              ((a_entraine_c=>.((neg c)=>.(neg c)))=>.(a_entraine_c=>.((neg c)=>.(neg a))));
-              (a_entraine_c=>.((neg c)=>.(neg c)))=>.(a_entraine_c=>.((neg c)=>.(neg a)));
-              (*((neg c)=>.(neg a));*)
-              a_entraine_c=>.((neg c)=>.(neg a));
-              ((neg a)=>.(a_ou_b=>.(b)));
-              (*((neg a)=>.(a_ou_b=>.(b)))=>. ((neg c)=>. ((neg a)=>.(a_ou_b=>.(b))));*)
-              (*55*)    ((neg a)=>.(a_ou_b=>.(b)))=>. ((neg c)=>. ((neg a)=>.(a_ou_b=>.(b))));
-              (*((neg c)=>.((neg a)=>.(a_ou_b=>.(b))));*)
-              ((neg c)=>.((neg a)=>.(a_ou_b=>.(b))));
-              (*((neg c)=>.((neg a)=>.(a_ou_b=>.(b))))=>.(((neg c)=>.(neg a))=>.((neg c)=>.(a_ou_b=>.(b))));*)
-              ((neg c)=>.((neg a)=>.(a_ou_b=>.(b))))=>.(((neg c)=>.(neg a))=>.((neg c)=>.(a_ou_b=>.(b))));
-              (*(((neg c)=>.(neg a))=>.((neg c)=>.(a_ou_b=>.(b))));*)
-              ((((neg c)=>.(neg a))=>.((neg c)=>.((a_ou_b)=>.(b)))));
-              ((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.
-              (a_entraine_c=>.((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b))))));
-              (*60*)    (a_entraine_c=>.((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b))))));
-              (a_entraine_c=>.((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.
-              ((a_entraine_c=>.(((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))));
-              ((a_entraine_c=>.(((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))));
-              (a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))));
-
-              (((neg c)=>.(a_ou_b=>.b)))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))));
-              ((((neg c)=>.(a_ou_b=>.b)))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.
-              (*65*)    (a_entraine_c=>.((((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))));
-              (a_entraine_c=>.((((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))); (*k k*)
-              (a_entraine_c=>.((((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))))=>.
-              ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))));
-
-              ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))); (*s (k k)*)
-              ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))));
-              (*70*)    ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))));(*k (s (k k))*)
-              ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))))=>.
-              (((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))));
-              (((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))))); (*(s (k (s (k k))))*)
-              (*77*)  ] @ (taut ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))) (*i*)@ [
-
-              ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))));(*((s (k (s (k k)))) i)*)
-
-              (*((neg c)=>.(a_ou_b=>.(b)));*)
-
-              a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))));
-              (*((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b));*)
-              (*80*)    ((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b));
-              (((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))=>.
-              (b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
-              (b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
-              (b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))))=>.
-              ((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
-              ((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
-              ((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))))=>.
-              (*85*)    (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
-              (*(((neg c)=>.(a_ou_b))=>.((neg c)=>.b));*)
-
-              a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))));
-              (b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
-              (*90*)   ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))));
-
-
-              ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
-               ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))) =>. 
-              (*91*)(a_entraine_c =>. ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
-
-              (*92*)    a_entraine_c =>. ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
-              (a_entraine_c =>. ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>. ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))) =>. ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
-              (a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
-              (*95*)    (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
-              (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
-              (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))))=>. ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>. (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))))) ;
-              ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>. (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
-                                                                                               ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))))) ;
-
-              (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
-                (*100*)      ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
-
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)))));
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)))));
-
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)))))=>.
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
-              (*105*)    (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))))=>.
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
-              (*((neg c)=>.(b));*)
-              (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b))));
-              (*((neg c)=>.(b))=>.(b_entraine_c=>.((neg c)=>.(b)));
-                (b_entraine_c=>.((neg c)=>.(b)));
-                (b_entraine_c=>.((neg c)=>.(b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))));
-
-                a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)));*)
-              (*b_entraine_c;*)
-              b_entraine_c=>.((neg c)=>. b_entraine_c);
-              (b_entraine_c=>.((neg c)=>. b_entraine_c))=>.
-              (*110*)    (a_entraine_c=>.(b_entraine_c=>.((neg c)=>. b_entraine_c)));
-              (*((neg c)=>.(b_entraine_c));*)
-              a_entraine_c=>.(b_entraine_c=>.((neg c)=>. b_entraine_c));
-
-              (*((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c));*)
-              (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c)));
-              (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.(b_entraine_c=>.(((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c))));
-              b_entraine_c=>. (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c)));
-              (b_entraine_c=>. (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.
-              ((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
-              ((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
-              ((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))));
-
-
-              a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
-
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b_entraine_c))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))));
-              (*120*)    ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b_entraine_c))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))));
-              (*(((neg c)=>.b)=>.((neg c)=>.c));*)
-              (*(((neg c)=>.b)=>.((neg c)=>.c));
-                (((neg c)=>.b)=>.((neg c)=>.c))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)));*)
-              a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
-              (b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
-              ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)));
-
-              ((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
-               ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c))))=>.
-              (a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
-                               ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
-
-              (a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
-                               ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
-
-              (a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
-              ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
-
-
-              a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)));
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))));
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))));
-
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))))=>.
-              (*130*)    (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))))=>.
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
-
-              (*((neg c)=>.(c));*)
-              (*((neg c)=>.(c));
-                ((neg c)=>.(c))=>.(b_entraine_c=>.((neg c)=>.(c)));*)
-              a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(c))));
-              (*((neg c)=>.((neg tout)=>.(neg c)));*)
-              (*135*)     ((neg c)=>.((neg tout)=>.(neg c)));
-              ((neg c)=>.((neg tout)=>.(neg c)))=>.(b_entraine_c=>.((neg c)=>.((neg tout)=>.(neg c))));
-              (b_entraine_c=>.((neg c)=>.((neg tout)=>.(neg c))));
-              (*(((neg tout)=>.(neg c))=>.((c)=>.(tout)));*)
-
-            ]@ neg_contraposition (tout) (c) @ [
-              (((neg tout)=>.(neg c))=>.((c)=>.(tout)));
-              (((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>.(b_entraine_c=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));
-              (b_entraine_c=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));
-              (*(((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout))));*)
-              ((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout)))));
-              ((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout)))))=>.(b_entraine_c=>.((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout))))));
-              (b_entraine_c=>.((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout))))));
-              (*((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));*)
-              ((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));
-              ((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))=>.(b_entraine_c=>.((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout)))));
-              (b_entraine_c=>.((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout)))));
-              (*((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))=>. (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)));*)
-              (((neg c)=>.(((neg tout)=>.(neg c)) =>. ((c)=>.(tout))))=>. 
-               (((neg c)=>.((neg tout)=>.(neg c))) =>. ((neg c)=>.(c=>.tout))));
-
-              (((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))
-               =>. 
-               (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))
-              )
-              =>.
-              (b_entraine_c=>.(((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))
-                               =>. 
-                               (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))
-                              )
-              );
-              (b_entraine_c=>.(((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))=>. (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))));
-              (*(((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)));*)
-              (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)));
-              (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))=>.(b_entraine_c=>.(((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout))));
-              (b_entraine_c=>.(((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout))));
-              (*((neg c)=>.((c)=>.(tout)));*)
-              ((neg c)=>.((c)=>.(tout)));
-              ((neg c)=>.((c)=>.(tout)))=>.(b_entraine_c=>.((neg c)=>.((c)=>.(tout))));
-              (b_entraine_c=>.((neg c)=>.((c)=>.(tout))));
-              (*((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout));*)
-              ((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout));
-              (((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout)))=>.(b_entraine_c=>.(((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout))));
-              b_entraine_c=>.(((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout)));
-              (*((neg c)=>.c)=>. ((neg c)=>.tout);*)
-              (((neg c)=>.c)=>. ((neg c)=>.tout));
-              (((neg c)=>.c)=>. ((neg c)=>.tout))=>.(b_entraine_c=>.(((neg c)=>.c)=>. ((neg c)=>.tout)));
-              (b_entraine_c=>.(((neg c)=>.c)=>. ((neg c)=>.tout)));
-              (b_entraine_c=>.(((neg c)=>.c)=>. ((neg c)=>.tout)))=>.
-              ((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout)));
-              ((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout)));
-              ((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout)))=>.
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout))));
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout))));
-
-              (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))));
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))));
-
-              ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))))=>.
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))));
-
-
-              a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))));
-
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))))=>.
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))));
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))));
-              (*((neg c)=>.(tout));*)
-              (*((neg c)=>.(tout));
-                ((neg c)=>.(tout))=>.(b_entraine_c=>.((neg (c))=>.(tout)));*)
-
-
-
-              a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))));
-              (*(((neg c)=>.(tout))=>.((neg tout)=>.(neg(neg c))));*)
-              ((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))));
-              (((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c)))))=>.(b_entraine_c=>.(((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))))));
-              (b_entraine_c=>.(((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))))));
-              (b_entraine_c=>.(((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))))))=>.
-              ((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))));
-              ((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))));
-              ((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
-              (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
-
-              (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
-              (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
-              (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
-              (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
-
-              (a_entraine_c =>. ((b_entraine_c=>.((neg (c))=>.(tout))) =>. (b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
-              ((a_entraine_c =>. (b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
-            ]@(cut 
-                 a_ou_b 
-                 (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))
-                 ((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))
-              )@[
-              (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))
-              =>.
-              (((a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
-                ((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))
-               =>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))));
-
-              (((a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))=>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))));
-
-              a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))=>.
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
-
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
-              (*((neg tout)=>.(neg(neg c)));*)
-              (*((neg tout)=>.(neg(neg c)));
-                ((neg tout)=>.(neg(neg c)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))));*)
-              a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))));
-              (b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
-              ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))));
-
-              ((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
-               ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.
-              (a_entraine_c=>.((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
-                               ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
-              (a_entraine_c=>.((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
-                               ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
-
-              (a_entraine_c=>.((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
-
-              ((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
-               (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
-              ((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
-               (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))))=>.
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
-                         (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))));
-
-              a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
-                        (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
-
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
-                         (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))))=>.
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.(a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))));
-
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
-               (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))));
-
-              a_ou_b=>.
-              (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))));
-              (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))));
-            ] @ (cut
-                   a_ou_b
-                   (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))
-                   ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))
-                ) 
-            @ [
-
-              (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))))
-              =>.(((a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.
-                   ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))))
-                  =>.
-                  (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))));	         
-              (((a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))))=>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))));
-              a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))));
-
-
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))));
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))))=>.
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg tout))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))));
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg tout))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))));
-              (*(neg(neg c));*)
-              (*(neg(neg c));
-                (neg(neg c))=>.(b_entraine_c=>.(neg(neg (c))));*)
-              a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))));
-              (*((neg(neg c))=>.(c));*)
-              ((neg(neg c))=>.(c));
-              ((neg(neg c))=>.(c))=>.(b_entraine_c=>.((neg(neg c))=>.(c)));
-              (b_entraine_c=>.((neg(neg c))=>.(c)));
-
-              (b_entraine_c=>.((neg(neg c))=>.(c)))=>.
-              ((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c));
-
-              ((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c));
-
-              ((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c))=>.
-              (a_entraine_c=>.((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c)));
-
-              (a_entraine_c=>.((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c)));
-              (a_entraine_c=>.((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c)))=>.
-              ((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c)));
-              ((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c)));
-              ((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c)))=>.
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c))));
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c))));
-              (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c))))=>.
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg c)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c))));
-              ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg c)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c))));
-              (*(c)*)
-              (*c;
-                c=>.(b_entraine_c=>.c);*)
-              (*a_entraine_c=>.(b_entraine_c=>.c);
-                (a_entraine_c=>.(b_entraine_c=>.c))=>. (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));*)
-
-              diamond;
-            ]
+  let taut x =
+    [
+      (x =>. ((x =>. x) =>. x)) =>. ((x =>. (x =>. x)) =>. (x =>. x));
+      x =>. ((x =>. x) =>. x);
+      (x =>. (x =>. x)) =>. (x =>. x);
+      x =>. (x =>. x);
+      x =>. x;
+    ]
+  and cut x1 x2 x3 =
+    [
+      (x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3));
+      ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3))) =>. ((x2 =>. x3) =>. ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
+      ((x2 =>. x3) =>. ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
+      ((x2 =>. x3) =>. ((x1 =>. (x2 =>. x3)) =>. ((x1 =>. x2) =>. (x1 =>. x3)))) =>. (((x2 =>. x3) =>. (x1 =>. (x2 =>. x3))) =>. ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
+      (((x2 =>. x3) =>. (x1 =>. (x2 =>. x3))) =>. ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3))));
+      ((x2 =>. x3) =>.  (x1 =>. (x2 =>. x3)));
+      ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3)));
+      ((x2 =>. x3) =>. ((x1 =>. x2) =>. (x1 =>. x3))) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
+      (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
+      (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))) =>. ((x1 =>. x2) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))));  
+      ((x1 =>. x2) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))));
+      ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x2)));
+      ((x1 =>. x2) =>. (((x2 =>. x3) =>. (x1 =>. x2)) =>. ((x2 =>. x3) =>. (x1 =>. x3))))  =>.  (((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x2))) =>. ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x3))));
+      ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x2))) =>. ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
+      ((x1 =>. x2) =>. ((x2 =>. x3) =>. (x1 =>. x3)));
+    ] 
   in
-  verif  ~formula:(string_to_formula "(X_1 \\lor X_2)  \\implies  ((X_1  \\implies  X_3)  \\implies  ((X_2  \\implies  X_3)  \\implies  X_3))")
-    ~proof:demo ()
+  let neg_contraposition x1 x2 =
+    [
+      (*138*)      ((neg  (neg  x1))  =>.x1);
+      ((neg  (neg  x1))  =>.x1)  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1));
+      ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1);
+      (*155*)    ]@ (cut (neg (neg x2)) (neg (neg x1)) x1) @[
+      ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x1))  =>.x1)  =>.((neg  (neg  x2))  =>.x1));
+      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x1))  =>.x1)  =>.((neg  (neg  x2))  =>.x1)))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1)));
+      ((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1)));
+      ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1);
+      (*160*)      (x2  =>.neg  (neg  x2));
+      (x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)));
+      ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2));
+      (*163*)]@cut x2 (neg (neg x2)) x1@[
+      (x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1));
+      (*165*)      ((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
+      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
+      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
+      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)));
+      ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1));
+      (*170*)      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1)));
+      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1));
+      ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1);
+      (*187*) (((neg  x1)  =>.(neg  x2))  =>.((neg  (neg  x2))  =>.(neg  (neg  x1))));
+      (*188*)] @ 
+    (cut ((neg  x1)  =>.(neg  x2)) ((neg  (neg  x2))  =>.(neg  (neg  x1))) (x2=>.x1))
+    @ [
+      (((neg  x1)  =>.(neg  x2))  =>.((neg  (neg  x2))  =>.(neg  (neg  x1))))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1))  =>.(((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1)));
+      ((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1))  =>.(((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1)));
+      (((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1));
+    ]
+  in 
+  List.map (fun f -> Single f) (
+    (*05*)  
+    (taut a) @ [
+      (a =>. a) =>. (neg tout);
+      (*neg tout*)
+      (neg tout);
+      (neg tout)=>.(b_entraine_c=>. neg tout);
+      (b_entraine_c=>. neg tout);
+      (*10*)   (b_entraine_c=>. neg tout)=>.(a_entraine_c=>.(b_entraine_c=>. neg tout));
+      (a_entraine_c=>.(b_entraine_c=>. neg tout));
+      (a_entraine_c=>.(b_entraine_c=>. neg tout))=>.  (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>. neg tout)));
+      (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>. neg tout)));
+
+      (*a_ou_b;*)
+      (*a_ou_b=>.((neg c)=>.a_ou_b);*)
+      a_ou_b=>.((neg c)=>.a_ou_b);
+
+      (*((neg c)=>.a_ou_b);*)
+      (*15*)    ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b));
+
+      (((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))=>. 
+      (a_ou_b =>.( ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
+
+      (a_ou_b =>.( ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
+      ((a_ou_b =>.( ((neg c) =>. a_ou_b) =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))))=>.
+      ((a_ou_b =>. ((neg c) =>. a_ou_b))=>. (a_ou_b =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
+
+      (a_ou_b=>.((neg c)=>.a_ou_b))=>.  (a_ou_b=>.(b_entraine_c=>.((neg c)=>.a_ou_b)));
+
+      (*20*)  (a_ou_b=>.(b_entraine_c=>.((neg c)=>.a_ou_b)));
+
+      ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))));
+      ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))) =>. (a_ou_b =>. ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
+      (a_ou_b =>. ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
+      (a_ou_b =>. ((b_entraine_c =>. ((neg c) =>. a_ou_b)) =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))))) =>. ((a_ou_b =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))) =>. (a_ou_b =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
+      (*25*)    ((a_ou_b =>. (b_entraine_c =>. ((neg c) =>. a_ou_b))) =>. (a_ou_b =>. (a_entraine_c =>. (b_entraine_c =>. ((neg c) =>. a_ou_b)))));
+
+      (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.a_ou_b))));
+
+      (*a_entraine_c;*)
+      (*27*)    a_entraine_c=>.((neg c)=>.a_entraine_c);
+      (*((neg c)=>.a_entraine_c);*)
+      (*32*)  ] @ (taut (neg c)) @ [
+      ((neg c)=>.(neg c))=>.(a_entraine_c=>.((neg c)=>.(neg c)));
+      (a_entraine_c=>.((neg c)=>.(neg c)));
+      (*35*)    ((a_entraine_c)=>.((neg c)=>.(neg a)));
+      ((a_entraine_c)=>.((neg c)=>.(neg a)))=>.((neg c)=>.((a_entraine_c)=>.((neg c)=>.(neg a))));
+      ((neg c)=>.((a_entraine_c)=>.((neg c)=>.(neg a))));
+      ((neg c)=>.((a_entraine_c)=>.((neg c)=>.(neg a))))=>.
+      (((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a))));
+      (((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a))));
+      (((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a))))=>.
+      (*40*)    (a_entraine_c=>.(((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a)))));
+      (a_entraine_c=>.(((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a)))));
+      (a_entraine_c=>.(((neg c)=>.a_entraine_c)=>.((neg c)=>.((neg c)=>.(neg a)))))=>.
+      ((a_entraine_c=>.((neg c)=>.a_entraine_c))=>.(a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a)))));
+      ((a_entraine_c=>.((neg c)=>.a_entraine_c))=>.(a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a)))));
+      a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a)));
+      (*45*)    ((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)));
+
+      (((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a))))=>.
+      (a_entraine_c=>.(((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
+      (a_entraine_c=>.(((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
+      (a_entraine_c=>.(((neg c)=>.((neg c)=>.(neg a)))=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))))=>.
+      ((a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
+      ((a_entraine_c=>.((neg c)=>.((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)))));
+      (*50*)    a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a)));
+      (a_entraine_c=>.(((neg c)=>.(neg c))=>.((neg c)=>.(neg a))))=>.
+      ((a_entraine_c=>.((neg c)=>.(neg c)))=>.(a_entraine_c=>.((neg c)=>.(neg a))));
+      (a_entraine_c=>.((neg c)=>.(neg c)))=>.(a_entraine_c=>.((neg c)=>.(neg a)));
+      (*((neg c)=>.(neg a));*)
+      a_entraine_c=>.((neg c)=>.(neg a));
+      ((neg a)=>.(a_ou_b=>.(b)));
+      (*((neg a)=>.(a_ou_b=>.(b)))=>. ((neg c)=>. ((neg a)=>.(a_ou_b=>.(b))));*)
+      (*55*)    ((neg a)=>.(a_ou_b=>.(b)))=>. ((neg c)=>. ((neg a)=>.(a_ou_b=>.(b))));
+      (*((neg c)=>.((neg a)=>.(a_ou_b=>.(b))));*)
+      ((neg c)=>.((neg a)=>.(a_ou_b=>.(b))));
+      (*((neg c)=>.((neg a)=>.(a_ou_b=>.(b))))=>.(((neg c)=>.(neg a))=>.((neg c)=>.(a_ou_b=>.(b))));*)
+      ((neg c)=>.((neg a)=>.(a_ou_b=>.(b))))=>.(((neg c)=>.(neg a))=>.((neg c)=>.(a_ou_b=>.(b))));
+      (*(((neg c)=>.(neg a))=>.((neg c)=>.(a_ou_b=>.(b))));*)
+      ((((neg c)=>.(neg a))=>.((neg c)=>.((a_ou_b)=>.(b)))));
+      ((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.
+      (a_entraine_c=>.((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b))))));
+      (*60*)    (a_entraine_c=>.((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b))))));
+      (a_entraine_c=>.((((neg c)=>.(neg a)))=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.
+      ((a_entraine_c=>.(((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))));
+      ((a_entraine_c=>.(((neg c)=>.(neg a))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))));
+      (a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))));
+
+      (((neg c)=>.(a_ou_b=>.b)))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))));
+      ((((neg c)=>.(a_ou_b=>.b)))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.
+      (*65*)    (a_entraine_c=>.((((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))));
+      (a_entraine_c=>.((((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))); (*k k*)
+      (a_entraine_c=>.((((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))))=>.
+      ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))));
+
+      ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))); (*s (k k)*)
+      ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))));
+      (*70*)    ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))));(*k (s (k k))*)
+      ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))))=>.
+      (((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))));
+      (((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))=>.((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))))); (*(s (k (s (k k))))*)
+      (*77*)  ] @ (taut ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b))))))) (*i*)@ [
+
+      ((a_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))))));(*((s (k (s (k k)))) i)*)
+
+      (*((neg c)=>.(a_ou_b=>.(b)));*)
+
+      a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))));
+      (*((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b));*)
+      (*80*)    ((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b));
+      (((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))=>.
+      (b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
+      (b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
+      (b_entraine_c=>.(((neg c)=>.(a_ou_b=>.(b)))=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))))=>.
+      ((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
+      ((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))));
+      ((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b))))=>.
+      (*85*)    (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b))))=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b=>.(b)))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.b)))));
+      (*(((neg c)=>.(a_ou_b))=>.((neg c)=>.b));*)
+
+      a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))));
+      (b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
+      (*90*)   ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))));
+
+
+      ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
+       ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))) =>. 
+      (*91*)(a_entraine_c =>. ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
+
+      (*92*)    a_entraine_c =>. ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
+      (a_entraine_c =>. ((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>. ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))) =>. ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
+      (a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
+      (*95*)    (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
+      (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
+      (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))))=>. ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>. (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))))) ;
+      ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b)))))=>. (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
+                                                                                       ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>. (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))))) ;
+
+      (((b_entraine_c=>.(((neg c)=>.(a_ou_b))=>.((neg c)=>.(b))))=>.
+        (*100*)      ((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b))))));
+
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))));
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(a_ou_b)))=>.(b_entraine_c=>.((neg c)=>.(b)))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)))));
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)))));
+
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)))))=>.
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
+      (*105*)    (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))))=>.
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(a_ou_b)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))))));
+      (*((neg c)=>.(b));*)
+      (a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b))));
+      (*((neg c)=>.(b))=>.(b_entraine_c=>.((neg c)=>.(b)));
+        (b_entraine_c=>.((neg c)=>.(b)));
+        (b_entraine_c=>.((neg c)=>.(b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b))));
+
+        a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b)));*)
+      (*b_entraine_c;*)
+      b_entraine_c=>.((neg c)=>. b_entraine_c);
+      (b_entraine_c=>.((neg c)=>. b_entraine_c))=>.
+      (*110*)    (a_entraine_c=>.(b_entraine_c=>.((neg c)=>. b_entraine_c)));
+      (*((neg c)=>.(b_entraine_c));*)
+      a_entraine_c=>.(b_entraine_c=>.((neg c)=>. b_entraine_c));
+
+      (*((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c));*)
+      (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c)));
+      (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.(b_entraine_c=>.(((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c))));
+      b_entraine_c=>. (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c)));
+      (b_entraine_c=>. (((neg c)=>.(b_entraine_c))=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.
+      ((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
+      ((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
+      ((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))));
+
+
+      a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
+
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.(b_entraine_c)))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b_entraine_c))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))));
+      (*120*)    ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(b_entraine_c))))=>.(a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))));
+      (*(((neg c)=>.b)=>.((neg c)=>.c));*)
+      (*(((neg c)=>.b)=>.((neg c)=>.c));
+        (((neg c)=>.b)=>.((neg c)=>.c))=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)));*)
+      a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))));
+      (b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
+      ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)));
+
+      ((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
+       ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c))))=>.
+      (a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
+                       ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
+
+      (a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.
+                       ((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
+
+      (a_entraine_c=>.((b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c)))=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
+      ((a_entraine_c=>.(b_entraine_c=>.(((neg c)=>.b)=>.((neg c)=>.c))))=>.(a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)))));
+
+
+      a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c)));
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.b))=>.(b_entraine_c=>.((neg c)=>.c))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))));
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))));
+
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))))=>.
+      (*130*)    (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))))=>.
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.b))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))));
+
+      (*((neg c)=>.(c));*)
+      (*((neg c)=>.(c));
+        ((neg c)=>.(c))=>.(b_entraine_c=>.((neg c)=>.(c)));*)
+      a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.(c))));
+      (*((neg c)=>.((neg tout)=>.(neg c)));*)
+      (*135*)     ((neg c)=>.((neg tout)=>.(neg c)));
+      ((neg c)=>.((neg tout)=>.(neg c)))=>.(b_entraine_c=>.((neg c)=>.((neg tout)=>.(neg c))));
+      (b_entraine_c=>.((neg c)=>.((neg tout)=>.(neg c))));
+      (*(((neg tout)=>.(neg c))=>.((c)=>.(tout)));*)
+
+    ]@ neg_contraposition (tout) (c) @ [
+      (((neg tout)=>.(neg c))=>.((c)=>.(tout)));
+      (((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>.(b_entraine_c=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));
+      (b_entraine_c=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));
+      (*(((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout))));*)
+      ((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout)))));
+      ((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout)))))=>.(b_entraine_c=>.((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout))))));
+      (b_entraine_c=>.((((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>. ((neg c) =>. (((neg tout)=>.(neg c))=>.((c)=>.(tout))))));
+      (*((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));*)
+      ((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));
+      ((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))=>.(b_entraine_c=>.((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout)))));
+      (b_entraine_c=>.((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout)))));
+      (*((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))=>. (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)));*)
+      (((neg c)=>.(((neg tout)=>.(neg c)) =>. ((c)=>.(tout))))=>. 
+       (((neg c)=>.((neg tout)=>.(neg c))) =>. ((neg c)=>.(c=>.tout))));
+
+      (((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))
+       =>. 
+       (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))
+      )
+      =>.
+      (b_entraine_c=>.(((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))
+                       =>. 
+                       (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))
+                      )
+      );
+      (b_entraine_c=>.(((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))=>. (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))));
+      (*(((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)));*)
+      (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)));
+      (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))=>.(b_entraine_c=>.(((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout))));
+      (b_entraine_c=>.(((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout))));
+      (*((neg c)=>.((c)=>.(tout)));*)
+      ((neg c)=>.((c)=>.(tout)));
+      ((neg c)=>.((c)=>.(tout)))=>.(b_entraine_c=>.((neg c)=>.((c)=>.(tout))));
+      (b_entraine_c=>.((neg c)=>.((c)=>.(tout))));
+      (*((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout));*)
+      ((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout));
+      (((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout)))=>.(b_entraine_c=>.(((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout))));
+      b_entraine_c=>.(((neg c)=>.(c=>.tout))=>.(((neg c)=>.c)=>. ((neg c)=>.tout)));
+      (*((neg c)=>.c)=>. ((neg c)=>.tout);*)
+      (((neg c)=>.c)=>. ((neg c)=>.tout));
+      (((neg c)=>.c)=>. ((neg c)=>.tout))=>.(b_entraine_c=>.(((neg c)=>.c)=>. ((neg c)=>.tout)));
+      (b_entraine_c=>.(((neg c)=>.c)=>. ((neg c)=>.tout)));
+      (b_entraine_c=>.(((neg c)=>.c)=>. ((neg c)=>.tout)))=>.
+      ((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout)));
+      ((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout)));
+      ((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout)))=>.
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout))));
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout))));
+
+      (a_entraine_c=>.((b_entraine_c=>.((neg c)=>.c))=>.(b_entraine_c=>.((neg c)=>.tout))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))));
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))));
+
+      ((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))))=>.
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))));
+
+
+      a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout))));
+
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c)))=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))))=>.
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))));
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.c))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg c)=>.tout)))));
+      (*((neg c)=>.(tout));*)
+      (*((neg c)=>.(tout));
+        ((neg c)=>.(tout))=>.(b_entraine_c=>.((neg (c))=>.(tout)));*)
+
+
+
+      a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))));
+      (*(((neg c)=>.(tout))=>.((neg tout)=>.(neg(neg c))));*)
+      ((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))));
+      (((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c)))))=>.(b_entraine_c=>.(((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))))));
+      (b_entraine_c=>.(((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))))));
+      (b_entraine_c=>.(((neg (c))=>.(tout))=>.((neg tout)=>.(neg(neg (c))))))=>.
+      ((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))));
+      ((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))));
+      ((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
+      (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
+
+      (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
+      (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
+      (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
+      (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
+
+      (a_entraine_c =>. ((b_entraine_c=>.((neg (c))=>.(tout))) =>. (b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
+      ((a_entraine_c =>. (b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
+    ]@(cut 
+         a_ou_b 
+         (a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))
+         ((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))
+      )@[
+      (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))
+      =>.
+      (((a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
+        ((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))
+       =>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))));
+
+      (((a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))=>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))));
+
+      a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))));
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))=>.
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
+
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))));
+      (*((neg tout)=>.(neg(neg c)));*)
+      (*((neg tout)=>.(neg(neg c)));
+        ((neg tout)=>.(neg(neg c)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))));*)
+      a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))));
+      (b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
+      ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))));
+
+      ((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
+       ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.
+      (a_entraine_c=>.((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
+                       ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
+      (a_entraine_c=>.((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.
+                       ((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
+
+      (a_entraine_c=>.((b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
+
+      ((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
+       (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
+      ((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
+       (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))))=>.
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
+                 (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))));
+
+      a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
+                (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))));
+
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))=>.
+                 (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))))=>.
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.(a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))));
+
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
+       (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))));
+
+      a_ou_b=>.
+      (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))));
+      (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))));
+    ] @ (cut
+           a_ou_b
+           (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))
+           ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))
+        ) 
+    @ [
+
+      (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c)))))))
+      =>.(((a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.
+           ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))))
+          =>.
+          (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))));	         
+      (((a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))))=>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))));
+      a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))));
+
+
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))));
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))))=>.
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg tout))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))));
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg tout))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))))));
+      (*(neg(neg c));*)
+      (*(neg(neg c));
+        (neg(neg c))=>.(b_entraine_c=>.(neg(neg (c))));*)
+      a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c)))));
+      (*((neg(neg c))=>.(c));*)
+      ((neg(neg c))=>.(c));
+      ((neg(neg c))=>.(c))=>.(b_entraine_c=>.((neg(neg c))=>.(c)));
+      (b_entraine_c=>.((neg(neg c))=>.(c)));
+
+      (b_entraine_c=>.((neg(neg c))=>.(c)))=>.
+      ((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c));
+
+      ((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c));
+
+      ((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c))=>.
+      (a_entraine_c=>.((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c)));
+
+      (a_entraine_c=>.((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c)));
+      (a_entraine_c=>.((b_entraine_c=>.(neg(neg c)))=>.(b_entraine_c=>.c)))=>.
+      ((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c)));
+      ((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c)));
+      ((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c)))=>.
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c))));
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c))));
+      (a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.(neg(neg c))))=>.(a_entraine_c=>.(b_entraine_c=>.c))))=>.
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg c)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c))));
+      ((a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg c)))))=>.(a_ou_b=>.(a_entraine_c=>.(b_entraine_c=>.c))));
+      (*(c)*)
+      (*c;
+        c=>.(b_entraine_c=>.c);*)
+      (*a_entraine_c=>.(b_entraine_c=>.c);
+        (a_entraine_c=>.(b_entraine_c=>.c))=>. (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));*)
+
+      diamond;
+    ])
+let ou_diamant_unproved = {kind=Unproved;name="ou diamant";params=[];premisses=[];conclusion=ou_diamant;demonstration=ou_diamant_demo}
+let verif_ou_diamant = verif ~speed:Paranoid ou_diamant_unproved
 
 let test_tauto _ = assert_bool "tauto" (verif_tauto)
-let test_cut _ = assert_equal (Ok())  ~msg:"cut" (verif_cut)
-let test_contraposee _ = assert_equal (Ok()) ~msg:"contraposee" (verif_contraposee)
-let test_tiers_exclus _ = assert_equal (Ok()) ~msg:"tiers exclus" (verif_tiers_exclus)
-let test_rajout_hypothese _ = assert_equal (Ok()) ~msg:"rajout hypothese" (verif_rajout_hypothese)
-let test_ou_idempotent _ = assert_equal (Ok()) ~msg:"ou idempotent" (verif_ou_idempotent)
-let test_ou_diamant _ = assert_equal (Ok()) ~msg:"ou diamant" (verif_ou_diamant)
+let test_cut _ = 
+  assert_equal 
+    ~msg:"cut"
+    (Ok {modus_ponens_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) modus_ponens_unproved.demonstration)})
+    (verif_cut)
+let test_contraposee _ = assert_equal ~msg:"contraposee"
+    (Ok {contraposition_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) contraposition_demo)})
+    (verif_contraposee)
+let test_tiers_exclus _ = assert_equal~msg:"tiers exclus"
+    (Ok {tiers_exclus_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) tiers_exclus_demo)})
+    (verif_tiers_exclus)
+let test_rajout_hypothese _ = assert_equal ~msg:"rajout hypothese"
+    (Ok {rajout_demo_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) rajout_demo)})
+    (verif_rajout_hypothese)
+let test_ou_idempotent _ = assert_equal ~msg:"ou idempotent"
+    (Ok {ou_idempotent_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) ou_idempotent_demo)})
+    (verif_ou_idempotent)
+let test_ou_diamant _ = assert_equal ~msg:"ou diamant"
+    (Ok {ou_diamant_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) ou_diamant_demo)})
+    (verif_ou_diamant)
 
 let test_instance_1 _ = assert_equal [(PVar 1, PVar 1); (PVar 2, PVar 2)] (instance (string_to_formula "X_1 \\land X_2") (string_to_formula "X_1 \\land X_2"))
 let test_instance_2 _ = assert_equal [(PVar 3,

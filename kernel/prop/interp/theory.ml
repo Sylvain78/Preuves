@@ -80,6 +80,7 @@ Prop_parser.formule lexbuf
   type step =  
     | Single of formula 
     | Call of {theorem : theorem; params : formula list}
+  type theorem_unproved = (formula, step list) Kernel.Logic.theorem_logic 
   let string_to_formula = formula_from_string
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop
@@ -91,15 +92,19 @@ Prop_parser.formule lexbuf
     | Call{theorem; params} -> Format.fprintf ff "Call(%s,%a)" theorem.name 
                                  (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',')
                                      printer_formula out l) params
-  exception Invalid_demonstration of formula_prop * theorem_prop list * formula_prop list * step list;;
+  exception Invalid_demonstration of theorem_unproved
 
   let print_invalid_demonstration =  (function 
-      | Invalid_demonstration(f,theorems,hypotheses,demo) -> 
+      | Invalid_demonstration {conclusion=f;premisses=hypotheses;demonstration=demo;_} -> 
         (*Printexc.print_backtrace stderr; flush stderr;*)
-        Some(
-Format.fprintf Format.str_formatter "Invalid demonstrion of %a\n\ntheorems\n:%a\n\nhypotheses:%a" printer_formula f
-(fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') (fun out t -> Format.pp_print_string out t.name) out l) theorems
-(fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_formula  out l) hypotheses; Format.flush_str_formatter())
+        Some (
+          Format.fprintf Format.str_formatter "Invalid demonstration of %a\n\ntheorems:\n%a\n\nhypotheses:%a\n\ndemonstration:%a\n\n" printer_formula f
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') (fun out t -> Format.pp_print_string out t.name) out l) !theorems
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_formula  out l) hypotheses
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_step  out l) demo ; 
+          Format.flush_str_formatter()
+        )
+
 (*
 
           "Invalid demonstration of " ^ (to_string_formula_prop f) ^ "\n" ^ 
@@ -117,15 +122,26 @@ Format.fprintf Format.str_formatter "Invalid demonstrion of %a\n\ntheorems\n:%a\
   let is_instance_axiom f = 
     List.exists (function axiom -> try ignore (instance f axiom.conclusion);true  with Failed_Unification _ -> false) !axioms_prop
 
-  let rec verif_prop ~theorems ~hypotheses ~proved ~to_prove = 
+  let rec compile ~speed ?(hypotheses=[]) ~demonstration () = 
+    match demonstration 
+    with 
+    | [] -> []
+    | Single f as step:: l -> ([f],step) :: (compile ~speed ~hypotheses ~demonstration:l ())
+    | Call {theorem ; params } as step :: l ->
+      match speed with
+      | Fast -> ([(Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step) :: (compile ~speed ~hypotheses ~demonstration:l ())
+      | Paranoid -> ((List.map (function step -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params step)) theorem.demonstration),step) 
+                    :: (compile ~speed ~hypotheses ~demonstration:l ())
+
+  let rec verif_prop ~(hypotheses:formula list) ~(proved:(formula * step) list) ~(to_prove:(formula list * step) list) = 
     match to_prove with
-    | [] -> Ok()
-    | f_i::p ->  
+    | [] -> Ok ()
+    | ([f_i],(Single f as step))::p  when f = f_i->  
       if (
         (*Formula is an hypothesis*)
         List.mem f_i hypotheses 
         (*Formula already present *)
-        || List.mem f_i proved
+        || List.mem f_i (fst @@ List.split proved)
         (*Formula is an instance of a theorem or axiom *)
         || (List.exists (fun th -> 
             try
@@ -137,25 +153,28 @@ Format.fprintf Format.str_formatter "Invalid demonstrion of %a\n\ntheorems\n:%a\
             | _ -> 
               Logs.debug (fun m ->  m "NO");
               false) 
-            (theorems))
+            (!theorems))
         || is_instance_axiom f_i
         (*cut*)
-        || (cut f_i proved) 
+        || (cut f_i (fst @@ List.split proved)) 
         (*application of notations*)
-        || List.exists (fun f -> equiv_notation f_i f) proved
+        || List.exists (fun f -> equiv_notation f_i f) (fst @@ List.split proved)
       )
       then 
         begin
           Logs.debug (fun m -> m "%a Proved" pp_formula f_i);
-          verif_prop ~theorems ~hypotheses ~proved:(f_i :: proved) ~to_prove:p
+          verif_prop ~hypotheses ~proved:((f_i,step) :: proved) ~to_prove:p
         end
       else 
         begin
           Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
-          Error ("Invalid demonstration", Invalid_demonstration (f_i, theorems, hypotheses, List.rev (f_i::proved)))
+          Error ("Invalid demonstration", (f_i, !theorems, hypotheses, List.rev (step::(snd @@ List.split proved))))
         end
+    | _ -> failwith "to implement"
 
-  let kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof =
+  let kernel_prop_interp_verif ~speed ~hypotheses ~formula:(f:formula) ~proof:(proof:step list)  =
+    let compiled_proof = compile ~speed ~demonstration:proof ()
+    in
     (* f is at the end of the proof *)
     let is_end_proof f t =
       let rev_t = List.rev t
@@ -165,10 +184,10 @@ Format.fprintf Format.str_formatter "Invalid demonstrion of %a\n\ntheorems\n:%a\
       with
       | Failure _ -> false
     in
-    if not (is_end_proof f proof)
-    then Error ("Formula is not at the end of the proof", Invalid_demonstration(f,theorems, hypotheses, proof))
+    if not (is_end_proof f (List.flatten @@ fst @@ List.split compiled_proof))
+    then Error ("Formula is not at the end of the proof", (f, !theorems, hypotheses, snd @@ List.split compiled_proof))
     else
-      verif_prop ~theorems ~hypotheses ~proved:[] ~to_prove:proof
+      verif_prop ~hypotheses ~proved:[] ~to_prove:compiled_proof
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
@@ -362,18 +381,12 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
   }::!theorems_prop;;
 
 
-  let verif ?(theorems=[]) ?(hypotheses=[]) () ~formula:f ~proof:(proof:demonstration) = 
-    kernel_prop_interp_verif ~theorems ~hypotheses ~formula:f ~proof:proof
-  let rec compile ~speed ?(hypotheses=[]) ~demonstration () = 
-    match demonstration 
-    with 
-    | [] -> []
-    | Single f :: l -> f :: (compile ~speed ~hypotheses ~demonstration:l ())
-    | Call {theorem ; params } :: l ->
-      match speed with
-      | Fast -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion) :: (compile ~speed ~hypotheses ~demonstration:l ())
-      | Paranoid -> (List.map (function step -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params step)) theorem.demonstration) 
-                    @ (compile ~speed ~hypotheses ~demonstration:l ())
-
+  let verif ~speed theorem_unproved = 
+    let compiled_demonstration = compile ~speed ~hypotheses:theorem_unproved.premisses ~demonstration:theorem_unproved.demonstration ()
+    in
+    match kernel_prop_interp_verif ~speed ~hypotheses:theorem_unproved.premisses ~formula:theorem_unproved.conclusion ~proof:theorem_unproved.demonstration
+    with
+    | Ok () -> Ok {theorem_unproved with demonstration = compiled_demonstration} 
+    | Error _ -> Error ("invalid",Invalid_demonstration theorem_unproved)
 
 end

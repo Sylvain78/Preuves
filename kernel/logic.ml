@@ -3,11 +3,14 @@ type speed =
   | Paranoid
 
 type kind = 
+  | Unproved
   | Invalid
   | Axiom
   | Theorem
   | Assumed
+
 let kind_to_string = function
+  | Unproved -> "Unproved"
   | Invalid -> "Invalid"
   | Axiom -> "Axiom"
   | Theorem -> "Theorem"

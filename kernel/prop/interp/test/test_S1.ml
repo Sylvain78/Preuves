@@ -1,5 +1,7 @@
- module P = Kernel_prop_interp.Theory.Prop
-open Kernel_prop_interp.Formula_prop
+open Kernel.Logic
+open  Kernel_prop_interp.Formula_prop
+module P = Kernel_prop_interp.Theory.Prop
+open P
 
 let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
@@ -17,33 +19,35 @@ and b_entraine_c = (b=>.c)
 
 (* |   F \\implies  F *)
 let verif_C8 =
-  let demo = [
-    (a =>. ((a =>. a) =>. a)) =>. (( a =>. (a =>. a)) =>. (a =>. a));
-    a =>. ((a =>. a) =>. a);
-    (a =>. (a =>. a)) =>. (a =>. a);
-    a =>. (a =>. a);
-    a =>. a;
-  ]
-  in
-  match (P.verif  ~formula:(a=>. a) ~proof:(demo: P.demonstration) ())
-  with 
-  |Ok() ->  
-    P.theorems := {
-      kind = Theorem;
+  let demo = List.map (fun f -> P.Single f) [
+      (a =>. ((a =>. a) =>. a)) =>. (( a =>. (a =>. a)) =>. (a =>. a));
+      a =>. ((a =>. a) =>. a);
+      (a =>. (a =>. a)) =>. (a =>. a);
+      a =>. (a =>. a);
+      a =>. a;
+    ]
+  in 
+  let (theorem_unproved : (formula_prop,P.step list) Kernel.Logic.theorem_logic) ={
+      kind = Kernel.Logic.Theorem;
       name="[Bourbaki]C8";
       params = [];
       premisses = [];
       demonstration = demo;
       conclusion = P.string_to_formula  "X_1 \\implies X_1";
-    }::!P.theorems 
- | Error _ -> ()
+    }
+  in
+  match (P.verif ~speed:Paranoid theorem_unproved) 
+  with 
+  |Ok theorem ->  
+    P.theorems := theorem::!P.theorems 
+  | Error _ -> ()
 
 let add_chaining =
   let chaining =
     P.string_to_formula "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   in
   let demo_chaining = 
-    List.map (fun s -> P.string_to_formula s) [
+    List.map (fun s -> P.Single(P.string_to_formula s)) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -67,19 +71,21 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  match (P.verif  ~formula:chaining ~proof:demo_chaining ())          
+  let theorem_chaining_unproved =
+    {
+      kind = Kernel.Logic.Unproved;
+      name = "C6";
+      params = [];
+      premisses = [];
+      conclusion = chaining;
+      demonstration = demo_chaining;
+    }
+  in
+  match (P.verif  ~speed:Paranoid theorem_chaining_unproved)
   with
-  | Ok () -> 
+  | Ok theorem -> 
     P.theorems :=
-      {
-        kind = Kernel.Logic.Theorem;
-        name = "C6";
-        params = [];
-        premisses = [];
-        demonstration = demo_chaining;
-        conclusion = chaining;
-      }
-      :: !P.theorems
+      theorem :: !P.theorems
   | Error _ -> ()
 ;;
 (*non A  \\implies  non B |   B  \\implies  A*)
@@ -90,51 +96,56 @@ let add_chaining =
    and (X_2 \\implies \\lnot (\\lnot X_2))=	(X_2 \\implies \\lnot (\\lnot X_2))
    in
 *)
-match
-  P.verif  ~theorems:!P.theorems ~formula:(P.string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))") ()
-    ~proof:(List.map (fun s -> P.string_to_formula s) [
-
-        "((\\lnot (\\lnot X_1)) \\implies X_1)";
-        "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
-        "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)";
-        "(X_2 \\implies \\lnot (\\lnot X_2))";
-        "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2)))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))";
-        "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
-        "((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies  (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))  \\implies  ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1)))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)))";
-        "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1))";
-        "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)";
-        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))))";
-        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
-        "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
-        "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
-      ])
-with 
-| Ok() ->  
-  P.theorems := {
-    kind = Kernel.Logic.Assumed;
+let contraposition = (P.string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))")
+and contraposition_demo = List.map (fun s -> P.Single(P.string_to_formula s)) [
+    "((\\lnot (\\lnot X_1)) \\implies X_1)";
+    "((\\lnot (\\lnot X_1)) \\implies X_1) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))  \\implies (((\\lnot (\\lnot X_1)) \\implies X_1) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_1)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)";
+    "(X_2 \\implies \\lnot (\\lnot X_2))";
+    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))";
+    "(X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+    "((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies  (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((X_2 \\implies \\lnot (\\lnot X_2)) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))  \\implies  ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies \\lnot (\\lnot X_2))) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1)))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (((\\lnot (\\lnot X_2)) \\implies X_1) \\implies (X_2 \\implies X_1))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)))";
+    "(((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies ((\\lnot (\\lnot X_2)) \\implies X_1)) \\implies (((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1))";
+    "((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))))";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies  ((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1)))) \\implies ((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+    "((((\\lnot (\\lnot X_2)) \\implies (\\lnot (\\lnot X_1))) \\implies (X_2 \\implies X_1)) \\implies (((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1)))";
+    "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
+  ]
+in
+let contraposition_unproved = 
+  {
+    kind = Kernel.Logic.Unproved;
     name ="contraposition";
     params = [];
     premisses = [];
-    demonstration = [];
-    conclusion = P.string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
-    ::!P.theorems
+    demonstration = contraposition_demo;
+    conclusion = contraposition;
+  }
+in
+match P.verif ~speed:Paranoid contraposition_unproved
+with 
+| Ok theorem ->  
+  P.theorems := {theorem with kind=Theorem} 
+                ::!P.theorems
 | Error _ -> ()
 ;;
 
 
 
-(* |   F ou F  \\implies  F *)
-let demo = (List.map (fun s -> P.string_to_formula s) [
+(* |   F ou F  \\implies  F *) 
+let s1 =(P.string_to_formula "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
+and demo_s1_unproved = (List.map (fun s -> P.Single(P.string_to_formula s)) [
     "((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))";
     "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))";
     "((\\lnot \\mathbf{A})  \\implies   ((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}))  \\implies  ((((\\mathbf{A} \\lor\\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A})))  \\implies  ((\\lnot \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A}\\lor\\mathbf{A}))))";
@@ -148,18 +159,19 @@ let demo = (List.map (fun s -> P.string_to_formula s) [
     "(\\mathbf{A}\\lor \\mathbf{A})  \\implies  \\mathbf{A}";
   ])
 in
-match P.verif  ~theorems:!P.theorems ~formula:(P.string_to_formula "(\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A}")
-    ~proof:demo ()
+let s1_unproved = {
+  kind = Unproved;
+  name="[Bourbaki]S1";
+  params = [];
+  premisses = [];
+  demonstration = demo_s1_unproved;
+  conclusion=s1;
+}
+in
+match P.verif ~speed:Paranoid s1_unproved
 with 
-| Ok() ->
-  P.theorems := {
-    kind = Assumed;
-    name="[Bourbaki]S1";
-    params = [];
-    premisses = [];
-    demonstration = demo;
-    conclusion=P.string_to_formula "(X_1 \\lor X_1) \\implies X_1";
-  }::!P.theorems 
+| Ok theorem ->
+  P.theorems := {theorem with kind=Theorem} :: !P.theorems 
 | Error _ -> ()
 
 let demo = 
@@ -589,5 +601,12 @@ let demo1 = demo @ [
     a_ou_b =>. c;];;
 
 let verif_S3 = 
-  (P.verif  ~theorems:!P.theorems ~formula:(a_ou_b=>. c) ~proof:demo1 ())
+
+  let s3 = a_ou_b =>. c
+  and demo_s3 = List.map (fun f -> Single f) demo1
+  in
+  let s3_unproved =
+    {kind = Unproved;name="S3"; params=[];premisses=[];conclusion=s3;demonstration=demo_s3}
+  in
+  (P.verif ~speed:Paranoid s3_unproved  )
 ;;

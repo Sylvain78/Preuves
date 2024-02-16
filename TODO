@@ -1,4 +1,4 @@
---Remove axioms in kernel/prop/compile/verif.ml
+-- decide compile output : formula or formula*step ?
 --Add logs and formatting in pretty boxes.
 --remove old specs/usage in proof_server.ml
 -- Adding more units test to prop
