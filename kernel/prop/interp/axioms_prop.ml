@@ -17,92 +17,92 @@ let a10 = Prop_parser.formula_from_string "X_2 \\implies (X_1 \\lor X_2)";;
 let a11 = Prop_parser.formula_from_string "(\\lnot X_1) \\implies ((X_1 \\lor X_2) \\implies X_2)";;
 
 let (axioms_prop: theorem_prop list ref) = ref [
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A1";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a1;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A2";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a2;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A3";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a3;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A4";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a4;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A5";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a5;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A6";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a6;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A7";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a7;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A8";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a8;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A9";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a9;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A10";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a10;
     };
-    {
-      kind=Axiom;
+    Theorem {
+      kind=KAxiom;
       name="A11";
       params= [];
       premisses=[];
-      demonstration=[];
+      demonstration= Demonstration [];
       conclusion=a11;
     };
   ];;

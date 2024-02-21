@@ -11,7 +11,7 @@ let print_result = function
 
 let test_invalid_empty_proof _ =
   let invalid_empty_theorem = {
-    kind = Kernel.Logic.Unproved;
+    kind = Kernel.Logic.KUnproved;
     name = "invalid";
     params=[];
     premisses=[];
@@ -27,7 +27,7 @@ let test_invalid_empty_proof _ =
 
 let test_invalid_proof _ =
   let invalid_theorem = {
-    kind = Kernel.Logic.Unproved;
+    kind = Kernel.Logic.KUnproved;
     name = "invalid";
     params=[];
     premisses=[];
@@ -40,7 +40,7 @@ let test_invalid_proof _ =
 
 let test_invalid_proof_length_2 _ =
   let invalid_proof_length_2_theorem = {
-    kind = Kernel.Logic.Unproved;
+    kind = Kernel.Logic.KUnproved;
     name = "invalid";
     params=[];
     premisses=[];
@@ -49,12 +49,12 @@ let test_invalid_proof_length_2 _ =
   }
   in
   assert_equal ~printer:print_result ~msg:"Invalid proof" 
-    (Error ("Invalid demonstration", Invalid_demonstration({ invalid_proof_length_2_theorem with demonstration=[Single x1]})))
+    (Error ("Invalid demonstration", Invalid_demonstration({ invalid_proof_length_2_theorem with conclusion=x1 ; demonstration=[Single x1]})))
     (verif ~speed:Paranoid invalid_proof_length_2_theorem)
 
 let test_invalid_proof_length_2_hyp _ =
   let invalid_proof_length_2_hyp_theorem = {
-    kind = Kernel.Logic.Unproved;
+    kind = Kernel.Logic.KUnproved;
     name = "invalid";
     params=[];
     premisses=[x1];
@@ -71,10 +71,10 @@ let test_S1_Bourbaki _ =
     in*)
   let f = string_to_formula "((\\mathbf{A} \\lor \\mathbf{A})  \\implies  \\mathbf{A})  \\implies  ((\\lnot \\mathbf{A})  \\implies  \\lnot (\\mathbf{A} \\lor \\mathbf{A}))"
   in
-  let s1_unproved = {kind=Unproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=[Single f]}
+  let s1_unproved = {kind=KUnproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=[Single f]}
   in
   assert_equal ~msg:"test_S0_Bourbaki"
-    (Ok {kind=Unproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=[f]})
+    (Ok (Theorem {kind=KUnproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=Demonstration[[f], Single f]}))
     (verif ~speed:Paranoid s1_unproved)
 
 let proof_prop_suite = "Proof prop" >:::

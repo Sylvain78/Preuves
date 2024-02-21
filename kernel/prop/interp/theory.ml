@@ -1,11 +1,9 @@
 open Kernel.Logic
 open Formula_prop
-open Theorem_prop
 
 module Prop:(LOGIC 
              with type formula = formula_prop 
               and type notation = notation_prop
-              and type demonstration = demonstration_prop
             ) =
 struct
 
@@ -68,38 +66,40 @@ Prop_parser.formule lexbuf
                             end
                           | _ -> false) p
 
-  let theorems_prop = ref []
 
   type formula = formula_prop
   type notation = notation_prop
-  type demonstration = demonstration_prop
+  type step = step_prop = 
+      Single of formula
+    | Call of { theorem : theorem; params : formula list; }
+  and demonstration = demonstration_prop = Demonstration of (formula list * step) list [@@unboxed]
+  and theorem = theorem_prop = Theorem of (formula, demonstration) Kernel.Logic.theorem_logic [@@unboxed]
+  type theorem_unproved = (formula, step list) Kernel.Logic.theorem_logic 
+
+  exception Invalid_demonstration of theorem_unproved
+
   let axioms = axioms_prop
   let add_axiom ax = axioms := ax :: !axioms
+  let (theorems_prop : theorem list ref)  = ref []
   let theorems = theorems_prop
-  type theorem = (formula, demonstration) Kernel.Logic.theorem_logic 
-  type step =  
-    | Single of formula 
-    | Call of {theorem : theorem; params : formula list}
-  type theorem_unproved = (formula, step list) Kernel.Logic.theorem_logic 
   let string_to_formula = formula_from_string
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop
   let string_to_notation = notation_from_string
-  let printer_demonstration ff d=
-    (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d
   let printer_step ff = function
     | Single f -> Format.fprintf ff "Single(%a)" printer_formula f
-    | Call{theorem; params} -> Format.fprintf ff "Call(%s,%a)" theorem.name 
-                                 (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',')
-                                     printer_formula out l) params
-  exception Invalid_demonstration of theorem_unproved
+    | Call{theorem; params} -> Format.fprintf ff "Call(%s,%a)" (match theorem with Theorem t -> t).name 
+        (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',')
+            printer_formula out l) params
+  let printer_demonstration ff (Demonstration d) =
+    (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_step) ff (snd @@ List.split d)
 
   let print_invalid_demonstration =  (function 
       | Invalid_demonstration {conclusion=f;premisses=hypotheses;demonstration=demo;_} -> 
         (*Printexc.print_backtrace stderr; flush stderr;*)
         Some (
           Format.fprintf Format.str_formatter "Invalid demonstration of %a\n\ntheorems:\n%a\n\nhypotheses:%a\n\ndemonstration:%a\n\n" printer_formula f
-            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') (fun out t -> Format.pp_print_string out t.name) out l) !theorems
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') (fun out (Theorem t) -> Format.pp_print_string out t.name) out l) !theorems
             (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_formula  out l) hypotheses
             (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_step  out l) demo ; 
           Format.flush_str_formatter()
@@ -120,20 +120,28 @@ Prop_parser.formule lexbuf
   Printexc.register_printer (print_invalid_demonstration)
 
   let is_instance_axiom f = 
-    List.exists (function axiom -> try ignore (instance f axiom.conclusion);true  with Failed_Unification _ -> false) !axioms_prop
+    List.exists (function Theorem axiom -> try ignore (instance f axiom.conclusion);true  with Failed_Unification _ -> false) !axioms_prop
 
-  let rec compile ~speed ?(hypotheses=[]) ~demonstration () = 
-    match demonstration 
-    with 
-    | [] -> []
-    | Single f as step:: l -> ([f],step) :: (compile ~speed ~hypotheses ~demonstration:l ())
-    | Call {theorem ; params } as step :: l ->
-      match speed with
-      | Fast -> ([(Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step) :: (compile ~speed ~hypotheses ~demonstration:l ())
-      | Paranoid -> ((List.map (function step -> (Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params step)) theorem.demonstration),step) 
-                    :: (compile ~speed ~hypotheses ~demonstration:l ())
+  let compile ~speed ?(hypotheses=[]) ~demonstration () = 
+    let rec compile_aux ~speed ?(hypotheses=[]) ~demonstration ()   =
+      match demonstration 
+      with 
+      | [] ->  []
+      | Single f as step:: l ->  ([f],step) :: (compile_aux ~speed ~hypotheses ~demonstration:l ())
+      | Call {theorem ; params } as step :: l ->
+        let theorem = match theorem with Theorem t -> t
+        in
+        match speed with
+        | Fast ->  ([(Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step) 
+                   :: (compile_aux ~speed ~hypotheses ~demonstration:l ())
+        | Paranoid -> (List.map (fun f ->Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f) 
+                         (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d)),
+                       step)
+                      :: (compile_aux ~speed ~hypotheses ~demonstration:l ())
+    in
+    Demonstration (compile_aux ~speed ~hypotheses ~demonstration ())
 
-  let rec verif_prop ~(hypotheses:formula list) ~(proved:(formula * step) list) ~(to_prove:(formula list * step) list) = 
+  let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula * step) list) ~(to_prove:(formula list * step) list) = 
     match to_prove with
     | [] -> Ok ()
     | ([f_i],(Single f as step))::p  when f = f_i->  
@@ -143,7 +151,7 @@ Prop_parser.formule lexbuf
         (*Formula already present *)
         || List.mem f_i (fst @@ List.split proved)
         (*Formula is an instance of a theorem or axiom *)
-        || (List.exists (fun th -> 
+        || (List.exists (fun (Theorem th) -> 
             try
               Logs.debug (fun m -> m " %a instance of %s (%a) ?" pp_formula f_i th.name pp_formula th.conclusion);
               ignore(instance f_i th.conclusion);
@@ -163,17 +171,19 @@ Prop_parser.formule lexbuf
       then 
         begin
           Logs.debug (fun m -> m "%a Proved" pp_formula f_i);
-          verif_prop ~hypotheses ~proved:((f_i,step) :: proved) ~to_prove:p
+          verif_prop ~name ~hypotheses ~proved:((f_i,step) :: proved) ~to_prove:p
         end
       else 
         begin
           Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
-          Error ("Invalid demonstration", (f_i, !theorems, hypotheses, List.rev (step::(snd @@ List.split proved))))
+          Error ("Invalid demonstration", Invalid_demonstration {kind=KUnproved;name;params = []; premisses=hypotheses; conclusion=f_i; demonstration=List.rev (step::(snd @@ List.split proved))})
         end
     | _ -> failwith "to implement"
 
-  let kernel_prop_interp_verif ~speed ~hypotheses ~formula:(f:formula) ~proof:(proof:step list)  =
-    let compiled_proof = compile ~speed ~demonstration:proof ()
+  let kernel_prop_interp_verif ~speed ~name ~hypotheses ~formula:(f:formula) ~proof:(proof:step list)  =
+    let compiled_proof = 
+      match compile ~speed ~demonstration:proof ()
+      with Demonstration d -> d
     in
     (* f is at the end of the proof *)
     let is_end_proof f t =
@@ -185,9 +195,9 @@ Prop_parser.formule lexbuf
       | Failure _ -> false
     in
     if not (is_end_proof f (List.flatten @@ fst @@ List.split compiled_proof))
-    then Error ("Formula is not at the end of the proof", (f, !theorems, hypotheses, snd @@ List.split compiled_proof))
+    then Error ("Formula is not at the end of the proof", Invalid_demonstration ({kind = KUnproved;name; params=[]; premisses=hypotheses;conclusion=f; demonstration = snd @@ List.split compiled_proof}))
     else
-      verif_prop ~hypotheses ~proved:[] ~to_prove:compiled_proof
+      verif_prop ~name ~hypotheses ~proved:[] ~to_prove:compiled_proof
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
@@ -203,9 +213,9 @@ Prop_parser.formule lexbuf
       ]);;
 
     theorems_prop := {
-    kind = Theorem;
+    kind = KTheorem;
     name="[Bourbaki]C8";
-    demonstration = [];
+    demonstration = Demonstration [];
     conclusion=formula_from_string "X_1 \\implies X_1";
     }::!theorems_prop;;
   *)
@@ -239,7 +249,7 @@ Prop_parser.formule lexbuf
      ;;
 
      theorems_prop := {
-     kind = Theorem;
+     kind = KTheorem;
      name="chainage";
      demonstration=demo_chaining;
      conclusion=formula_from_string "(X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3))";
@@ -282,9 +292,9 @@ Prop_parser.formule lexbuf
       "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
     ]);;
 theorems_prop := {
-  kind = Assumed;
+  kind = KAssumed;
   name="contraposition";
-  demonstration = [];
+  demonstration = Demonstration [];
   conclusion=formula_from_string "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
   ::!theorems_prop;;
 *)
@@ -306,9 +316,9 @@ prop_proof_verif ~hyp:[] (formula_from_string "(\\mathbf{A} \\lor \\mathbf{A})  
     ]);;
 
 theorems_prop := {
-  kind = Assumed;
+  kind = KAssumed;
   name="[Bourbaki]S1";
-  demonstration = [];
+  demonstration = Demonstration [];
   conclusion=formula_from_string "(X_1 \\lor X_1) \\implies X_1";
 }::!theorems_prop;;
 *)
@@ -371,22 +381,22 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
       "(X_1 \\lor \\lnot X_1)"
     ]);;
    *)
-  theorems_prop := {
-    kind = Assumed;
-    name="Excluded middle";
-    params = [];
-    premisses = [];
-    demonstration = [];
-    conclusion=formula_from_string "(X_1 \\lor \\lnot X_1)";
-  }::!theorems_prop;;
+  theorems_prop := (Theorem {
+      kind = KAssumed;
+      name="Excluded middle";
+      params = [];
+      premisses = [];
+      demonstration = Demonstration [];
+      conclusion=formula_from_string "(X_1 \\lor \\lnot X_1)";
+    })::!theorems_prop;;
 
 
   let verif ~speed theorem_unproved = 
     let compiled_demonstration = compile ~speed ~hypotheses:theorem_unproved.premisses ~demonstration:theorem_unproved.demonstration ()
     in
-    match kernel_prop_interp_verif ~speed ~hypotheses:theorem_unproved.premisses ~formula:theorem_unproved.conclusion ~proof:theorem_unproved.demonstration
+    match kernel_prop_interp_verif ~name:theorem_unproved.name ~speed ~hypotheses:theorem_unproved.premisses ~formula:theorem_unproved.conclusion ~proof:theorem_unproved.demonstration
     with
-    | Ok () -> Ok {theorem_unproved with demonstration = compiled_demonstration} 
-    | Error _ -> Error ("invalid",Invalid_demonstration theorem_unproved)
+    | Ok () -> Ok (Theorem {theorem_unproved with demonstration = compiled_demonstration}) 
+    | Error (_, invalid_theorem) -> Error ("Invalid demonstration",invalid_theorem)
 
 end

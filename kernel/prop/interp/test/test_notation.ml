@@ -40,7 +40,7 @@ let add_chaining =
     ] 
   in
   let theorem_chaining = {
-    kind=Kernel.Logic.Theorem;
+    kind=Kernel.Logic.KTheorem;
     name="C6";
     params=[];
     premisses=[];
@@ -72,7 +72,7 @@ let add_idem =
       ]) in
   let theorem_unproved = 
     {
-      kind = Kernel.Logic.Theorem;
+      kind = Kernel.Logic.KTheorem;
       name = "C8";
       params = [];
       premisses = [];
@@ -84,9 +84,9 @@ let add_idem =
   in
   match verif 
   with 
-  | Ok theorem ->
+  | Ok (Theorem theorem) ->
     theorems :=
-      theorem :: !theorems
+      (Theorem {theorem with kind = KTheorem}) :: !theorems
   | Error _ -> ()
 ;;
 
@@ -119,7 +119,7 @@ let demo_contraposition = List.map (fun f -> Single (string_to_formula f)) [
   ]
 in
 let theorem_contraposition_unproved = {
-  kind = Unproved;
+  kind = KUnproved;
   name ="contraposition";
   params = [];
   premisses = [];
@@ -131,9 +131,9 @@ let verif =
 in 
 match verif 
 with 
-| Ok theorem ->
+| Ok (Theorem theorem) ->
   theorems := 
-    {theorem with kind=Theorem} ::!theorems
+    (Theorem {theorem with kind = KTheorem}) ::!theorems
 | Error _ -> ()
 ;;
 
@@ -153,7 +153,7 @@ let f_unproved_demo = List.map (fun s -> Single(string_to_formula s)) [
 and f_unproved = string_to_formula "(\\mathbf{A} \\lor \\mathbf{A})"
 let f() =
 
-  verif ~speed:Paranoid {kind=Unproved;name="";params=[];premisses=[];demonstration=f_unproved_demo; conclusion=f_unproved}
+  verif ~speed:Paranoid {kind=KUnproved;name="";params=[];premisses=[];demonstration=f_unproved_demo; conclusion=f_unproved}
 
 let g_unproved =(string_to_formula "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}")
 and g_unproved_demo =
@@ -170,16 +170,16 @@ and g_unproved_demo =
       "((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A})";
       "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}";
     ])
-let g() = verif ~speed:Paranoid {kind=Unproved;name="";params=[];premisses=[];demonstration=g_unproved_demo; conclusion=g_unproved}
+let g() = verif ~speed:Paranoid {kind=KUnproved;name="";params=[];premisses=[];demonstration=g_unproved_demo; conclusion=g_unproved}
 
 let test_without_notation _ =
   assert_equal ~printer:(function Ok _ -> "Ok" | Error (error,_) -> error) 
-    (Ok {kind=Unproved;name="";params=[];premisses=[];conclusion=f_unproved;demonstration = compile ~speed:Paranoid ~demonstration:f_unproved_demo ()}) 
+    (Ok (Theorem{kind=KUnproved;name="";params=[];premisses=[];conclusion=f_unproved;demonstration = compile ~speed:Paranoid ~demonstration:f_unproved_demo ()})) 
     (f())
 
 let test_with_notation _ =
   assert_equal ~printer:(function Ok _ -> "Ok" | Error (error,_) -> error)
-    (Ok {kind=Unproved;name="";params=[];premisses=[];conclusion=g_unproved;demonstration = compile ~speed:Paranoid ~demonstration:g_unproved_demo ()}) 
+    (Ok (Theorem {kind=KUnproved;name="";params=[];premisses=[];conclusion=g_unproved;demonstration = compile ~speed:Paranoid ~demonstration:g_unproved_demo ()}))
     (g())
 
 let notation_suite =

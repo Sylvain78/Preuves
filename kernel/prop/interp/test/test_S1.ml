@@ -28,7 +28,7 @@ let verif_C8 =
     ]
   in 
   let (theorem_unproved : (formula_prop,P.step list) Kernel.Logic.theorem_logic) ={
-      kind = Kernel.Logic.Theorem;
+      kind = Kernel.Logic.KUnproved;
       name="[Bourbaki]C8";
       params = [];
       premisses = [];
@@ -38,8 +38,8 @@ let verif_C8 =
   in
   match (P.verif ~speed:Paranoid theorem_unproved) 
   with 
-  |Ok theorem ->  
-    P.theorems := theorem::!P.theorems 
+  |Ok (Theorem theorem) ->  
+    P.theorems := (Theorem {theorem with kind = KTheorem})::!P.theorems 
   | Error _ -> ()
 
 let add_chaining =
@@ -73,7 +73,7 @@ let add_chaining =
   in
   let theorem_chaining_unproved =
     {
-      kind = Kernel.Logic.Unproved;
+      kind = Kernel.Logic.KUnproved;
       name = "C6";
       params = [];
       premisses = [];
@@ -83,9 +83,9 @@ let add_chaining =
   in
   match (P.verif  ~speed:Paranoid theorem_chaining_unproved)
   with
-  | Ok theorem -> 
+  | Ok (Theorem theorem) -> 
     P.theorems :=
-      theorem :: !P.theorems
+      (Theorem {theorem with kind = KTheorem}) :: !P.theorems
   | Error _ -> ()
 ;;
 (*non A  \\implies  non B |   B  \\implies  A*)
@@ -125,7 +125,7 @@ and contraposition_demo = List.map (fun s -> P.Single(P.string_to_formula s)) [
 in
 let contraposition_unproved = 
   {
-    kind = Kernel.Logic.Unproved;
+    kind = Kernel.Logic.KUnproved;
     name ="contraposition";
     params = [];
     premisses = [];
@@ -135,8 +135,8 @@ let contraposition_unproved =
 in
 match P.verif ~speed:Paranoid contraposition_unproved
 with 
-| Ok theorem ->  
-  P.theorems := {theorem with kind=Theorem} 
+| Ok (Theorem theorem) ->  
+  P.theorems := (Theorem {theorem with kind=KTheorem})
                 ::!P.theorems
 | Error _ -> ()
 ;;
@@ -160,7 +160,7 @@ and demo_s1_unproved = (List.map (fun s -> P.Single(P.string_to_formula s)) [
   ])
 in
 let s1_unproved = {
-  kind = Unproved;
+  kind = KUnproved;
   name="[Bourbaki]S1";
   params = [];
   premisses = [];
@@ -170,8 +170,8 @@ let s1_unproved = {
 in
 match P.verif ~speed:Paranoid s1_unproved
 with 
-| Ok theorem ->
-  P.theorems := {theorem with kind=Theorem} :: !P.theorems 
+| Ok (Theorem theorem) ->
+  P.theorems := (Theorem {theorem with kind=KTheorem}) :: !P.theorems 
 | Error _ -> ()
 
 let demo = 
@@ -606,7 +606,7 @@ let verif_S3 =
   and demo_s3 = List.map (fun f -> Single f) demo1
   in
   let s3_unproved =
-    {kind = Unproved;name="S3"; params=[];premisses=[];conclusion=s3;demonstration=demo_s3}
+    {kind = KUnproved;name="S3"; params=[];premisses=[];conclusion=s3;demonstration=demo_s3}
   in
   (P.verif ~speed:Paranoid s3_unproved  )
 ;;

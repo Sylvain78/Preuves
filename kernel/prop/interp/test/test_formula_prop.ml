@@ -4,6 +4,10 @@ open Kernel_prop_interp.Formula_prop
 open Kernel_prop_interp.Instance_notation_printers
 open Kernel_prop_interp.Theory.Prop
 
+let print_result = function
+  | Ok _ -> "Ok"
+  | Error (m,e) -> m ^ ( match print_invalid_demonstration e with None -> "" | Some s -> s)
+
 let notation = string_to_notation  "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 let () = 
   ignore (string_to_formula "(X_1=>X_2)=>((X_2=>X_3)=>(X_1=>X_3))");
@@ -22,14 +26,14 @@ let verif_tauto =
         "X_1  \\implies  X_1"
       ])
   in
-  let theorem_unproved = {kind=Kernel.Logic.Theorem; name="tautologie" ; params=[]; premisses=[]; conclusion=(string_to_formula "X_1  \\implies   X_1"); demonstration=demo_tauto}
+  let theorem_unproved = {kind=Kernel.Logic.KTheorem; name="tautologie" ; params=[]; premisses=[]; conclusion=(string_to_formula "X_1  \\implies   X_1"); demonstration=demo_tauto}
   in
   match (verif ~speed:Paranoid theorem_unproved )
   with
-  | Ok theorem->
+  | Ok (Theorem theorem)->
     begin
       theorems :=
-        theorem :: !theorems;
+        (Theorem {theorem with kind = KTheorem}) :: !theorems;
       true
     end
   | Error _ ->  false
@@ -59,7 +63,7 @@ let modus_ponens_unproved =
       "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))"
     ]) 
   in
-  {kind = Unproved;name="modus ponens";params=[];premisses=[];conclusion=modus_ponens;demonstration=modus_ponens_demo}
+  {kind = KUnproved;name="modus ponens";params=[];premisses=[];conclusion=modus_ponens;demonstration=modus_ponens_demo}
 let verif_cut = verif ~speed:Paranoid modus_ponens_unproved
 
 let add_chaining =
@@ -92,7 +96,7 @@ let add_chaining =
   in
   let  chaining_unproved =
     {
-      kind = Kernel.Logic.Unproved;
+      kind = Kernel.Logic.KUnproved;
       name = "C6";
       params = [];
       premisses = [];
@@ -102,9 +106,9 @@ let add_chaining =
   in
   match (verif ~speed:Paranoid chaining_unproved )          
   with
-  | Ok theorem ->
+  | Ok (Theorem theorem) ->
     print_endline "C6 verified";
-    theorems := {theorem with kind=Theorem} :: !theorems
+    theorems := (Theorem {theorem with kind = KTheorem}) :: !theorems
   | Error _ -> ();;
 
 (*non A  \\implies  non B  \\implies   B  \\implies  A*)
@@ -135,7 +139,7 @@ and  contraposition_demo = (List.map (fun s -> Single(string_to_formula s)) [
     "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";
   ])  
 let contraposition_unproved = {
-  kind = Assumed;
+  kind = KAssumed;
   name ="contraposition";
   params = [];
   premisses  = [];
@@ -145,8 +149,8 @@ let verif_contraposee = verif ~speed:Paranoid contraposition_unproved
 ;;
 match verif_contraposee 
 with 
-| Ok theorem ->  
-  theorems := {theorem with kind=Theorem} :: !theorems
+| Ok (Theorem theorem) ->  
+  theorems := (Theorem {theorem with kind = KTheorem}) :: !theorems
 | Error _ -> ()
 ;;
 
@@ -205,7 +209,7 @@ let tiers_exclus_demo = (List.map (fun s -> Single(string_to_formula s)) [
     "\\lnot(\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
     "(X_1 \\lor \\lnot X_1)"
   ])
-let tiers_exclus_unproved={kind=Unproved;name="tiers exclus"; params=[];premisses=[];conclusion=tiers_exclus;demonstration=tiers_exclus_demo}
+let tiers_exclus_unproved={kind=KUnproved;name="tiers exclus"; params=[];premisses=[];conclusion=tiers_exclus;demonstration=tiers_exclus_demo}
 let verif_tiers_exclus =
   (*let z = X_1 \\lor \\lnot X_1
     and tout = \\lnot (X_1  \\implies  X_1)
@@ -231,7 +235,7 @@ and rajout_demo =  (List.map (fun s -> Single(string_to_formula s)) [
     "(((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  X_3))  \\implies  ((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3))))";(*s (k (s (k k)))*)
     "((X_1  \\implies  X_3)  \\implies  (X_1  \\implies  (X_2  \\implies  X_3)))"; (*(s (k (s (k k)))) i*)
   ])
-let rajout_demo_unproved={kind=Unproved;name="rajout"; params=[];premisses=[]; conclusion=rajout;demonstration=rajout_demo}
+let rajout_demo_unproved={kind=KUnproved;name="rajout"; params=[];premisses=[]; conclusion=rajout;demonstration=rajout_demo}
 let verif_rajout_hypothese =
   (*TODO to delete when not needed anymore
     let 
@@ -256,7 +260,7 @@ and ou_idempotent_demo = (List.map (fun s -> Single(string_to_formula s)) [
     "((\\lnot X_1)  \\implies  (\\lnot (X_1\\lorX_1)))  \\implies   ((X_1\\lorX_1)   \\implies  X_1)";
     "(X_1\\lor X_1)  \\implies  X_1";
   ])
-let ou_idempotent_unproved = {kind=Unproved;name="ou idempotent";params=[];premisses=[];conclusion=ou_idempotent;demonstration=ou_idempotent_demo}
+let ou_idempotent_unproved = {kind=KUnproved;name="ou idempotent";params=[];premisses=[];conclusion=ou_idempotent;demonstration=ou_idempotent_demo}
 let verif_ou_idempotent = verif ~speed:Paranoid ou_idempotent_unproved
 
 (* |- (A ou B)  \\implies  (A  \\implies  C)  \\implies  (B  \\implies  C)  \\implies  C*)
@@ -764,30 +768,30 @@ and ou_diamant_demo =
 
       diamond;
     ])
-let ou_diamant_unproved = {kind=Unproved;name="ou diamant";params=[];premisses=[];conclusion=ou_diamant;demonstration=ou_diamant_demo}
+let ou_diamant_unproved = {kind=KUnproved;name="ou diamant";params=[];premisses=[];conclusion=ou_diamant;demonstration=ou_diamant_demo}
 let verif_ou_diamant = verif ~speed:Paranoid ou_diamant_unproved
 
 let test_tauto _ = assert_bool "tauto" (verif_tauto)
 let test_cut _ = 
   assert_equal 
     ~msg:"cut"
-    (Ok {modus_ponens_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) modus_ponens_unproved.demonstration)})
-    (verif_cut)
+    (PVar 1 )
+    (match verif_cut with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
 let test_contraposee _ = assert_equal ~msg:"contraposee"
-    (Ok {contraposition_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) contraposition_demo)})
-    (verif_contraposee)
+    (PVar 1 )
+    (match verif_contraposee with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
 let test_tiers_exclus _ = assert_equal~msg:"tiers exclus"
-    (Ok {tiers_exclus_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) tiers_exclus_demo)})
-    (verif_tiers_exclus)
+    (PVar 1 )
+    (match verif_tiers_exclus with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
 let test_rajout_hypothese _ = assert_equal ~msg:"rajout hypothese"
-    (Ok {rajout_demo_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) rajout_demo)})
-    (verif_rajout_hypothese)
+    (PVar 1 )
+    (match verif_rajout_hypothese with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
 let test_ou_idempotent _ = assert_equal ~msg:"ou idempotent"
-    (Ok {ou_idempotent_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) ou_idempotent_demo)})
-    (verif_ou_idempotent)
-let test_ou_diamant _ = assert_equal ~msg:"ou diamant"
-    (Ok {ou_diamant_unproved with demonstration = (List.map (function Single f -> f | Call _ -> raise (Invalid_argument "Call")) ou_diamant_demo)})
-    (verif_ou_diamant)
+    (PVar 1 )
+    (match verif_ou_idempotent with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
+let test_ou_diamant _ = assert_equal ~msg:"ou diamant" ~printer:print_result
+    (Ok {kind=KUnproved;name="ou diamant";params=[];premisses=[];conclusion=ou_diamant;demonstration=[]})
+    (match verif_ou_diamant with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
 
 let test_instance_1 _ = assert_equal [(PVar 1, PVar 1); (PVar 2, PVar 2)] (instance (string_to_formula "X_1 \\land X_2") (string_to_formula "X_1 \\land X_2"))
 let test_instance_2 _ = assert_equal [(PVar 3,

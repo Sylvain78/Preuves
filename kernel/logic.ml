@@ -3,18 +3,18 @@ type speed =
   | Paranoid
 
 type kind = 
-  | Unproved
-  | Invalid
-  | Axiom
-  | Theorem
-  | Assumed
+  | KUnproved
+  | KInvalid
+  | KAxiom
+  | KTheorem
+  | KAssumed
 
 let kind_to_string = function
-  | Unproved -> "Unproved"
-  | Invalid -> "Invalid"
-  | Axiom -> "Axiom"
-  | Theorem -> "Theorem"
-  | Assumed -> "Assumed"
+  | KUnproved -> "Unproved"
+  | KInvalid -> "Invalid"
+  | KAxiom -> "Axiom"
+  | KTheorem -> "Theorem"
+  | KAssumed -> "Assumed"
 
 type ('formula, 'demonstration) theorem_logic = {
   kind : kind; 
@@ -28,19 +28,18 @@ type ('formula, 'demonstration) theorem_logic = {
 module type LOGIC = sig
   type formula
   type notation
-  type demonstration
-  type theorem = (formula, demonstration) theorem_logic
-  val axioms : theorem list ref
-  val add_axiom : theorem -> unit
-  val theorems : theorem list ref
-
-  type step =  
+  type demonstration = Demonstration of (formula list * step) list [@@unboxed]
+  and  theorem = Theorem of (formula, demonstration) theorem_logic [@@unboxed]
+  and  step = 
     | Single of formula 
     | Call of 
         {
           theorem : theorem;
           params :  formula list
-        }
+        } 
+  val axioms : theorem list ref
+  val add_axiom : theorem -> unit
+  val theorems : theorem list ref
   type theorem_unproved = (formula, step list) theorem_logic
   val is_instance_axiom : formula -> bool
   val compile :

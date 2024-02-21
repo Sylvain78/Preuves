@@ -70,7 +70,7 @@ struct
       function
       | Known i -> Some ((List.nth theorems (i-1)).conclusion)
       | Ax (i,subst) ->
-        let axiom = List.nth !axioms_prop (i-1)
+        let Theorem axiom = List.nth !axioms_prop (i-1)
         in
         let  lv,lt = List.split subst
         in
@@ -266,7 +266,7 @@ struct
       | _::l1 -> find_aux (i+1) f l1
     in find_aux 1 f theorems
 
-  let rec (axioms:theorem list ref)  = ref (List.map (theorem_prop_to_theorem ~speed:Paranoid) !axioms_prop)
+  let rec (axioms:theorem list ref)  = ref (List.map ( theorem_prop_to_theorem ~speed:Paranoid ) !axioms_prop)
   and theorem_prop_to_theorem ~speed = function 
       ({kind;name;conclusion;demonstration;_}:theorem_prop) -> 
       let compiled_demonstration = compile ~speed ~demonstration:(List.map (function f -> Kernel_prop_interp.Theory.Prop.Single f) demonstration) ()
