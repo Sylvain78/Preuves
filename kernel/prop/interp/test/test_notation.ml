@@ -150,7 +150,7 @@ let f_unproved_demo = List.map (fun s -> Single(string_to_formula s)) [
     "((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})";
     "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}";
   ] 
-and f_unproved = string_to_formula "(\\mathbf{A} \\lor \\mathbf{A})"
+and f_unproved = string_to_formula "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}"
 let f() =
 
   verif ~speed:Paranoid {kind=KUnproved;name="";params=[];premisses=[];demonstration=f_unproved_demo; conclusion=f_unproved}

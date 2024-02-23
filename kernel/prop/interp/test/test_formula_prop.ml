@@ -772,25 +772,23 @@ let ou_diamant_unproved = {kind=KUnproved;name="ou diamant";params=[];premisses=
 let verif_ou_diamant = verif ~speed:Paranoid ou_diamant_unproved
 
 let test_tauto _ = assert_bool "tauto" (verif_tauto)
-let test_cut _ = 
-  assert_equal 
-    ~msg:"cut"
-    (PVar 1 )
+let test_cut _ = assert_equal ~msg:"cut" ~printer:formula_to_string
+    (string_to_formula "((X_1  \\implies  X_2)  \\implies  ((X_2  \\implies  X_3)  \\implies  (X_1  \\implies  X_3)))")
     (match verif_cut with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
-let test_contraposee _ = assert_equal ~msg:"contraposee"
-    (PVar 1 )
+let test_contraposee _ = assert_equal ~msg:"contraposee" ~printer:formula_to_string
+    contraposition
     (match verif_contraposee with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
-let test_tiers_exclus _ = assert_equal~msg:"tiers exclus"
-    (PVar 1 )
+let test_tiers_exclus _ = assert_equal~msg:"tiers exclus" ~printer:formula_to_string
+     tiers_exclus
     (match verif_tiers_exclus with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
-let test_rajout_hypothese _ = assert_equal ~msg:"rajout hypothese"
-    (PVar 1 )
+let test_rajout_hypothese _ = assert_equal ~msg:"rajout hypothese" ~printer:formula_to_string
+   rajout 
     (match verif_rajout_hypothese with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
-let test_ou_idempotent _ = assert_equal ~msg:"ou idempotent"
-    (PVar 1 )
+let test_ou_idempotent _ = assert_equal ~msg:"ou idempotent" ~printer:formula_to_string
+    ou_idempotent
     (match verif_ou_idempotent with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
-let test_ou_diamant _ = assert_equal ~msg:"ou diamant" ~printer:print_result
-    (Ok {kind=KUnproved;name="ou diamant";params=[];premisses=[];conclusion=ou_diamant;demonstration=[]})
+let test_ou_diamant _ = assert_equal ~printer:formula_to_string ~msg:"ou diamant" 
+    ou_diamant
     (match verif_ou_diamant with Ok (Theorem theorem) -> theorem | Error (_,e) -> raise e).conclusion
 
 let test_instance_1 _ = assert_equal [(PVar 1, PVar 1); (PVar 2, PVar 2)] (instance (string_to_formula "X_1 \\land X_2") (string_to_formula "X_1 \\land X_2"))

@@ -397,6 +397,6 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     match kernel_prop_interp_verif ~name:theorem_unproved.name ~speed ~hypotheses:theorem_unproved.premisses ~formula:theorem_unproved.conclusion ~proof:theorem_unproved.demonstration
     with
     | Ok () -> Ok (Theorem {theorem_unproved with demonstration = compiled_demonstration}) 
-    | Error (_, invalid_theorem) -> Error ("Invalid demonstration",invalid_theorem)
+    | Error (msg, invalid_theorem) -> Error (msg,invalid_theorem)
 
 end
