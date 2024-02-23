@@ -4,7 +4,7 @@ open Formula_prop
 module Prop:(LOGIC 
              with type formula = formula_prop 
               and type notation = notation_prop
-            ) =
+              and type demonstration = Theorem_prop.demonstration_prop) =  
 struct
 
 

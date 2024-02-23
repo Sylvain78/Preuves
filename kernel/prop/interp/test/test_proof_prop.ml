@@ -74,7 +74,7 @@ let test_S1_Bourbaki _ =
   let s1_unproved = {kind=KUnproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=[Single f]}
   in
   assert_equal ~msg:"test_S0_Bourbaki"
-    (Ok (Theorem {kind=KUnproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=Demonstration[[f], Single f]}))
+    (Ok (Theorem {kind=KUnproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=Demonstration [[f], Single f]}))
     (verif ~speed:Paranoid s1_unproved)
 
 let proof_prop_suite = "Proof prop" >:::

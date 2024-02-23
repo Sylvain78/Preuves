@@ -28,7 +28,7 @@ type ('formula, 'demonstration) theorem_logic = {
 module type LOGIC = sig
   type formula
   type notation
-  type demonstration = Demonstration of (formula list * step) list [@@unboxed]
+  type demonstration
   and  theorem = Theorem of (formula, demonstration) theorem_logic [@@unboxed]
   and  step = 
     | Single of formula 
