@@ -143,7 +143,7 @@ Prop_parser.formule lexbuf
 
   let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:(formula list * step) list) ~(original_proof:theorem_unproved) = 
     match to_prove with
-    | [] -> Ok (Theorem { original_proof with demonstration = Demonstration(proved)})
+    | [] -> Ok (Theorem { original_proof with demonstration = Demonstration(List.rev proved)})
     | ([f_i],(Single f as step))::p  when f = f_i->  
       if (
         (*Formula is an hypothesis*)

@@ -173,7 +173,7 @@ and g_unproved_demo =
 let g() = verif ~speed:Paranoid {kind=KUnproved;name="";params=[];premisses=[];demonstration=g_unproved_demo; conclusion=g_unproved}
 
 let test_without_notation _ =
-  assert_equal ~printer:(function Ok _ -> "Ok" | Error (error,_) -> error) 
+  assert_equal ~printer:(function Ok (Theorem theorem) -> printer_demonstration Format.str_formatter  theorem.demonstration;Format.flush_str_formatter()  | Error (error,_) -> error) 
     (Ok (Theorem{kind=KUnproved;name="";params=[];premisses=[];conclusion=f_unproved;demonstration = compile ~speed:Paranoid ~demonstration:f_unproved_demo ()})) 
     (f())
 
