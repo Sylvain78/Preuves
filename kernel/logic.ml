@@ -37,6 +37,7 @@ module type LOGIC = sig
           theorem : theorem;
           params :  formula list
         } 
+  val is_formula_at_end : formula -> step list -> bool
   val axioms : theorem list ref
   val add_axiom : theorem -> unit
   val theorems : theorem list ref

@@ -141,15 +141,15 @@ Prop_parser.formule lexbuf
     in
     Demonstration (compile_aux ~speed ~hypotheses ~demonstration ())
 
-  let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula * step) list) ~(to_prove:(formula list * step) list) = 
+  let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:(formula list * step) list) ~(original_proof:theorem_unproved) = 
     match to_prove with
-    | [] -> Ok ()
+    | [] -> Ok (Theorem { original_proof with demonstration = Demonstration(proved)})
     | ([f_i],(Single f as step))::p  when f = f_i->  
       if (
         (*Formula is an hypothesis*)
         List.mem f_i hypotheses 
         (*Formula already present *)
-        || List.mem f_i (fst @@ List.split proved)
+        || List.mem f_i (List.flatten @@ fst @@ List.split proved)
         (*Formula is an instance of a theorem or axiom *)
         || (List.exists (fun (Theorem th) -> 
             try
@@ -164,14 +164,14 @@ Prop_parser.formule lexbuf
             (!theorems))
         || is_instance_axiom f_i
         (*cut*)
-        || (cut f_i (fst @@ List.split proved)) 
+        || (cut f_i (List.flatten @@ fst @@ List.split proved)) 
         (*application of notations*)
-        || List.exists (fun f -> equiv_notation f_i f) (fst @@ List.split proved)
+        || List.exists (fun f -> equiv_notation f_i f) (List.flatten @@ fst @@ List.split proved)
       )
       then 
         begin
           Logs.debug (fun m -> m "%a Proved" pp_formula f_i);
-          verif_prop ~name ~hypotheses ~proved:((f_i,step) :: proved) ~to_prove:p
+          verif_prop ~name ~hypotheses ~proved:(([f_i],step) :: proved) ~to_prove:p ~original_proof
         end
       else 
         begin
@@ -180,24 +180,26 @@ Prop_parser.formule lexbuf
         end
     | _ -> failwith "to implement"
 
-  let kernel_prop_interp_verif ~speed ~name ~hypotheses ~formula:(f:formula) ~proof:(proof:step list)  =
-    let compiled_proof = 
-      match compile ~speed ~demonstration:proof ()
-      with Demonstration d -> d
-    in
     (* f is at the end of the proof *)
-    let is_end_proof f t =
+    let is_formula_at_end f t =
       let rev_t = List.rev t
       in
       try
-        f = List.hd rev_t
+        match List.hd rev_t
+        with 
+        | Single g when g = f -> true
+        | _ -> failwith "to implement"
       with
       | Failure _ -> false
+
+  let kernel_prop_interp_verif ~speed theorem_unproved =
+    let compiled_proof = 
+      match compile ~speed ~demonstration:theorem_unproved.demonstration ()
+      with Demonstration d -> d
     in
-    if not (is_end_proof f (List.flatten @@ fst @@ List.split compiled_proof))
-    then Error ("Formula is not at the end of the proof", Invalid_demonstration ({kind = KUnproved;name; params=[]; premisses=hypotheses;conclusion=f; demonstration = snd @@ List.split compiled_proof}))
-    else
-      verif_prop ~name ~hypotheses ~proved:[] ~to_prove:compiled_proof
+      verif_prop ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:compiled_proof ~original_proof:theorem_unproved
+
+
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
@@ -392,11 +394,10 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
 
 
   let verif ~speed theorem_unproved = 
-    let compiled_demonstration = compile ~speed ~hypotheses:theorem_unproved.premisses ~demonstration:theorem_unproved.demonstration ()
-    in
-    match kernel_prop_interp_verif ~name:theorem_unproved.name ~speed ~hypotheses:theorem_unproved.premisses ~formula:theorem_unproved.conclusion ~proof:theorem_unproved.demonstration
-    with
-    | Ok () -> Ok (Theorem {theorem_unproved with demonstration = compiled_demonstration}) 
-    | Error (msg, invalid_theorem) -> Error (msg,invalid_theorem)
+    if not (is_formula_at_end theorem_unproved.conclusion  theorem_unproved.demonstration)
+    then 
+      Error ("Formula is not at the end of the proof", Invalid_demonstration theorem_unproved)
+    else
+    kernel_prop_interp_verif ~speed theorem_unproved
 
 end
