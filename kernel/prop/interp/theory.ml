@@ -198,8 +198,6 @@ Prop_parser.formule lexbuf
       with Demonstration d -> d
     in
       verif_prop ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:compiled_proof ~original_proof:theorem_unproved
-
-
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
