@@ -4,7 +4,9 @@ open Formula_prop
 module Prop:(LOGIC 
              with type formula = formula_prop 
               and type notation = notation_prop
-              and type demonstration = Theorem_prop.demonstration_prop) =  
+              and type demonstration = Theorem_prop.demonstration_prop
+              and type theorem = Theorem_prop.theorem_prop
+            ) =  
 struct
 
 
@@ -141,10 +143,10 @@ Prop_parser.formule lexbuf
     in
     Demonstration (compile_aux ~speed ~hypotheses ~demonstration ())
 
-  let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:(formula list * step) list) ~(original_proof:theorem_unproved) = 
+  let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:demonstration ) ~(original_proof:theorem_unproved) = 
     match to_prove with
-    | [] -> Ok (Theorem { original_proof with demonstration = Demonstration(List.rev proved)})
-    | ([f_i],(Single f as step))::p  when f = f_i->  
+    | Demonstration [] -> Ok (Theorem { original_proof with demonstration = Demonstration(List.rev proved)})
+    | Demonstration (([f_i],(Single f as step))::p)  when f = f_i->  
       if (
         (*Formula is an hypothesis*)
         List.mem f_i hypotheses 
@@ -171,7 +173,7 @@ Prop_parser.formule lexbuf
       then 
         begin
           Logs.debug (fun m -> m "%a Proved" pp_formula f_i);
-          verif_prop ~name ~hypotheses ~proved:(([f_i],step) :: proved) ~to_prove:p ~original_proof
+          verif_prop ~name ~hypotheses ~proved:(([f_i],step) :: proved) ~to_prove:(Demonstration p) ~original_proof
         end
       else 
         begin
@@ -180,24 +182,23 @@ Prop_parser.formule lexbuf
         end
     | _ -> failwith "to implement"
 
-    (* f is at the end of the proof *)
-    let is_formula_at_end f t =
-      let rev_t = List.rev t
-      in
-      try
-        match List.hd rev_t
-        with 
-        | Single g when g = f -> true
-        | _ -> failwith "to implement"
-      with
-      | Failure _ -> false
+  (* f is at the end of the proof *)
+  let is_formula_at_end f t =
+    let rev_t = List.rev t
+    in
+    try
+      match List.hd rev_t
+      with 
+      | Single g when g = f -> true
+      | _ -> failwith "to implement"
+    with
+    | Failure _ -> false
 
   let kernel_prop_interp_verif ~speed theorem_unproved =
     let compiled_proof = 
-      match compile ~speed ~demonstration:theorem_unproved.demonstration ()
-      with Demonstration d -> d
+      compile ~speed ~demonstration:theorem_unproved.demonstration ()
     in
-      verif_prop ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:compiled_proof ~original_proof:theorem_unproved
+    verif_prop ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:compiled_proof ~original_proof:theorem_unproved
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
@@ -396,6 +397,6 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     then 
       Error ("Formula is not at the end of the proof", Invalid_demonstration theorem_unproved)
     else
-    kernel_prop_interp_verif ~speed theorem_unproved
+      kernel_prop_interp_verif ~speed theorem_unproved
 
 end

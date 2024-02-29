@@ -1,7 +1,6 @@
 open Kernel_prop_interp.Formula_prop
 open Kernel_prop_interp.Instance_notation_printers
 open Kernel_prop_interp.Theory.Prop
-open Kernel_prop_compile.Compile
 open Kernel_prop_compile.Verif
 
 open OUnit2

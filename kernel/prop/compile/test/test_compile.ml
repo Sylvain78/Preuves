@@ -1,11 +1,10 @@
 open Kernel.Logic
 open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Theory.Prop
 open OUnit2
 
 open Kernel_prop_compile.Ast
-open Kernel_prop_compile.Compile
-open Kernel_prop_compile.Verif
+open Kernel_prop_compile.Theorem_compile
+open Kernel_prop_compile.Verif.Prop
 
 let x1,x2,x3 = PVar 1,PVar 2, PVar 3
 let (=>) a b = PImpl(a,b)
@@ -13,7 +12,7 @@ let formula = x1=>x1
 
 let assumed f =
   {
-    kind = Assumed;
+    kind = KAssumed;
     name = "";
     params = [];
     premisses = [];
@@ -50,24 +49,26 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  match (verif  ~formula:chaining ~proof:demo_chaining ())          
-  with
-  | Ok() -> 
-    theorems :=
-      {
-        kind = Kernel.Logic.Theorem;
+  let chainging_unproved = {
+        kind = Kernel.Logic.KUnproved;
         name = "C6";
         params = [];
         premisses = [];
-        demonstration = demo_chaining;
+        demonstration = List.map (function f -> Single f) demo_chaining;
         conclusion = chaining;
       }
+  in 
+  match (verif ~speed:Paranoid chainging_unproved )          
+  with
+  | Ok(Theorem th) -> 
+    theorems :=
+      Theorem { th with kind = Kernel.Logic.KTheorem; }
       :: !theorems
   | Error _ -> ();;
 
 
 let demo =
-  List.map (fun f -> Step f) [ 
+  List.map (fun f -> Single f) [ 
     (x1 =>((x1 => x1) => x1)) =>((x1 =>(x1 => x1)) =>(x1 => x1));
     x1 =>((x1 => x1) => x1);
     (x1 =>(x1 => x1)) =>(x1 => x1);
@@ -75,15 +76,16 @@ let demo =
     x1 => x1
   ]
 
-let test = compile_demonstration  ~theorems:!theorems ~demo ();;
+let test = compile ~speed:Paranoid ~demonstration:demo ();;
+
 
 let test_cut _ =
-  assert_equal {theorem=x2 ; demonstration=[Known 1 ; Known 2 ; Cut(1,2)]}
-    (compile_demonstration   ~demo:[Step x1; Step (x1=>x2) ; Step x2] ~theorems:[assumed x1;assumed (x1=>x2)] ())
+  assert_equal (Demonstration [([Known 1],Single x1);([Known 2],Single(x1=>x2));([Cut(1,2)],Single x2)])
+    (compile ~speed:Paranoid  ~demonstration:[Single x1; Single (x1=>x2) ; Single x2] ~hypotheses:[x1; (x1=>x2)] ())
 
 let test_compile _ =
-  assert_equal { theorem=formula ; demonstration=[ Known 1 ] }
-    (compile_demonstration  ~demo:[Step formula] ~theorems:[assumed formula] ())
+  assert_equal (Demonstration [([ Known 1 ], Single x1)]) 
+    (compile ~speed:Paranoid ~demonstration:[Single formula] ~hypotheses:[formula] ())
 
 let test_compile_a_implies_a _ =
   assert_equal 
