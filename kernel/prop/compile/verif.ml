@@ -1,15 +1,17 @@
 open Kernel.Logic
 open Kernel_prop_interp.Formula_prop
 open Kernel_prop_interp
+open Ast
+open Theorem_compile
 
 module Prop:(LOGIC 
              with type formula = formula_prop 
               and type notation = notation_prop
-              and type demonstration = Ast.kernel_proof_term list 
-            ) =
+              and type demonstration = demonstration_compile
+              and type theorem = theorem_compile
+              and type step = step_compile) =
 struct
 
-  open Ast
   include Axioms_prop
   include Instance_notation_printers
   include Theorem_prop
@@ -24,17 +26,18 @@ struct
 
   type formula = formula_prop
   type notation = notation_prop
-  type demonstration = kernel_proof_term list
-  type theorem = (formula, demonstration) Kernel.Logic.theorem_logic
-  let theorems = ref []
-  type step =  
+  type demonstration = demonstration_compile
+  type theorem = theorem_compile = Theorem of (formula_prop, demonstration_compile) theorem_logic [@@unboxed]
+  let theorems = ref ([] : theorem list)
+  type step = step_compile =   
     | Single of formula 
     | Call of {theorem : theorem; params :  formula list}
-  exception Invalid_demonstration of formula * theorem list * formula list * demonstration
+  type theorem_unproved = (formula, step list) Kernel.Logic.theorem_logic 
 
+  exception Invalid_demonstration of theorem_unproved
 
-  type kernel_proof_term = Ast.kernel_proof_term
-
+  let (axioms:theorem list ref)  =  ref(List.map (function (Theorem_prop.Theorem t) -> 
+      Theorem_compile.Theorem ({kind=t.kind;name=t.name; params=t.params;premisses=t.premisses;conclusion=t.conclusion; demonstration = ((Demonstration []):demonstration)})) !axioms_prop)
   let printer_kernel_proof_term out =
     function 
     | Ax(i,l) -> Format.fprintf out "Ax(%d,[%a])" i 
@@ -58,88 +61,6 @@ struct
     | HypUse i -> Format.fprintf out "Hyp(%d)" i
     | EndHyp -> Format.fprintf out "End hypotheses"
 
-  let kernel_prop_compile_verif  ?(theorems=[]) ?(hypotheses=[||]) ~formula:f ~proof () =
-    let formula_stack = ref []
-    and hypotheses_stack = Stack.create ()
-    in
-    Stack.push hypotheses hypotheses_stack;
-    let formula_from_proof_term step_index 
-        (theorems : theorem list) = 
-      let hyp = ref 0
-      in
-      function
-      | Known i -> Some ((List.nth theorems (i-1)).conclusion)
-      | Ax (i,subst) ->
-        let Theorem axiom = List.nth !axioms_prop (i-1)
-        in
-        let  lv,lt = List.split subst
-        in
-        Some(Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop ~vars:(List.map (fun i -> PVar i) lv) ~terms:lt axiom.conclusion)
-      | Th (i,subst) ->
-        let theorem = List.nth theorems (i-1)
-        in
-        let  lv,lt = List.split subst
-        in
-        let substitute_in = Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop ~vars:lv ~terms:lt 
-        in
-        (*verify premisses*)
-        if not (List.for_all (fun p -> List.mem (substitute_in p) !formula_stack) theorem.premisses)
-        then 
-          begin
-            failwith ( theorem.name ^ "premisse " ^ "not verified")
-          end;
-        Some (substitute_in theorem.conclusion)
-      | Cut(j,k) -> 
-        let rev_stack = List.rev !formula_stack
-        in
-        let fj,fk= List.nth rev_stack (j-1), List.nth rev_stack (k-1)
-        in
-        begin
-          match fk with
-          | PImpl(f,g) when f=fj -> Some g
-          | _ -> failwith @@ "Proof term " ^ "Cut(" ^ (string_of_int j) ^ ", " ^ (string_of_int k) ^ ")"
-        end
-      | BeginHyp n -> 
-        Stack.push (Array.make n (PVar 0)) hypotheses_stack ;
-        None
-      | HypDecl f -> 
-        if (List.mem f !formula_stack) 
-        then 
-          begin
-            (Stack.top hypotheses_stack).(!hyp) <- f ;
-            incr hyp;
-            Some f
-          end
-        else 
-          begin
-            Logs.err (fun m ->  m ("verif : premisse %a not verified at step %d") pp_formula f step_index);
-            raise (Invalid_demonstration (f, theorems, Array.to_list hypotheses, 
-                                          List.of_seq @@Seq.take step_index @@ List.to_seq @@ List.rev proof))
-          end
-      | HypUse i -> Some (Stack.top hypotheses_stack).(i)
-      | EndHyp -> hyp:= 0; None
-    in
-    List.iteri 
-      (fun  step_index proof_term ->
-         match formula_from_proof_term step_index theorems proof_term 
-         with
-         | Some f -> formula_stack := f :: !formula_stack
-         |None -> ()
-      )
-      proof;
-    (*verify formula is at the end of the proof*)
-    begin
-      Logs.info (fun m -> m ~header:("compare f and hd stack" )  "%a <?> %a"
-                    Kernel_prop_interp.Instance_notation_printers.printer_formula_prop (expand_all_notations f)
-                    Kernel_prop_interp.Instance_notation_printers.printer_formula_prop (List.hd !formula_stack))
-    end;
-    if expand_all_notations f = List.hd !formula_stack
-    then
-      Ok ()
-    else
-      Error ("Formula " ^ (to_string_formula_prop f) ^ "is not at the end of the proof.")
-
-
   let find_index_instance f list_props =
     let rec find_aux index l =
       match l with
@@ -149,9 +70,10 @@ struct
         with Failed_Unification _ -> find_aux (index+1) list_props'
     in
     find_aux 1 list_props
+
   (*instance of axiom*)
   let is_instance_of_axiom axioms f =
-    match find_index_instance f axioms
+    match find_index_instance f (List.map (function Theorem_compile.Theorem t -> t) axioms)
     with
     | Some (i,subst) ->
       begin
@@ -181,35 +103,6 @@ struct
       | _::l1 -> find_aux (i+1) f l1
     in 
     find_aux 1 f lf
-  (*instance of theorem*)
-  let is_instance_of_theorem_aux theorems  f =
-    let find_index_instance f list_theorems =
-      let rec find_aux index l =
-        match l with
-          [] -> None
-        | th :: list_theorems' ->
-          try Some (index,instance f th.conclusion )
-          with Failed_Unification _ -> find_aux (index+1) list_theorems'
-      in
-      find_aux 1 list_theorems
-    in
-    match find_index_instance f theorems
-    with
-    | Some (i,subst) ->
-      begin
-        try
-          let subst' = List.rev subst
-          in
-          Fmt_tty.setup_std_outputs ();
-          let pp ppf i =
-            Fmt.pf ppf "%a%a" Fmt.(styled `Cyan (styled `Bold string)) "Th" Fmt.(parens int) i;
-          in
-          Logs.debug (fun m -> m "%a" ~header:"Th" pp i);
-          Some(Th(i,subst'))
-        with
-        | Not_found -> None
-      end
-    | None -> None
 
   (*cut*)
   let is_cut_aux demo f =
@@ -264,16 +157,40 @@ struct
       | [] -> None
       | f1::_ when f=f1.conclusion -> Some(Known i)
       | _::l1 -> find_aux (i+1) f l1
-    in find_aux 1 f theorems
+    in find_aux 1 f (List.map (function Theorem_compile.Theorem th -> th) theorems)
 
-  let rec (axioms:theorem list ref)  = ref (List.map ( theorem_prop_to_theorem ~speed:Paranoid ) !axioms_prop)
-  and theorem_prop_to_theorem ~speed = function 
-      ({kind;name;conclusion;demonstration;_}:theorem_prop) -> 
-      let compiled_demonstration = compile ~speed ~demonstration:(List.map (function f -> Kernel_prop_interp.Theory.Prop.Single f) demonstration) ()
+  (*instance of theorem*)
+  let is_instance_of_theorem_aux theorems  f =
+    let find_index_instance f list_theorems =
+      let rec find_aux index l =
+        match l with
+          [] -> None
+        | th :: list_theorems' ->
+          try Some (index,instance f th.conclusion )
+          with Failed_Unification _ -> find_aux (index+1) list_theorems'
       in
-      ({kind;name;params=[];premisses =[];conclusion;demonstration=compiled_demonstration.demonstration}:theorem)
-  and compile ~speed ?(hypotheses=[]) ~demonstration () =
-    let rec compile_aux ~depth ~proof ~proved = 
+      find_aux 1 list_theorems
+    in
+    match find_index_instance f (List.map (function Theorem_compile.Theorem th -> th) theorems)
+    with
+    | Some (i,subst) ->
+      begin
+        try
+          let subst' = List.rev subst
+          in
+          Fmt_tty.setup_std_outputs ();
+          let pp ppf i =
+            Fmt.pf ppf "%a%a" Fmt.(styled `Cyan (styled `Bold string)) "Th" Fmt.(parens int) i;
+          in
+          Logs.debug (fun m -> m "%a" ~header:"Th" pp i);
+          Some(Th(i,subst'))
+        with
+        | Not_found -> None
+      end
+    | None -> None
+
+  let compile ~speed ?(hypotheses=[]) ~(demonstration: step list) () =
+    let rec compile_aux ~depth ~(proof : demonstration) ~proved = 
       let lift n  = function
         | ( Ax _ | BeginHyp _ | HypDecl _ | HypUse _ | EndHyp | Th _) as kpt -> kpt
         | Known n' -> Known (n+n')
@@ -285,7 +202,7 @@ struct
         Logs.debug (fun m -> m "formule expansée : %s" (Kernel_prop_interp.Instance_notation_printers.to_string_formula_prop (expand_all_notations f)));
         let  proof_term = List.find_map (fun func -> func (expand_all_notations f)) 
             [ 
-              is_instance_of_axiom !axioms_prop; 
+              is_instance_of_axiom !axioms; 
               is_cut_aux (List.rev proved);
               is_hypothesis hypotheses; 
               is_known_theorem_aux !theorems; 
@@ -294,84 +211,143 @@ struct
         in
         begin
           match proof_term with
-          | Some step -> 
+          | Some step_compiled -> 
             Logs.debug(fun m -> pp_formula Fmt.stdout f;Fmt.flush Fmt.stdout ();m "proof_term");
-            compile_aux ~depth:(depth+1) ~proved:(f::proved)  ~proof:(step :: proof) demo_tail
+            compile_aux ~depth:(depth+1) ~proved:(f::proved)  ~proof:(match proof with Demonstration proof ->  Demonstration (([step_compiled],(Single f)) :: proof)) demo_tail
           | None -> 
             Logs.err (fun m -> pp_formula Fmt.stdout f;m "compile: Invalid_demonstration ");
-            raise (Invalid_demonstration (f, !theorems, hypotheses,List.rev ((Single f)::proof)))
+            failwith "formula not compilable (msg TODO)"
         end
-      | Call {theorem ; params } :: l ->
+      | Call {theorem; params } :: l ->
+        let theorem = match theorem with Theorem t -> t
+        in
         let substituted = Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
         in
         match speed with
-        | Fast -> (substituted theorem.conclusion) :: (compile_aux ~depth:(depth+1) l)
-        | Paranoid -> 
-          BeginHyp (List.length theorem.premisses) :: (List.map (fun p -> HypDecl(substituted p)) theorem.premisses)  @
+        | Fast -> (failwith "to implement"  (*compile_aux ~depth:(depth+1) l*))
+        | Paranoid -> ignore (substituted,lift);failwith "to implement"
+        (*BeginHyp (List.length theorem.premisses) :: (List.map (fun p -> HypDecl(substituted p)) theorem.premisses)  @
           (List.map (function kpt -> lift (depth + 1 + (*BeginHyp*)+ (List.length theorem.premisses)) kpt) theorem.demonstration) 
-          @ (EndHyp :: (compile_aux ~depth l))  
-    in compile_aux ~depth:0 demonstration.demonstration
+          @ (EndHyp :: (compile_aux ~depth l))  *)
+    in compile_aux ~depth:0 ~proved:[] ~proof:(Demonstration []) demonstration
+
+  let verif_compile ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:demonstration) ~(original_proof:theorem_unproved) =
+    let formula_stack = ref []
+    and hypotheses_stack = Stack.create ()
+    in
+    Stack.push (Array.of_list hypotheses) hypotheses_stack;
+    let formula_from_proof_term step_index 
+        (theorems : theorem list) = 
+      let hyp = ref 0
+      in
+      function
+      | Known i -> Some (match List.nth theorems (i-1) with Theorem t -> t).conclusion
+      | Ax (i,subst) ->
+        let Theorem axiom = List.nth !axioms_prop (i-1)
+        in
+        let  lv,lt = List.split subst
+        in
+        Some(Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop ~vars:(List.map (fun i -> PVar i) lv) ~terms:lt axiom.conclusion)
+      | Th (i,subst) ->
+        let theorem = 
+          match List.nth theorems (i-1) 
+          with Theorem t -> t
+        in
+        let  lv,lt = List.split subst
+        in
+        let substitute_in = Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop ~vars:lv ~terms:lt 
+        in
+        (*verify premisses*)
+        if not (List.for_all (fun p -> List.mem (substitute_in p) !formula_stack) theorem.premisses)
+        then 
+          begin
+            failwith ( theorem.name ^ "premisse " ^ "not verified")
+          end;
+        Some (substitute_in theorem.conclusion)
+      | Cut(j,k) -> 
+        let rev_stack = List.rev !formula_stack
+        in
+        let fj,fk= List.nth rev_stack (j-1), List.nth rev_stack (k-1)
+        in
+        begin
+          match fk with
+          | PImpl(f,g) when f=fj -> Some g
+          | _ -> failwith @@ "Proof term " ^ "Cut(" ^ (string_of_int j) ^ ", " ^ (string_of_int k) ^ ")"
+        end
+      | BeginHyp n -> 
+        Stack.push (Array.make n (PVar 0)) hypotheses_stack ;
+        None
+      | HypDecl f -> 
+        if (List.mem f !formula_stack) 
+        then 
+          begin
+            (Stack.top hypotheses_stack).(!hyp) <- f ;
+            incr hyp;
+            Some f
+          end
+        else 
+          begin
+            Logs.err (fun m ->  m ("verif : premisse %a not verified at step %d")  pp_formula f step_index);
+            raise (Invalid_demonstration ({original_proof
+                                           with conclusion=f 
+                                              ;demonstration =
+                                                 List.of_seq @@Seq.take step_index @@ List.to_seq @@ original_proof.demonstration}))
+          end
+      | HypUse i -> Some (Stack.top hypotheses_stack).(i)
+      | EndHyp -> hyp:= 0; None
+    in
+    List.iteri 
+      (fun  step_index proof_term ->
+         match formula_from_proof_term step_index !theorems proof_term 
+         with
+         | Some f -> formula_stack := f :: !formula_stack
+         | None -> ()
+      )
+      (failwith "to_prove");
+    Ok (failwith "original_proof")
+
+  let kernel_prop_compile_verif ~speed theorem_unproved =
+    let compiled_proof = 
+      compile ~speed ~demonstration:(failwith "theorem_unproved.demonstration") ()
+    in
+    verif_compile ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:(compiled_proof) ~original_proof:theorem_unproved
+  ;;
 
   let add_axiom ax = axioms := ax :: !axioms
   let is_instance_axiom f =
-    match is_instance_of_axiom (List.map theorem_to_theorem_prop !axioms) f 
+    match is_instance_of_axiom !axioms f 
     with 
     | Some _ -> true 
     | None -> false 
-
-
-  let compile_demonstration  ?(theorems=([]:theorem list)) ?(hypotheses=[]) ~(demo: demonstration) () =
-    let rec compile_demo_aux ~(demo:demonstration) ~proof ~proved =
-      match demo with
-      | [] ->List.hd proved, proof
-      | (Single f) :: demo_tail ->
-        Logs.debug (fun m -> m "formule expansée : %s" (Kernel_prop_interp.Instance_notation_printers.to_string_formula_prop (expand_all_notations f)));
-        let  proof_term = List.find_map (fun func -> func (expand_all_notations f)) 
-            [ 
-              is_instance_of_axiom !axioms_prop; 
-              is_cut_aux (List.rev proved);
-              is_hypothesis hypotheses; 
-              is_known_theorem_aux theorems; 
-              is_instance_of_theorem_aux theorems;
-            ]
-        in
-        begin
-          match proof_term with
-          | Some step -> 
-            Logs.debug(fun m -> pp_formula Fmt.stdout f;Fmt.flush Fmt.stdout ();m "proof_term");
-            compile_demo_aux ~demo:demo_tail ~proved:(f::proved)  ~proof:(step :: proof)
-          | None -> 
-            Logs.err (fun m -> pp_formula Fmt.stdout f;m "compile: Invalid_demonstration ");
-            raise (Invalid_demonstration (f, theorems, hypotheses, List.map (function f -> Formula f) (List.rev ((f::proved)))))
-        end
-
-
-      | Call{theorem;params} ::demo_tail -> (*TODO instantiate theorem with params and add it to proved and proof*)
-        compile_demo_aux ~demo:demo_tail ~proved:(proved)  ~proof:( proof)
-    in
-    let theorem, demonstration = compile_demo_aux ~demo:(compile ~speed ~hypotheses ~demonstration:demo ()) ~proof:[] ~proved:[]
-    in
-    {
-      theorem ;
-      demonstration=List.rev demonstration;
-    }
-  let theorem_to_theorem_prop = function 
-      ({name;conclusion;_}:theorem) -> 
-      ({kind=Axiom;name;params=[];premisses =[];conclusion;demonstration=[]}:theorem_prop)
-
-
 
   let print_invalid_demonstration = Theory.Prop.print_invalid_demonstration;;
 
   Printexc.register_printer (print_invalid_demonstration)
 
-  let verif ?(theorems=([]:theorem list)) ?(hypotheses=[]) () ~formula:f ~(proof:demonstration) = 
-    kernel_prop_compile_verif ~theorems ~hypotheses ~formula:f ~proof
+  (* f is at the end of the proof *)
+  let is_formula_at_end f t =
+    let rev_t = List.rev t
+    in
+    try
+      match List.hd rev_t
+      with 
+      | Single g when g = f -> true
+      | _ -> failwith "to implement"
+    with
+    | Failure _ -> false
+
+  let verif ~speed (theorem_unproved: theorem_unproved) = 
+    if not (is_formula_at_end theorem_unproved.conclusion (failwith " theorem_unproved.demonstration"))
+    then 
+      Error ("Formula is not at the end of the proof", Invalid_demonstration (failwith "theorem_unproved"))
+    else
+      kernel_prop_compile_verif ~speed (failwith "theorem_unproved")
 
   let string_to_formula = formula_from_string
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop
   let string_to_notation = notation_from_string
   let printer_demonstration ff d=
-    (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d
+    failwith "to implement : (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_formula) ff d"
+  let printer_step = failwith "to implement"
 end
