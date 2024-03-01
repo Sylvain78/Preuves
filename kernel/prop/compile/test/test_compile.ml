@@ -89,20 +89,26 @@ let test_compile _ =
 
 let test_compile_a_implies_a _ =
   assert_equal 
-    { theorem = formula ; 
-      demonstration = [Ax (2, [(3, x1); (1, x1); (2, x1 => x1)]);
-                       Ax (1, [(1, x1); (2, x1 => x1)]);
-                       Cut (2, 1);
-                       Ax (1, [(1, x1); (2, x1)]);
-                       Cut (4, 3)
-                      ]
-    }
+    (Demonstration (List.combine (List.map (fun t -> [t])  [ Ax (2, [(3, x1); (1, x1); (2, x1 => x1)]);
+                                                             Ax (1, [(1, x1); (2, x1 => x1)]);
+                                                             Cut (2, 1);
+                                                             Ax (1, [(1, x1); (2, x1)]);
+                                                             Cut (4, 3)
+                                                           ]
+                                 )
+                      (List.map (fun f -> Single f) [ 
+                          (x1 =>((x1 => x1) => x1)) =>((x1 =>(x1 => x1)) =>(x1 => x1));
+                          x1 =>((x1 => x1) => x1);
+                          (x1 =>(x1 => x1)) =>(x1 => x1);
+                          x1 =>(x1 => x1);
+                          x1 => x1
+                        ] )))
 
-    (compile_demonstration  ~theorems:!theorems ~demo:demo ())
+    (compile ~speed:Paranoid  ~demonstration:demo () )
 
 let test_compile_s1 _ =
   let demo_chaining x1 x2 x3 = 
-    List.map (fun f -> Step f)
+    List.map (fun f -> Single f)
       [
         (x1 => (x2 => x3)) => ((x1 => x2) => (x1 => x3));
         ((x1 => (x2 => x3)) => ((x1 => x2) => (x1 => x3))) => ((x2 => x3) => ((x1 => (x2 => x3)) => ((x1 => x2) => (x1 => x3))));
@@ -128,7 +134,7 @@ let test_compile_s1 _ =
       ] 
   in
   let _ = Kernel_prop_interp.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd"
-  and demo = compile_demonstration  ~theorems:!theorems ~demo:((List.map (fun s -> Step (Kernel_prop_interp.Prop_parser.formula_from_string s)) [
+  and demo = compile ~speed:Paranoid  ~demonstration:((List.map (fun s -> Single (Kernel_prop_interp.Prop_parser.formula_from_string s)) [
       "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))";
       "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
       "((\\lnot \\mathbf{A}) \\implies (((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A})))) \\implies (((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies ((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
@@ -198,7 +204,7 @@ let test_compile_s1 _ =
       "((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies \\mathbf{A})";
       "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A})))";
       "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";
-      "((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A})))"; ]) @ (demo_chaining (POr(PMetaVar "A", PMetaVar "A")) (PNeg(PNeg(POr(PMetaVar "A", PMetaVar "A")))) (PMetaVar "A")) @ (List.map (fun s -> Step (string_to_formula s)) [
+      "((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A})))"; ]) @ (demo_chaining (POr(PMetaVar "A", PMetaVar "A")) (PNeg(PNeg(POr(PMetaVar "A", PMetaVar "A")))) (PMetaVar "A")) @ (List.map (fun s -> Single (string_to_formula s)) [
 
       (* Demonstrated by chaining :
        * "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
@@ -213,19 +219,19 @@ let test_compile_s1 _ =
       "((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})";
       "(((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies  ((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))))";
     ]) 
-                                                                                        @ (demo_chaining (string_to_formula "((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))") (string_to_formula "((\\lnot \\lnot (\\mathbf{A} \\lor \\mathbf{A})) \\implies \\lnot \\lnot \\mathbf{A})") (string_to_formula "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})")) 
-                                                                                        @ (demo_chaining (string_to_formula "((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))") (string_to_formula "((\\lnot \\lnot (\\mathbf{A} \\lor \\mathbf{A})) \\implies \\lnot \\lnot \\mathbf{A})") (string_to_formula "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})")) 
-                                                                                        @ 
-                                                                                        (List.map (fun s -> Step (string_to_formula s)) [
-                                                                                            "(((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies  ((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A})))) \\implies ((((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies (((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})))";
+                                                               @ (demo_chaining (string_to_formula "((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))") (string_to_formula "((\\lnot \\lnot (\\mathbf{A} \\lor \\mathbf{A})) \\implies \\lnot \\lnot \\mathbf{A})") (string_to_formula "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})")) 
+                                                               @ (demo_chaining (string_to_formula "((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))") (string_to_formula "((\\lnot \\lnot (\\mathbf{A} \\lor \\mathbf{A})) \\implies \\lnot \\lnot \\mathbf{A})") (string_to_formula "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})")) 
+                                                               @ 
+                                                               (List.map (fun s -> Single (string_to_formula s)) [
+                                                                   "(((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies  ((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A})))) \\implies ((((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies (((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})))";
 
-                                                                                            "((((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies (((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})))";
-                                                                                            "(((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
-                                                                                            (* nA -> nB ---> A->B *)
+                                                                   "((((\\lnot (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies (\\lnot (\\lnot \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies (((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})))";
+                                                                   "(((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
+                                                                   (* nA -> nB ---> A->B *)
 
-                                                                                            "((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})";
-                                                                                            "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}"
-                                                                                          ])) ()
+                                                                   "((\\lnot \\mathbf{A}) \\implies (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})";
+                                                                   "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}"
+                                                                 ])) ()
   in
   assert_equal ~printer:(fun s -> Format.pp_print_list (printer_kernel_proof_term) Format.str_formatter s.demonstration; Format.flush_str_formatter ())
     {theorem =

@@ -1,3 +1,4 @@
+open Kernel.Logic
 open Kernel_prop_interp.Formula_prop
 open Kernel_prop_interp.Instance_notation_printers
 open Kernel_prop_interp.Theory.Prop
@@ -18,7 +19,7 @@ let add_chaining =
     string_to_formula "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
   in
   let demo_chaining = 
-    List.map (fun s -> (string_to_formula s)) [
+    List.map (fun s -> (Single(string_to_formula s))) [
       "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))";
       "((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))) \\implies ((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
       "((X_2 \\implies X_3) \\implies ((X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))))";
@@ -42,19 +43,20 @@ let add_chaining =
       "((X_1 \\implies X_2) \\implies ((X_2 \\implies X_3) \\implies (X_1 \\implies X_3)))"
     ] 
   in
-  let verif = (verif  ~formula:chaining ~proof:demo_chaining ())          
-  in
-  match verif with | Ok() ->
-    theorems :=
-      {
-        kind = Kernel.Logic.Theorem;
+  let chaining_unproved = {
+        kind = Kernel.Logic.KUnproved;
         name = "C6";
         params = [];
         premisses = [];
         demonstration = demo_chaining;
         conclusion = chaining;
       }
-      :: !theorems
+  in
+  let verif = (verif ~speed:Paranoid chaining_unproved )          
+  in
+  match verif with | Ok (Theorem chaining_proved) ->
+    theorems :=
+      (Theorem {chaining_proved with kind = Kernel.Logic.KTheorem}):: !theorems
                    | Error _ -> ()
 ;;
 let x1,x2,x3 = PVar 1, PVar 2, PVar 3

@@ -38,28 +38,6 @@ struct
 
   let (axioms:theorem list ref)  =  ref(List.map (function (Theorem_prop.Theorem t) -> 
       Theorem_compile.Theorem ({kind=t.kind;name=t.name; params=t.params;premisses=t.premisses;conclusion=t.conclusion; demonstration = ((Demonstration []):demonstration)})) !axioms_prop)
-  let printer_kernel_proof_term out =
-    function 
-    | Ax(i,l) -> Format.fprintf out "Ax(%d,[%a])" i 
-                   (fun out list_proof_term -> 
-                      Format.pp_print_list 
-                        ~pp_sep:(fun out () -> Format.pp_print_char out ',') 
-                        (fun out (i,f) -> Format.fprintf out "(%d,\"%a\")" i printer_formula_prop f) 
-                        out list_proof_term) l; 
-      Format.fprintf out "%s" (Format.flush_str_formatter()) 
-    | Th(i,l) -> Format.fprintf out "Th(%d,[%a])" i 
-                   (fun out list_proof_term -> 
-                      Format.pp_print_list 
-                        ~pp_sep:(fun out () -> Format.pp_print_char out ',') 
-                        (fun out (f,g) -> Format.fprintf out "(%a,\"%a\")" printer_formula_prop f printer_formula_prop g) 
-                        out list_proof_term) l; 
-      Format.fprintf out "%s" (Format.flush_str_formatter()) 
-    | Known i -> Format.fprintf out "Known(%d)" i
-    | Cut(i,j) -> Format.fprintf out "Cut(%d,%d)" i j
-    | BeginHyp n -> Format.fprintf out "Begin Hypotheses(%d)" n
-    | HypDecl f -> Format.fprintf out "Hypothese %a"printer_formula_prop f
-    | HypUse i -> Format.fprintf out "Hyp(%d)" i
-    | EndHyp -> Format.fprintf out "End hypotheses"
 
   let find_index_instance f list_props =
     let rec find_aux index l =
