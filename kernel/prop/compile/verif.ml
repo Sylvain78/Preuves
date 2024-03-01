@@ -266,7 +266,7 @@ struct
           (try 
              List.nth rev_stack (k-1)
            with 
-             Failure s -> failwith ("nth Cut k="^(string_of_int k)^":"^s)
+             Failure s -> failwith ("[" ^ name ^ "]" ^ "Cut k=" ^ (string_of_int k) ^ ":" ^ s)
           )
         in
         begin
