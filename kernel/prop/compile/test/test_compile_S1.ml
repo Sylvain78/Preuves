@@ -2,7 +2,6 @@ open Kernel.Logic
 open Kernel_prop_interp.Formula_prop
 open Kernel_prop_interp.Instance_notation_printers
 open Kernel_prop_interp.Theory.Prop
-open Kernel_prop_compile.Verif
 
 open OUnit2
 
@@ -44,13 +43,13 @@ let add_chaining =
     ] 
   in
   let chaining_unproved = {
-        kind = Kernel.Logic.KUnproved;
-        name = "C6";
-        params = [];
-        premisses = [];
-        demonstration = demo_chaining;
-        conclusion = chaining;
-      }
+    kind = Kernel.Logic.KUnproved;
+    name = "C6";
+    params = [];
+    premisses = [];
+    demonstration = demo_chaining;
+    conclusion = chaining;
+  }
   in
   let verif = (verif ~speed:Paranoid chaining_unproved )          
   in
@@ -96,33 +95,33 @@ let demo =
   in
   let neg_contraposition x1 x2 =
     [
-(*138*)      ((neg  (neg  x1))  =>.x1);
+      (*138*)      ((neg  (neg  x1))  =>.x1);
       ((neg  (neg  x1))  =>.x1)  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1));
       ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1);
-(*155*)    ]@ (cut (neg (neg x2)) (neg (neg x1)) x1) @[
+      (*155*)    ]@ (cut (neg (neg x2)) (neg (neg x1)) x1) @[
       ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x1))  =>.x1)  =>.((neg  (neg  x2))  =>.x1));
       (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x1))  =>.x1)  =>.((neg  (neg  x2))  =>.x1)))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1)));
       ((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x1))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1)));
       ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1);
-(*160*)      (x2  =>.neg  (neg  x2));
+      (*160*)      (x2  =>.neg  (neg  x2));
       (x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)));
       ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2));
       (*163*)]@cut x2 (neg (neg x2)) x1@[
       (x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1));
-(*165*)      ((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
+      (*165*)      ((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
       (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
       (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((x2  =>.neg  (neg  x2))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1))));
       (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.neg  (neg  x2)))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)));
       ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1));
-(*170*)      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1)));
+      (*170*)      (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(((neg  (neg  x2))  =>.x1)  =>.(x2  =>.x1)))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1)));
       (((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.((neg  (neg  x2))  =>.x1))  =>.(((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1));
       ((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1);
-(*187*) (((neg  x1)  =>.(neg  x2))  =>.((neg  (neg  x2))  =>.(neg  (neg  x1))));
+      (*187*) (((neg  x1)  =>.(neg  x2))  =>.((neg  (neg  x2))  =>.(neg  (neg  x1))));
       (*188*)] @ 
-(cut ((neg  x1)  =>.(neg  x2)) ((neg  (neg  x2))  =>.(neg  (neg  x1))) (x2=>.x1))
-@ [
+    (cut ((neg  x1)  =>.(neg  x2)) ((neg  (neg  x2))  =>.(neg  (neg  x1))) (x2=>.x1))
+    @ [
       (((neg  x1)  =>.(neg  x2))  =>.((neg  (neg  x2))  =>.(neg  (neg  x1))))  =>.((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1))  =>.(((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1)));
-                                                                                  ((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1))  =>.(((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1)));
+      ((((neg  (neg  x2))  =>.(neg  (neg  x1)))  =>.(x2  =>.x1))  =>.(((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1)));
       (((neg  x1)  =>.(neg  x2))  =>.(x2  =>.x1));
     ]
   in 
@@ -353,7 +352,7 @@ let demo =
             ((neg c)=>.((neg tout)=>.(neg c)))=>.(b_entraine_c=>.((neg c)=>.((neg tout)=>.(neg c))));
             (b_entraine_c=>.((neg c)=>.((neg tout)=>.(neg c))));
             (*(((neg tout)=>.(neg c))=>.((c)=>.(tout)));*)
-            
+
           ]@ neg_contraposition (tout) (c) @ [
             (((neg tout)=>.(neg c))=>.((c)=>.(tout)));
             (((neg tout)=>.(neg c))=>.((c)=>.(tout)))=>.(b_entraine_c=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))));
@@ -369,9 +368,9 @@ let demo =
             (*((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))=>. (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)));*)
             (((neg c)=>.(((neg tout)=>.(neg c)) =>. ((c)=>.(tout))))=>. 
              (((neg c)=>.((neg tout)=>.(neg c))) =>. ((neg c)=>.(c=>.tout))));
-            
+
             (((neg c)=>.(((neg tout)=>.(neg c))=>.((c)=>.(tout))))
-              =>. 
+             =>. 
              (((neg c)=>.((neg tout)=>.(neg c)))=>.((neg c)=>.(c=>.tout)))
             )
             =>.
@@ -448,9 +447,9 @@ let demo =
             )@[
             (a_ou_b=>.(a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))
             =>.
-                    (((a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
-                         ((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))
-            =>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))));
+            (((a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.
+              ((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))
+             =>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))));
 
             (((a_entraine_c=>.((b_entraine_c=>.((neg (c))=>.(tout)))=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c))))))))=>.(a_ou_b=>.((a_entraine_c=>.(b_entraine_c=>.((neg (c))=>.(tout))))=>.(a_entraine_c=>.(b_entraine_c=>.((neg tout)=>.(neg(neg (c)))))))));
 
@@ -498,9 +497,9 @@ let demo =
             (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))=>.
             ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))));
           ] @ (cut
-                a_ou_b
-                (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))
-                ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))
+                 a_ou_b
+                 (a_entraine_c=>.((b_entraine_c=>.(neg tout))=>.(b_entraine_c=>.(neg(neg (c))))))
+                 ((a_entraine_c=>.(b_entraine_c=>.(neg tout)))=>.(a_entraine_c=>.(b_entraine_c=>.(neg(neg (c))))))
               ) 
           @ [
 
@@ -550,18 +549,19 @@ let demo =
             (*a_entraine_c=>.(b_entraine_c=>.c);
               (a_entraine_c=>.(b_entraine_c=>.c))=>. (a_ou_b=>. (a_entraine_c=>.(b_entraine_c=>.c)));*)
 
-           diamond;
+            diamond;
           ];;
 let demo_S1 = 
   try 
-    compile_demonstration ~theorems:!theorems ~demo:(List.map (fun f -> Step f) demo)  ()
-  with Invalid_demonstration(f, theorems, [], l) -> failwith (Printf.eprintf"\n";Printf.eprintf "\n";to_string_formula_prop f ^ (string_of_int @@ List.length @@ l) )
+    Kernel_prop_compile.Verif.Prop.compile  ~demonstration:(List.map (fun f -> Kernel_prop_compile.Verif.Prop.Single f) demo)  ()
+  with Invalid_demonstration(demo) -> failwith (Printf.eprintf"\n";Printf.eprintf "\n";to_string_formula_prop demo.conclusion ^ (string_of_int @@ List.length @@ demo.demonstration))
 
 let test_verif _ =
-  assert_equal 
-    (Ok ()) 
-    (kernel_prop_compile_verif ~theorems:!theorems ~formula:(a_ou_b =>. (a_entraine_c=>.(b_entraine_c =>. c))) 
-       ~proof:(compile_demonstration ~theorems:!theorems ~demo:(List.map (fun f -> Step f) demo) ()).demonstration ())
+  assert_bool "test_verif" 
+    (match Kernel_prop_compile.Verif.Prop.verif ~speed:Paranoid 
+             {kind = KInvalid;name="diamond";params=[];premisses=[];conclusion=diamond;demonstration=(List.map (function f -> Kernel_prop_compile.Verif.Prop.Single f) demo)}
+     with Ok _ -> true
+        | _ -> false)
 let verif_suite =
   "verif test" >:::
   [
