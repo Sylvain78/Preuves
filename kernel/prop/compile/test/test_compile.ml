@@ -78,13 +78,14 @@ let demo =
 
 let test = compile ~speed:Paranoid ~demonstration:demo ();;
 
-
 let test_cut _ =
-  assert_equal (Demonstration [([Known 1],Single x1);([Known 2],Single(x1=>x2));([Cut(1,2)],Single x2)])
+  assert_equal (*~printer:(fun d -> printer_demonstration Format.str_formatter d; Format.flush_str_formatter())*) 
+    (Demonstration [([HypUse 1],Single x1);([HypUse 2],Single(x1=>x2));([Cut(1,2)],Single x2)])
     (compile ~speed:Paranoid  ~demonstration:[Single x1; Single (x1=>x2) ; Single x2] ~hypotheses:[x1; (x1=>x2)] ())
 
 let test_compile _ =
-  assert_equal (Demonstration [([ Known 1 ], Single x1)]) 
+  assert_equal (*~printer:(fun d -> printer_demonstration Format.str_formatter d; Format.flush_str_formatter())*)
+    (Demonstration [([ HypUse 1 ], Single formula)]) 
     (compile ~speed:Paranoid ~demonstration:[Single formula] ~hypotheses:[formula] ())
 
 let test_compile_a_implies_a _ =
@@ -361,8 +362,8 @@ let compile_suite =
     "test cut" >:: test_cut;
     "test compile" >:: test_compile;
     "test_compile_a_implies_a" >:: test_compile_a_implies_a;
-    "test_compile_s1" >:: test_compile_s1;
-  ]
+      "test_compile_s1" >:: test_compile_s1;
+    ]
 
 let () = 
   run_test_tt_main compile_suite

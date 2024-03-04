@@ -4,7 +4,7 @@ open Kernel_prop_interp.Instance_notation_printers
 type kernel_proof_term =
   | Ax of int * (int * formula_prop) list (*instantce of axiom i, with list of simulatenous substitution X_j => F_k*)
   | Th of int * (formula_prop * formula_prop) list (*instantce of theorem i, with list of simulatenous substitution for params *)
-  | Known of int (*formula already known by a theorem*)
+  | Known of int (*formula already known in the demonstration*)
   | Cut of int * int (*cut Fj, (Fj=>Fk) : Fk*)
   | BeginHyp of int
   | HypDecl of formula_prop (*declaration of a hypothesis*)
