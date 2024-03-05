@@ -165,6 +165,7 @@ and load_session mode file out_channel =
       session.mode <- session_loaded.mode;
       (*TODO tree of history by session ?*)
       session.history <- session_loaded.history;
+      session.theory <- session_loaded.theory;
       (*session.parser <- session_loaded.parser;*)
   end;
   close_in ic
