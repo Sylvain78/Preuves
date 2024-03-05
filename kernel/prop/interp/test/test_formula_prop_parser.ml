@@ -1,6 +1,6 @@
 open OUnit2
-open Kernel_prop_interp.Formula_prop
-open Kernel_prop_interp.Prop_parser
+open Kernel_prop_interp.Formula
+open Kernel_prop_interp.Parser
 open Kernel_prop_interp.Instance_notation_printers
 
 let test_parenthesis _ = 

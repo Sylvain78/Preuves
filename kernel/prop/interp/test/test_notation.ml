@@ -4,7 +4,7 @@ open Kernel_prop_interp.Theory.Prop
 
 let _ = print_endline "avant notation";;
 
-let notation = Kernel_prop_interp.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
+let notation = Kernel_prop_interp.Parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 
 
 (* 

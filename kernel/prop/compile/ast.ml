@@ -1,4 +1,4 @@
-open Kernel_prop_interp.Formula_prop
+open Kernel_prop_interp.Formula
 open Kernel_prop_interp.Instance_notation_printers
 
 type kernel_proof_term =

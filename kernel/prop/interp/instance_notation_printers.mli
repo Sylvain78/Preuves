@@ -1,4 +1,4 @@
-open Formula_prop
+open Formula
 
 exception Failed_Unification of formula_prop * formula_prop
 

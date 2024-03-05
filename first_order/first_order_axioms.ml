@@ -1,5 +1,5 @@
 open Signature 
-open Kernel_prop_interp.Formula_prop
+open Kernel_prop_interp.Formula
 open Kernel_prop_interp.Theory.Prop
 open First_order_parser
 
@@ -48,7 +48,7 @@ struct
           | _ -> raise (Failed_Unification(f, g))
         end
     in
-    List.exists (fun a ->
+    List.exists (function Theorem a ->
         let is_instance = 
           try (instance_aux [] f a.conclusion) <> []
           with Failed_Unification _ -> false 

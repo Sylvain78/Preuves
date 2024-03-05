@@ -90,10 +90,10 @@ let setup_logs =
 
 let session =
   {
-    mode = { verbose_level = 1; order = Session.Prop; speed = Keep_notations; evaluation = Interpreted };
+    mode = { verbose_level = 1; order = Session.Prop; expand_notations = Keep_notations; expand_calls = Fast; evaluation = Interpreted };
     name = "Init";
     history = [] ;
-    theory = (module Kernel_prop_interp.Prop_theory.Prop : Kernel.Logic.LOGIC);
+    theory = (module Kernel_prop_interp.Theory.Prop : Kernel.Logic.LOGIC);
     user = "";
   }
 
@@ -192,10 +192,10 @@ and eval s out_channel =
       session.mode.order<-Session.First_order;
       Protocol.Ok (command)
     | Keep_notations ->
-      session.mode.speed<- Session.Keep_notations;
+      session.mode.expand_notations<- Session.Keep_notations;
       Protocol.Ok (command)
     | Expand_notations ->
-      session.mode.speed<- Session.Expand_notations;
+      session.mode.expand_notations<- Session.Expand_notations;
       Protocol.Ok (command)
     | Compiled ->
       session.mode.evaluation <- Session.Compiled;
@@ -242,33 +242,33 @@ and eval s out_channel =
           Buffer.add_string buf "End";
           print_newline();
           (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
-          ignore @@ Kernel_prop_interp.Prop_parser.notation_from_string (Buffer.contents buf);
+          ignore @@ Kernel_prop_interp.Parser.notation_from_string (Buffer.contents buf);
           Protocol.Ok command
         | First_order -> Protocol.Error "Notation first_order : unimplemented"
       end
-    | Axiom { name ; formula } ->
+    | Protocol_commands.Axiom { name ; formula } ->
       if (session.mode.order = Session.Prop)
       then
         begin
           let module Th = (val session.theory) 
           in
-          if (List.exists (fun ({name=name_th; _}:Th.theorem) -> name=name_th) !Th.axioms)
+          if (List.exists (fun (Theorem {name=name_th; _}:Th.theorem) -> name=name_th) !Th.axioms)
           then
             Protocol.Error ("Axiom " ^ name ^ " already defined")
           else
             begin
-              Th.add_axiom { kind=Axiom;
-                             demonstration=Th.trans [];
+              Th.add_axiom (Theorem { kind=KAxiom;
+                             demonstration=Th.empty_demonstration;
                              params = [];
                              premisses = [];
                              name = name;
                              conclusion=Th.string_to_formula formula
-                           };
+                           });
               Protocol.Ok command
             end
         end
       else Protocol.Error "Axiom for first order unimplemented"
-    | Theorem ({name; params; premisses; conclusion; demonstration; status=_} as t) ->
+    | Theorem {name; kind;params;premisses; conclusion; demonstration; _} ->
       Logs.info (fun m -> m "Begin verification of Theorem %s" name);
       begin
         Logs.info (fun m -> m "%s" ((function Prop -> "Prop" | First_order -> "First_order") session.mode.order));
@@ -277,50 +277,59 @@ and eval s out_channel =
         | Session.Prop ->
           begin
             Logs.info (fun m -> m "%s" ((function Compiled -> "Compiled" | Interpreted -> "Interpreted") session.mode.evaluation));
-            let verif_function = Th.verif
+            let verif_function = Th.verif ~speed:session.mode.expand_calls
+            and conclusion = Th.string_to_formula conclusion
             in
-            let proof =Th.trans (List.map 
+            let theorem_to_prove_compiled =  {
+              Kernel.Logic.kind = kind;
+              Kernel.Logic.name = name;
+              params = List.map Th.string_to_formula params;
+              premisses = List.map Th.string_to_formula premisses;
+              conclusion;
+              demonstration= (List.map 
                                    (function 
                                      | Protocol_commands.Step s -> 
                                        Th.(Single (string_to_formula s))
                                      | Protocol_commands.Call (th, params) ->
-                                       Th.Call {theorem=List.find (fun (theorem:Th.theorem) -> theorem.name =  th) !Th.theorems; 
+                                       Th.Call {theorem=List.find (function Th.Theorem theorem -> theorem.name =  th) !Th.theorems; 
                                                 params=List.map Th.string_to_formula params}
                                    ) 
-                                   demonstration)
-            and conclusion = Th.string_to_formula conclusion
+                                   demonstration);
+            }
             in
-            let (verif : (unit, string * exn) result) =
+            let verif =
               try
                 (
                   try
-                    let v = verif_function ~theorems:!Th.theorems 
-                        ~hypotheses:(List.map Th.string_to_formula premisses) () ~formula:conclusion ~proof:proof
+                    let theorem_proved  = verif_function theorem_to_prove_compiled
                     in
                     Logs.info (fun m -> m "End verification of Theorem %s" name);
-                    v
+                    theorem_proved 
                   with
                   | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 )
               with
-              | Th.Invalid_demonstration(f,_,_,d) as ex ->
-                let error_format = format_of_string "Invalid demonstration: %a\n[[\n%a]]\n"
+              | Th.Invalid_demonstration _ as ex ->
+                let error_format = format_of_string "Invalid demonstration: %a\n\n"
                 in
                 Logs.err (fun m -> m ~header:("Invalid demonstration") error_format
-                             Th.printer_formula f
-                             Th.printer_demonstration d
+                             (fun ff ex -> 
+                                match Th.print_invalid_demonstration ex 
+                                with 
+                                | Some s -> Format.fprintf ff "%s" s 
+                                | None -> ()) ex 
                          );
                 Error ("Invalid demonstration", ex)
             in
             match verif with 
-            | Ok () -> 
+            | Ok (Theorem t) -> 
               begin
-                Th.theorems := {
-                  kind = Th.Theorem;
+                Th.theorems := Th.Theorem {
+                  kind = Kernel.Logic.KTheorem;
                   name = t.name;
                   params = List.map Th.string_to_formula params;
                   premisses = List.map Th.string_to_formula premisses;
-                  demonstration = proof;
+                  demonstration = t.demonstration;
                   conclusion = conclusion;
                 }
                   :: !Th.theorems;
@@ -335,13 +344,13 @@ and eval s out_channel =
       if (session.mode.order = Session.Prop)
       then
         Protocol.Answer(Latex, Some LMath,(
-            List.filter (fun (th : Th.theorem) -> th.name = theorem_name) (!Th.axioms @ !Th.theorems)
-            |> List.map (fun ({
+            List.filter (function Th.Theorem th -> th.name = theorem_name) (!Th.axioms @ !Th.theorems)
+            |> List.map (fun (Th.Theorem{
                 kind;
                 name;
                 conclusion;
                 _
-              }:Th.theorem) -> (Th.kind_to_string kind) ^ " " ^
+              }:Th.theorem) -> (Kernel.Logic.kind_to_string kind) ^ " " ^
                                name ^
                                ":" ^
                                (*TODO "(" ^
@@ -367,7 +376,7 @@ and eval s out_channel =
                            (String.concat
                               "\n"
                               (List.map
-                                 (fun (t:Th.theorem) ->
+                                 (function Th.Theorem t ->
                                     t.name ^
                                     " : " ^
                                     (Th.printer_formula Format.str_formatter t.conclusion;
@@ -392,7 +401,7 @@ and eval s out_channel =
                                            (String.concat
                                               "\\\\"
                                               (List.map
-                                                 (fun (t:Th.theorem) ->
+                                                 (function Th.Theorem t ->
                                                     "\\textrm{" ^
                                                     t.name ^
                                                     "} & : & " ^

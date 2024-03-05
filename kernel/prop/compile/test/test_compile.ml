@@ -1,10 +1,10 @@
 open Kernel.Logic
-open Kernel_prop_interp.Formula_prop
+open Kernel_prop_interp.Formula
 open OUnit2
 
 open Kernel_prop_compile.Ast
 open Kernel_prop_compile.Theorem_compile
-open Kernel_prop_compile.Verif.Prop
+open Kernel_prop_compile.Theory.Prop
 
 let x1,x2,x3 = PVar 1,PVar 2, PVar 3
 let (=>) a b = PImpl(a,b)
@@ -134,10 +134,10 @@ let test_compile_s1 _ =
         ((x1 => x2) => ((x2 => x3) => (x1 => x3)))
       ] 
   in
-  let _ = Kernel_prop_interp.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd"
+  let _ = Kernel_prop_interp.Parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd"
   in
   let demo_unproved =
-    ((List.map (fun s -> Single (Kernel_prop_interp.Prop_parser.formula_from_string s)) [
+    ((List.map (fun s -> Single (Kernel_prop_interp.Parser.formula_from_string s)) [
          "((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))";
          "((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}))";
          "((\\lnot \\mathbf{A}) \\implies (((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A})))) \\implies (((\\lnot \\mathbf{A}) \\implies ((\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A})) \\implies ((\\lnot \\mathbf{A}) \\implies ((\\lnot \\mathbf{A}) \\implies \\lnot (\\mathbf{A} \\lor \\mathbf{A}))))";

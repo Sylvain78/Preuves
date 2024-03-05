@@ -1,5 +1,5 @@
 open Kernel.Logic
-open Kernel_prop_interp.Formula_prop
+open Kernel_prop_interp.Formula
 open Kernel_prop_interp
 open Ast
 open Theorem_compile
@@ -12,13 +12,13 @@ module Prop:(LOGIC
               and type step = step_compile) =
 struct
 
-  include Axioms_prop
+  include Axioms
   include Instance_notation_printers
-  include Theorem_prop
-  (*TODO open Substitution_prop*)
-  include (Prop_parser : sig
-             val formula_from_string : string -> Formula_prop.formula_prop
-             val notation_from_string : string -> Formula_prop.notation_prop
+  include Theorem
+  (*TODO open Substitution*)
+  include (Parser : sig
+             val formula_from_string : string -> Formula.formula_prop
+             val notation_from_string : string -> Formula.notation_prop
              (* TODO one day ...
               * val save_parser : string -> unit
               * *)
@@ -35,6 +35,7 @@ struct
   type theorem_unproved = (formula, step list) Kernel.Logic.theorem_logic
 
   exception Invalid_demonstration of theorem_unproved
+  let empty_demonstration = Theorem_compile.Demonstration []
   let printer_formula = printer_formula_prop
   let printer_step ff = function
     | Single f -> Format.fprintf ff "Single(%a)" printer_formula f
@@ -46,7 +47,7 @@ struct
                 (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_kernel_proof_term) ff kptl )
       d
 
-  let (axioms:theorem list ref)  =  ref(List.map (function (Theorem_prop.Theorem t) ->
+  let (axioms:theorem list ref)  =  ref(List.map (function (Theorem.Theorem t) ->
       Theorem_compile.Theorem ({kind=t.kind;name=t.name; params=t.params;premisses=t.premisses;conclusion=t.conclusion; demonstration = ((Demonstration []):demonstration)})) !axioms_prop)
 
   let find_index_instance f list_props =
@@ -209,7 +210,7 @@ struct
       | Call {theorem; params } :: l ->
         let theorem = match theorem with Theorem t -> t
         in
-        let substituted = Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
+        let substituted = Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
         in
         match speed with
         | Fast -> (failwith "to implement1"  (*compile_aux ~depth:(depth+1) l*))
@@ -249,7 +250,7 @@ struct
         in
         let  lv,lt = List.split subst
         in
-        Some(Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop ~vars:(List.map (fun i -> PVar i) lv) ~terms:lt axiom.conclusion)
+        Some(Kernel_prop_interp.Substitution.simultaneous_substitution_formula_prop ~vars:(List.map (fun i -> PVar i) lv) ~terms:lt axiom.conclusion)
       | Th (i,subst) ->
         let theorem =
           try
@@ -259,7 +260,7 @@ struct
         in
         let  lv,lt = List.split subst
         in
-        let substitute_in = Kernel_prop_interp.Substitution_prop.simultaneous_substitution_formula_prop ~vars:lv ~terms:lt
+        let substitute_in = Kernel_prop_interp.Substitution.simultaneous_substitution_formula_prop ~vars:lv ~terms:lt
         in
         (*verify premisses*)
         if not (List.for_all (fun p -> List.mem (substitute_in p) !formula_stack) theorem.premisses)

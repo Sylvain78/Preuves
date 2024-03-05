@@ -15,7 +15,7 @@ type command =
   | Save of Modes.ascii_mode * string
   | Load of Modes.ascii_mode * string
   | Notation of { name:string ; params: string list ; syntax : notation_element list ; semantics : notation_element list }
-  | Theorem of {name:string ; params: string list; premisses: string list; conclusion : string ; demonstration : demonstration_step list; status : Session.status}
+  | Theorem of {name:string ; params: string list; premisses: string list; conclusion : string ; demonstration : demonstration_step list; kind : Kernel.Logic.kind} 
   | Axiom of {name:string; formula:string} 
   | History
   | Show of string

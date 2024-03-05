@@ -1,23 +1,23 @@
 open Kernel.Logic
-open Formula_prop
+open Formula
 
 module Prop:(LOGIC 
              with type formula = formula_prop 
               and type notation = notation_prop
-              and type demonstration = Theorem_prop.demonstration_prop
-              and type theorem = Theorem_prop.theorem_prop
+              and type demonstration = Theorem.demonstration_prop
+              and type theorem = Theorem.theorem_prop
             ) =  
 struct
 
 
 
-  include Axioms_prop
+  include Axioms
   include Instance_notation_printers
-  include Theorem_prop
-  (*TODO open Substitution_prop*)
-  include (Prop_parser : sig 
-             val formula_from_string : string -> Formula_prop.formula_prop
-             val notation_from_string : string -> Formula_prop.notation_prop
+  include Theorem
+  (*TODO open Substitution*)
+  include (Parser : sig 
+             val formula_from_string : string -> Formula.formula_prop
+             val notation_from_string : string -> Formula.notation_prop
              (* TODO one day ... 
               * val save_parser : string -> unit
               * *)
@@ -25,9 +25,9 @@ struct
 
 (*
 let (read_formule : string -> (formula_prop * string) list) = function s ->
-        let lexbuf = Dyp.from_string (Prop_parser.pp ()) s
+        let lexbuf = Dyp.from_string (Parser.pp ()) s
         in
-Prop_parser.formule lexbuf
+Parser.formule lexbuf
 *)
 
   (* Equivalence of formulas, modulo notations*)
@@ -80,6 +80,7 @@ Prop_parser.formule lexbuf
 
   exception Invalid_demonstration of theorem_unproved
 
+  let empty_demonstration = Demonstration []
   let axioms = axioms_prop
   let add_axiom ax = axioms := ax :: !axioms
   let (theorems_prop : theorem list ref)  = ref []
@@ -134,9 +135,9 @@ Prop_parser.formule lexbuf
         let theorem = match theorem with Theorem t -> t
         in
         match speed with
-        | Fast ->  ([(Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step) 
+        | Fast ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step) 
                    :: (compile_aux ~speed ~hypotheses ~demonstration:l ())
-        | Paranoid -> (List.map (fun f ->Substitution_prop.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f) 
+        | Paranoid -> (List.map (fun f ->Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f) 
                          (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d)),
                        step)
                       :: (compile_aux ~speed ~hypotheses ~demonstration:l ())

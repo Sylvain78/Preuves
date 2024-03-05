@@ -1,4 +1,4 @@
-open Formula_prop
+open Formula
 
 (** Replace the list of variable lx by the list of termes lt **)
 let simultaneous_substitution_var ~vars:lx ~terms:lt v = 

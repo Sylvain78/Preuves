@@ -1,5 +1,5 @@
 type order = Prop | First_order
-type speed = Keep_notations | Expand_notations (* expansion of notation *)
+type expand_notations = Keep_notations | Expand_notations (* expansion of notation *)
 type evaluation = Compiled | Interpreted (* Compilation of demonstration, or verification line by line*)
 
 (*
@@ -15,7 +15,8 @@ type mode =
   { 
     mutable verbose_level : int; 
     mutable order : order; 
-    mutable speed : speed; 
+    mutable expand_notations : expand_notations; 
+    mutable expand_calls : Kernel.Logic.speed;
     mutable evaluation : evaluation 
   }
 type status = 
@@ -43,7 +44,7 @@ type session =
                        Kernel_prop_interp.Formula_prop.notation_prop_element list,
                        Kernel_prop_interp.Formula_prop.notation_prop_element list,
                        Kernel_prop_interp.Formula_prop.notation_prop_element)
-                        Kernel_prop_interp.Prop_parser.obj, unit, unit,
+                        Kernel_prop_interp.Parser.obj, unit, unit,
                       (string * string * string * string * string * string *
                        Kernel_prop_interp.Formula_prop.notation_prop_element list * string * string *
                        string * Kernel_prop_interp.Formula_prop.notation_prop_element list * string *
@@ -58,7 +59,7 @@ type session =
                        Kernel_prop_interp.Formula_prop.notation_prop_element list,
                        Kernel_prop_interp.Formula_prop.notation_prop_element list,
                        Kernel_prop_interp.Formula_prop.notation_prop_element)
-                        Kernel_prop_interp.Prop_parser.obj Dyp.dyplexbuf)
+                        Kernel_prop_interp.Parser.obj Dyp.dyplexbuf)
         Dyp.parser_pilot;*)
     mutable theory : (module Kernel.Logic.LOGIC);
     mutable user : string;

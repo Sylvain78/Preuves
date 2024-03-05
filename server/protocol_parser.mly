@@ -79,7 +79,7 @@ theorem:
  FORMULA NEWLINE
  DEMONSTRATION NEWLINE
  term_proof_list 
- END { Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17;status=Unverified} } 
+ END { Theorem{name=$3;params=$7;premisses=$10;conclusion=$13;demonstration=$17;kind=KUnproved} } 
 ;
 
 mode:

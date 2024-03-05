@@ -1,4 +1,4 @@
-open Formula_prop
+open Formula
 
 exception Failed_Unification of formula_prop * formula_prop
 
@@ -47,7 +47,7 @@ and get_semantique ({apply_notation_prop; apply_notation_prop_params}:apply_nota
     | String s -> " " ^ s ^ " "
     | Param _ as p -> "(" ^ (to_string_formula_prop (List.assoc p map_params)) ^ ")"
   in
-  Prop_parser.formula_from_string 
+  Parser.formula_from_string 
     (List.fold_left (fun s e -> s ^ (replace e)) "" apply_notation_prop.notation_prop_semantique)
 (*
    Print formatters and String conversions

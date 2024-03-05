@@ -1,5 +1,5 @@
 open Kernel.Logic
-open  Kernel_prop_interp.Formula_prop
+open  Kernel_prop_interp.Formula
 module P = Kernel_prop_interp.Theory.Prop
 open P
 

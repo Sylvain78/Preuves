@@ -1,5 +1,5 @@
 open Kernel.Logic
-open Kernel_prop_interp.Formula_prop
+open Kernel_prop_interp.Formula
 open Kernel_prop_interp.Instance_notation_printers
 open Kernel_prop_interp.Theory.Prop
 
@@ -9,7 +9,7 @@ let neg p = PNeg p
 and (=>.) a b = PImpl(a,b)
 and (||.) a b = POr(a,b)
 (*let notation = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;*)
-let notation = Kernel_prop_interp.Prop_parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
+let notation = Kernel_prop_interp.Parser.notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"=>\" b\nSemantics\n\"(\"a\")\" \"\\implies\" \"(\"b\")\"\nEnd";;
 (* 
    |-   (F \\implies G) \\implies (G \\implies H) \\implies (F \\implies H)
 *)
@@ -553,13 +553,13 @@ let demo =
           ];;
 let demo_S1 = 
   try 
-    Kernel_prop_compile.Verif.Prop.compile  ~demonstration:(List.map (fun f -> Kernel_prop_compile.Verif.Prop.Single f) demo)  ()
+    Kernel_prop_compile.Theory.Prop.compile  ~demonstration:(List.map (fun f -> Kernel_prop_compile.Theory.Prop.Single f) demo)  ()
   with Invalid_demonstration(demo) -> failwith (Printf.eprintf"\n";Printf.eprintf "\n";to_string_formula_prop demo.conclusion ^ (string_of_int @@ List.length @@ demo.demonstration))
 
 let test_verif _ =
   assert_bool "test_verif" 
-    (match Kernel_prop_compile.Verif.Prop.verif ~speed:Paranoid 
-             {kind = KInvalid;name="diamond";params=[];premisses=[];conclusion=diamond;demonstration=(List.map (function f -> Kernel_prop_compile.Verif.Prop.Single f) demo)}
+    (match Kernel_prop_compile.Theory.Prop.verif ~speed:Paranoid 
+             {kind = KInvalid;name="diamond";params=[];premisses=[];conclusion=diamond;demonstration=(List.map (function f -> Kernel_prop_compile.Theory.Prop.Single f) demo)}
      with Ok _ -> true
         | _ -> false)
 let verif_suite =

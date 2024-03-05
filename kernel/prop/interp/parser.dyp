@@ -1,5 +1,5 @@
 {
-open Formula_prop
+open Formula
 let parser = ref None;;
 let rec notation_elements_to_regexp = function
   | [] -> []
