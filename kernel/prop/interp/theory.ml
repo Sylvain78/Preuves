@@ -382,7 +382,6 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
       "\\lnot(\\lnot (X_1 \\lor \\lnot X_1))";(*OK*)
       "(X_1 \\lor \\lnot X_1)"
     ]);;
-   *)
   theorems_prop := (Theorem {
       kind = KAssumed;
       name="Excluded middle";
@@ -391,6 +390,7 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
       demonstration = Demonstration [];
       conclusion=formula_from_string "(X_1 \\lor \\lnot X_1)";
     })::!theorems_prop;;
+   *)
 
 
   let verif ~speed theorem_unproved = 
