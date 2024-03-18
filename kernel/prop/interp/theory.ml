@@ -125,24 +125,24 @@ Parser.formule lexbuf
   let is_instance_axiom f = 
     List.exists (function Theorem axiom -> try ignore (instance f axiom.conclusion);true  with Failed_Unification _ -> false) !axioms_prop
 
-  let compile ~speed ?(hypotheses=[]) ~demonstration () = 
-    let rec compile_aux ~speed ?(hypotheses=[]) ~demonstration ()   =
+  let compile ~keep_calls ?(hypotheses=[]) ~demonstration () = 
+    let rec compile_aux ~keep_calls ?(hypotheses=[]) ~demonstration ()   =
       match demonstration 
       with 
       | [] ->  []
-      | Single f as step:: l ->  ([f],step) :: (compile_aux ~speed ~hypotheses ~demonstration:l ())
+      | Single f as step:: l ->  ([f],step) :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
       | Call {theorem ; params } as step :: l ->
         let theorem = match theorem with Theorem t -> t
         in
-        match speed with
-        | Fast ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step) 
-                   :: (compile_aux ~speed ~hypotheses ~demonstration:l ())
-        | Paranoid -> (List.map (fun f ->Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f) 
+        match keep_calls with
+        | Keep_calls ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step) 
+                   :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
+        | Expand_calls -> (List.map (fun f ->Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f) 
                          (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d)),
                        step)
-                      :: (compile_aux ~speed ~hypotheses ~demonstration:l ())
+                      :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
     in
-    Demonstration (compile_aux ~speed ~hypotheses ~demonstration ())
+    Demonstration (compile_aux ~keep_calls ~hypotheses ~demonstration ())
 
   let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:demonstration ) ~(original_proof:theorem_unproved) = 
     match to_prove with
@@ -195,9 +195,9 @@ Parser.formule lexbuf
     with
     | Failure _ -> false
 
-  let kernel_prop_interp_verif ~speed theorem_unproved =
+  let kernel_prop_interp_verif ~keep_calls theorem_unproved =
     let compiled_proof = 
-      compile ~speed ~demonstration:theorem_unproved.demonstration ()
+      compile ~keep_calls ~demonstration:theorem_unproved.demonstration ()
     in
     verif_prop ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:compiled_proof ~original_proof:theorem_unproved
   ;;
@@ -393,11 +393,11 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
    *)
 
 
-  let verif ~speed theorem_unproved = 
+  let verif ~keep_calls theorem_unproved = 
     if not (is_formula_at_end theorem_unproved.conclusion  theorem_unproved.demonstration)
     then 
       Error ("Formula is not at the end of the proof", Invalid_demonstration theorem_unproved)
     else
-      kernel_prop_interp_verif ~speed theorem_unproved
+      kernel_prop_interp_verif ~keep_calls theorem_unproved
 
 end

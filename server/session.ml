@@ -1,5 +1,6 @@
 type order = Prop | First_order
 type expand_notations = Keep_notations | Expand_notations (* expansion of notation *)
+type expand_calls = Kernel.Logic.keep_calls (* expansion of theorem calls *)
 type evaluation = Compiled | Interpreted (* Compilation of demonstration, or verification line by line*)
 
 (*
@@ -16,7 +17,7 @@ type mode =
     mutable verbose_level : int; 
     mutable order : order; 
     mutable expand_notations : expand_notations; 
-    mutable expand_calls : Kernel.Logic.speed;
+    mutable expand_calls : expand_calls;
     mutable evaluation : evaluation 
   }
 type status = 
@@ -28,7 +29,7 @@ type session =
   {
     mutable mode : mode ;
     name : string;
-    mutable history : string list;
+    mutable history : Protocol_commands.command list; 
     (*mutable parser : (unit,
                       (string * string * string * string * string * string *
                        Kernel_prop_interp.Formula_prop.notation_prop_element list * string * string *

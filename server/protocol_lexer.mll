@@ -39,6 +39,9 @@ let get_stored_string () =
         in 
         Buffer.clear buffer;
         s
+let comments : string list ref = ref []
+let add_comment s = 
+  comments := s:: !comments
 }
 let newline = ('\013'* '\010')
 let lowercase = ['a'-'z']
@@ -47,8 +50,7 @@ let digit = ['0'-'9']
 let ident = (lowercase|uppercase)(lowercase|uppercase|digit|'_')*
 
 rule token = parse 
-  | [' ' '\t']     { token lexbuf } 
-  | newline { NEWLINE }
+  | newline | [' ' '\t']     { token lexbuf } 
   | ident as id 
     {
       try 
@@ -62,7 +64,7 @@ rule token = parse
       QUOTED_STRING ( "\"" ^ (get_stored_string()) ^ "\"")
     } 
   | "$" { latex (Buffer.create 17) lexbuf; }
-  | "#" [^'\n']* newline { token lexbuf }
+  | "#"[^'\n']* { add_comment (Lexing.lexeme lexbuf); token lexbuf }
   | digit+ { NUMBER(int_of_string (Lexing.lexeme lexbuf)) }
 and latex buf = parse
       | '$' { FORMULA (Buffer.contents buf)}

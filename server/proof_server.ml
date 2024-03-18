@@ -9,7 +9,7 @@ open Utilities.Unix_tools
 
 module type SESSION = module type of Session
 
-let buffer_size = 65536
+let buffer_size = 4096
 let socket_name =
   ref None
 let nb_session =
@@ -90,9 +90,9 @@ let setup_logs =
 
 let session =
   {
-    mode = { verbose_level = 1; order = Session.Prop; expand_notations = Keep_notations; expand_calls = Fast; evaluation = Interpreted };
+    mode = { verbose_level = 1; order = Session.Prop; expand_notations = Keep_notations; expand_calls = Keep_calls; evaluation = Interpreted };
     name = "Init";
-    history = [] ;
+    history = [];
     theory = (module Kernel_prop_interp.Theory.Prop : Kernel.Logic.LOGIC);
     user = "";
   }
@@ -102,8 +102,10 @@ let save_session mode file=
   in
   begin
     match mode with
-    | Modes.Text ->
-      List.iter (fun s -> Printf.fprintf oc "%s\n\n" s) (List.rev session.history);
+    | Modes.Text -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_newline out ()) 
+                      (fun ff -> Format.fprintf ff "%s")
+                      (Format.formatter_of_out_channel oc) 
+                       (List.map (function c -> Protocol_commands.encode_command c |> Bytes.to_string) session.history)
     | Modes.Binary ->
       (*TODO one day....
        * let (base,ext) = Filename.remove_extension file, Filename.extension file
@@ -142,13 +144,11 @@ let send_answer oc answer =
   output_bytes oc (message);
   flush oc
 
-let rec command_stack = Queue.create ()
-and command_sem = Semaphore.Counting.make 0
-and command_queue_mutex = Mutex.create()
-and session_level = ref 0
-and load_session mode file out_channel =
+let session_level = ref 0
+let rec load_session mode file out_channel =
   incr session_level;
-  let ic = open_in file
+  let ic = 
+    open_in file
   in
   begin
     match mode with
@@ -169,8 +169,8 @@ and load_session mode file out_channel =
       (*session.parser <- session_loaded.parser;*)
   end;
   close_in ic
-and eval s out_channel =
-  Logs.debug (fun m -> m "eval %s" s);
+and eval command  out_channel =
+  Logs.debug (fun m -> m "eval" );
   let log_number label lf =
     Logs.debug (fun m-> m "number of %s : %d" label (List.length lf))
   in
@@ -178,9 +178,10 @@ and eval s out_channel =
   in
   log_number "theorems" !Th.theorems;
   try
-    let command = decode s
-    in
     match (command : Protocol_commands.command) with
+    | Comment com -> 
+      Logs.info (fun m -> m "comment :%s" com);
+      Protocol.Ok(command)
     | Quit -> raise Exit
     | Verbose level ->
       session.mode.verbose_level <- level;
@@ -198,6 +199,12 @@ and eval s out_channel =
     | Expand_notations ->
       session.mode.expand_notations<- Session.Expand_notations;
       Protocol.Ok (command)
+    | Keep_calls ->
+      session.mode.expand_calls<- Kernel.Logic.Keep_calls;
+      Protocol.Ok (command)
+    | Expand_calls ->
+      session.mode.expand_calls<- Kernel.Logic.Expand_calls;
+      Protocol.Ok (command)
     | Compiled ->
       session.mode.evaluation <- Session.Compiled;
       Protocol.Ok (command)
@@ -205,7 +212,7 @@ and eval s out_channel =
       session.mode.evaluation <- Session.Interpreted;
       Protocol.Ok (command)
     | History ->
-      Protocol.Answer (Latex,Some LText,String.concat "\n" @@ List.rev @@ session.history)
+      Protocol.Answer (Latex,Some LText,String.concat "\n" @@ List.rev @@ (List.map (function  com -> Bytes.to_string @@ Protocol_commands.encode_command com) session.history))
     | Save (file_mode, file) ->
       begin
         save_session file_mode file;
@@ -214,9 +221,11 @@ and eval s out_channel =
     | Load (file_mode, file) ->
       begin
         send_answer out_channel (Protocol.Answer (Text, None, "Load file "^file));
-        load_session file_mode file out_channel;
-        decr session_level;
-        Protocol.Answer (Text, None, "# Loaded file "^file)
+        try load_session file_mode file out_channel;
+          decr session_level;
+          Protocol.Answer (Text, None, "# Loaded file "^file)
+        with 
+          Sys_error s -> Protocol.Error s
       end
     | Notation n ->
       begin
@@ -259,26 +268,28 @@ and eval s out_channel =
           else
             begin
               Th.add_axiom (Theorem { kind=KAxiom;
-                             demonstration=Th.empty_demonstration;
-                             params = [];
-                             premisses = [];
-                             name = name;
-                             conclusion=Th.string_to_formula formula
-                           });
+                                      demonstration=Th.empty_demonstration;
+                                      params = [];
+                                      premisses = [];
+                                      name = name;
+                                      conclusion=Th.string_to_formula formula
+                                    });
               Protocol.Ok command
             end
         end
       else Protocol.Error "Axiom for first order unimplemented"
-    | Theorem {name; kind;params;premisses; conclusion; demonstration; _} ->
+    | Theorem {name; kind;params;premisses; conclusion; demonstration;} ->
       Logs.info (fun m -> m "Begin verification of Theorem %s" name);
       begin
+        let module Th = (val session.theory)
+        in
         Logs.info (fun m -> m "%s" ((function Prop -> "Prop" | First_order -> "First_order") session.mode.order));
         match session.mode.order
         with
         | Session.Prop ->
           begin
             Logs.info (fun m -> m "%s" ((function Compiled -> "Compiled" | Interpreted -> "Interpreted") session.mode.evaluation));
-            let verif_function = Th.verif ~speed:session.mode.expand_calls
+            let verif_function = Th.verif ~keep_calls:session.mode.expand_calls
             and conclusion = Th.string_to_formula conclusion
             in
             let theorem_to_prove_compiled =  {
@@ -288,27 +299,22 @@ and eval s out_channel =
               premisses = List.map Th.string_to_formula premisses;
               conclusion;
               demonstration= (List.map 
-                                   (function 
-                                     | Protocol_commands.Step s -> 
-                                       Th.(Single (string_to_formula s))
-                                     | Protocol_commands.Call (th, params) ->
-                                       Th.Call {theorem=List.find (function Th.Theorem theorem -> theorem.name =  th) !Th.theorems; 
-                                                params=List.map Th.string_to_formula params}
-                                   ) 
-                                   demonstration);
+                                (function 
+                                  | Protocol_commands.Step s -> 
+                                    Th.(Single (string_to_formula s))
+                                  | Protocol_commands.Call (th, params) ->
+                                    Th.Call {theorem=List.find (function Th.Theorem theorem -> theorem.name =  th) !Th.theorems; 
+                                       params=List.map Th.string_to_formula params}
+                                ) 
+                                demonstration);
             }
             in
             let verif =
               try
-                (
-                  try
-                    let theorem_proved  = verif_function theorem_to_prove_compiled
-                    in
-                    Logs.info (fun m -> m "End verification of Theorem %s" name);
-                    theorem_proved 
-                  with
-                  | _ -> failwith "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                )
+                let theorem_proved  = verif_function theorem_to_prove_compiled
+                in
+                Logs.info (fun m -> m "End verification of Theorem %s" name);
+                theorem_proved 
               with
               | Th.Invalid_demonstration _ as ex ->
                 let error_format = format_of_string "Invalid demonstration: %a\n\n"
@@ -326,14 +332,15 @@ and eval s out_channel =
             | Ok (Theorem t) -> 
               begin
                 Th.theorems := Th.Theorem {
-                  kind = Kernel.Logic.KTheorem;
-                  name = t.name;
-                  params = List.map Th.string_to_formula params;
-                  premisses = List.map Th.string_to_formula premisses;
-                  demonstration = t.demonstration;
-                  conclusion = conclusion;
-                }
-                  :: !Th.theorems;
+                    kind = Kernel.Logic.KTheorem;
+                    name = t.name;
+                    params = List.map Th.string_to_formula params;
+                    premisses = List.map Th.string_to_formula premisses;
+                    demonstration = t.demonstration;
+                    conclusion = conclusion;
+                  }
+                               :: !Th.theorems;
+                session.theory <- (module Th);
                 Protocol.Ok command
               end
             | Error (msg, exc) -> 
@@ -342,6 +349,8 @@ and eval s out_channel =
         | First_order -> failwith "unimplemented"
       end
     | Show theorem_name ->
+      let module Th = (val session.theory)
+      in
       if (session.mode.order = Session.Prop)
       then
         Protocol.Answer(Latex, Some LMath,(
@@ -369,6 +378,8 @@ and eval s out_channel =
       else
         failwith "session mode not Kernel_prop_interp.Prop"
     | List `Axioms ->
+      let module Th = (val session.theory)
+      in
       begin
         match session.mode.order
         with
@@ -394,6 +405,8 @@ and eval s out_channel =
         | First_order -> failwith "Unimplemented"
       end
     | List `Theorems ->
+      let module Th = (val session.theory)
+      in
       begin
         match session.mode.order
         with
@@ -457,74 +470,24 @@ and repl in_channel out_channel =
          * print
          * loop
          *)
-  let command = Buffer.create buffer_size
+  (*channels needed to be passed to  repl in case of executing a text file (load text)*)
+  let lexbuf = Lexing.from_channel in_channel
   in
-  (* read in_channel and put one command in a stack*)
-  let read_and_enqueue_command in_channel =
-    Logs.info (fun m -> m "read_and_enqueue_commands\n");
-    let must_read = ref true
+  while true
+  do
+        let command = decode lexbuf
     in
-    while !must_read
-    do
-      let s1 =
-        (try
-           input_line in_channel
-         with
-         | End_of_file -> 
-           begin 
-             Logs.info (fun m -> m "end of file") ;
-             raise Stdlib.Exit 
-           end
-         |  e -> Logs.err (fun m -> m " read error : %s" (Printexc.to_string e));raise e
-        )
-      in
-      must_read := s1 <> String.empty;
-      if (!must_read)
-      then 
-        begin
-          Buffer.add_string command s1;
-          Buffer.add_char command '\n'
-        end
-    done;
-    if (Buffer.length command > 0) then 
-      begin 
-        Mutex.lock command_queue_mutex;
-        Buffer.truncate command (max 0 ((Buffer.length command) - 1));
-        Queue.add  (Buffer.contents command) command_stack;
-        Mutex.unlock command_queue_mutex;
-      end;
-    Semaphore.Counting.release command_sem;
-    Buffer.clear command
-  and eval_commands command_stack = 
-    (*pop stack *)
-    (* read *)
-    Semaphore.Counting.acquire command_sem;
-    Mutex.lock command_queue_mutex;
-    let com = 
-      try
-        Queue.take command_stack
-      with Queue.Empty -> 
-        begin
-          Mutex.unlock command_queue_mutex;raise Stdlib.Exit
-        end
+    Logs.debug (fun m -> m "command read\n");
+    let answer = eval command out_channel
     in
-    Mutex.unlock command_queue_mutex;
     if (!session_level = 0) 
     then
-      (session.history <- com :: session.history);
+      (session.history <- command :: (List.map (function s -> Protocol_commands.Comment s) !Protocol_lexer.comments) @ session.history);
     (* eval *)
-    (*channels needed to be passed to  repl in case of executing a text file (load text)*)
-    let answer = eval com out_channel
-    in
     (* print *)
     send_answer out_channel answer
     (* loop *)
     (*;flush out_channel*)
-  in
-  while true
-  do
-    read_and_enqueue_command in_channel;
-    eval_commands command_stack
   done
 
 

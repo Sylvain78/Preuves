@@ -58,7 +58,7 @@ let add_chaining =
     conclusion = chaining;
   }
   in 
-  match (verif ~speed:Paranoid chainging_unproved )          
+  match (verif ~keep_calls:Expand_calls chainging_unproved )          
   with
   | Ok(Theorem th) -> 
     theorems :=
@@ -76,17 +76,17 @@ let demo =
     x1 => x1
   ]
 
-let test = compile ~speed:Paranoid ~demonstration:demo ();;
+let test = compile ~keep_calls:Expand_calls ~demonstration:demo ();;
 
 let test_cut _ =
   assert_equal (*~printer:(fun d -> printer_demonstration Format.str_formatter d; Format.flush_str_formatter())*) 
     (Demonstration [([HypUse 1],Single x1);([HypUse 2],Single(x1=>x2));([Cut(1,2)],Single x2)])
-    (compile ~speed:Paranoid  ~demonstration:[Single x1; Single (x1=>x2) ; Single x2] ~hypotheses:[x1; (x1=>x2)] ())
+    (compile ~keep_calls:Expand_calls  ~demonstration:[Single x1; Single (x1=>x2) ; Single x2] ~hypotheses:[x1; (x1=>x2)] ())
 
 let test_compile _ =
   assert_equal (*~printer:(fun d -> printer_demonstration Format.str_formatter d; Format.flush_str_formatter())*)
     (Demonstration [([ HypUse 1 ], Single formula)]) 
-    (compile ~speed:Paranoid ~demonstration:[Single formula] ~hypotheses:[formula] ())
+    (compile ~keep_calls:Expand_calls ~demonstration:[Single formula] ~hypotheses:[formula] ())
 
 let test_compile_a_implies_a _ =
   assert_equal 
@@ -105,7 +105,7 @@ let test_compile_a_implies_a _ =
                           x1 => x1
                         ] )))
 
-    (compile ~speed:Paranoid  ~demonstration:demo () )
+    (compile ~keep_calls:Expand_calls  ~demonstration:demo () )
 
 let test_compile_s1 _ =
   let demo_chaining x1 x2 x3 = 
@@ -236,7 +236,7 @@ let test_compile_s1 _ =
          "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}"
        ]))
   in 
-  let demo = compile ~speed:Paranoid  ~demonstration:demo_unproved ()
+  let demo = compile ~keep_calls:Expand_calls  ~demonstration:demo_unproved ()
   in
   assert_equal 
     (Demonstration( List.combine (List.map (fun t -> [t]) 

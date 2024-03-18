@@ -178,7 +178,7 @@ struct
       end
     | None -> None
 
-  let compile ~speed ?(hypotheses=[]) ~(demonstration: step list) () =
+  let compile ~keep_calls ?(hypotheses=[]) ~(demonstration: step list) () =
     let rec compile_aux ~depth ~(proof : demonstration) ~proved =
       let lift n  = function
         | ( Ax _ | BeginHyp _ | HypDecl _ | HypUse _ | EndHyp | Th _) as kpt -> kpt
@@ -212,9 +212,9 @@ struct
         in
         let substituted = Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
         in
-        match speed with
-        | Fast -> (failwith "to implement1"  (*compile_aux ~depth:(depth+1) l*))
-        | Paranoid -> ignore (substituted,lift);failwith "to implement2"
+        match keep_calls with
+        | Keep_calls -> (failwith "to implement1"  (*compile_aux ~depth:(depth+1) l*))
+        | Expand_calls -> ignore (substituted,lift);failwith "to implement2"
         (*BeginHyp (List.length theorem.premisses) :: (List.map (fun p -> HypDecl(substituted p)) theorem.premisses)  @
           (List.map (function kpt -> lift (depth + 1 + (*BeginHyp*)+ (List.length theorem.premisses)) kpt) theorem.demonstration)
           @ (EndHyp :: (compile_aux ~depth l))  *)
@@ -325,9 +325,9 @@ struct
       (match to_prove with Demonstration d -> List.flatten @@ fst @@ List.split d);
     Ok to_prove
 
-  let kernel_prop_compile_verif ~speed (theorem_unproved:theorem_unproved) =
+  let kernel_prop_compile_verif ~keep_calls (theorem_unproved:theorem_unproved) =
     let compiled_proof =
-      compile ~speed ~demonstration:theorem_unproved.demonstration ()
+      compile ~keep_calls ~demonstration:theorem_unproved.demonstration ()
     in
     verif_compile ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:(compiled_proof) ~original_proof:theorem_unproved
   ;;
@@ -355,12 +355,12 @@ struct
     with
     | Failure _ -> false
 
-  let verif ~speed (theorem_unproved: theorem_unproved) =
+  let verif ~keep_calls (theorem_unproved: theorem_unproved) =
     if not (is_formula_at_end theorem_unproved.conclusion theorem_unproved.demonstration)
     then
       Error ("Formula is not at the end of the proof", Invalid_demonstration theorem_unproved)
     else
-      match kernel_prop_compile_verif ~speed theorem_unproved
+      match kernel_prop_compile_verif ~keep_calls theorem_unproved
       with | Ok d ->
         Ok (Theorem {
             kind = theorem_unproved.kind;

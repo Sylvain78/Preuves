@@ -5,11 +5,14 @@ type demonstration_step =
   | Call of string * (string list)
 
 type command =
+  | Comment of string
   | Verbose of int
   | Prop
   | First_order
   | Keep_notations
   | Expand_notations
+  | Keep_calls
+  | Expand_calls
   | Compiled
   | Interpreted
   | Save of Modes.ascii_mode * string
@@ -37,6 +40,7 @@ let encode_command =
     | String s -> Bytes.cat (encode_string "Param") (encode_string s)
   in
   function
+  | Comment s -> encode_string s
   | Prop -> encode_string "Prop"
   | First_order -> encode_string "First_order"
   | Compiled -> encode_string "Compiled"

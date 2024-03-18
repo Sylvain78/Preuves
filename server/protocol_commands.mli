@@ -5,11 +5,14 @@ type demonstration_step =
   | Call of string * (string list)
 
 type command =
+  | Comment of string
   | Verbose of int
   | Prop
   | First_order
   | Keep_notations
   | Expand_notations
+  | Keep_calls
+  | Expand_calls
   | Compiled
   | Interpreted
   | Save of Modes.ascii_mode * string

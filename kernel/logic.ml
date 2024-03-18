@@ -1,8 +1,8 @@
-type speed =
-  | Fast
-  | Paranoid
+type keep_calls =
+  | Keep_calls
+  | Expand_calls
 
-type kind = 
+type kind =
   | KUnproved
   | KInvalid
   | KAxiom
@@ -46,8 +46,8 @@ module type LOGIC = sig
   type theorem_unproved = (formula, step list) theorem_logic
   val is_instance_axiom : formula -> bool
   val compile :
-    speed:speed -> ?hypotheses:formula list -> demonstration:step list -> unit-> demonstration 
-  val verif : speed:speed -> theorem_unproved -> 
+    keep_calls:keep_calls -> ?hypotheses:formula list -> demonstration:step list -> unit-> demonstration 
+  val verif : keep_calls:keep_calls -> theorem_unproved -> 
     (theorem, string * exn) result
   exception Invalid_demonstration of theorem_unproved
   val print_invalid_demonstration : exn -> string option
