@@ -475,6 +475,19 @@ and repl in_channel out_channel =
   in
   while true
   do
+  let lexbuf_contents lb =
+  let open Lexing in
+  let pos = lb.lex_curr_pos in
+  let len = lb.lex_buffer_len - lb.lex_curr_pos in
+  (Bytes.to_string (Bytes.sub lb.lex_buffer pos len))
+
+
+
+  Format.print_string "#<lexbuf:<";
+  Format.print_string (lexbuf_contents lexbuf);
+  Format.print_string ">>";
+ Stdlib.(flush stdout);
+
         let command = decode lexbuf
     in
     Logs.debug (fun m -> m "command read\n");
