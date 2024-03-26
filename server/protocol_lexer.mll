@@ -66,6 +66,7 @@ rule token = parse
   | "$" { latex (Buffer.create 17) lexbuf; }
   | "#"[^'\n']* { add_comment (Lexing.lexeme lexbuf); token lexbuf }
   | digit+ { NUMBER(int_of_string (Lexing.lexeme lexbuf)) }
+  | _ as c { failwith (Printf.sprintf "unexpected character: %C" c) }
 and latex buf = parse
       | '$' { FORMULA (Buffer.contents buf)}
       | "\\$" { Buffer.add_char buf '$' ; latex buf lexbuf }
@@ -77,3 +78,4 @@ and quoted_string = parse
           store_string_char c;
           quoted_string lexbuf 
         }
+        
