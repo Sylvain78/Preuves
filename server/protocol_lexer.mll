@@ -51,6 +51,8 @@ let ident = (lowercase|uppercase)(lowercase|uppercase|digit|'_')*
 
 rule token = parse 
   | newline | [' ' '\t']     { token lexbuf } 
+  | '(' { LPAREN }
+  | ')' { RPAREN }
   | ident as id 
     {
       try 

@@ -33,6 +33,7 @@ open Protocol_commands
 %token SHOW
 %token VERBOSE
 %token QUIT
+%token LPAREN RPAREN
 
 %token<int> NUMBER
 %token<string> IDENT
@@ -114,7 +115,7 @@ formula_list :
 
 term_proof_list:
 | FORMULA term_proof_list { Step $1::$2 }
-| IDENT formula_list term_proof_list { Call ($1,$2)::$3 }
+| IDENT LPAREN formula_list RPAREN  term_proof_list { Call ($1,$3)::$5 }
 | { [] }
 ;
 
