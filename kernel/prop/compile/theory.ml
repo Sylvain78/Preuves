@@ -28,7 +28,34 @@ struct
   type notation = notation_prop
   type demonstration = demonstration_compile
   type theorem = theorem_compile = Theorem of (formula_prop, demonstration_compile) theorem_logic [@@unboxed]
-  let theorems = ref ([] : theorem list)
+
+  module Theorems =
+  struct
+    type t = theorem
+    let (theorems : t Dynarray.t) = Dynarray.create()
+    let get_theorems () = Dynarray.to_list theorems
+    let add_theorem th = Dynarray.add_last theorems th
+    let find_by_name ~name =
+      let limit = Dynarray.length theorems - 1
+      in
+      let rec find_aux index  =
+        if (index > limit)
+        then
+          None
+        else
+          let theorem =
+            match Dynarray.get theorems index
+            with Theorem theorem -> theorem
+          in
+          if theorem.name = name
+          then
+            Some (Theorem theorem,index)
+          else
+            find_aux (index+1)
+      in
+      find_aux 0
+  end
+
   type step = step_compile =
     | Single of formula
     | Call of {theorem : theorem; params :  formula list}
@@ -194,8 +221,8 @@ struct
               is_instance_of_axiom !axioms;
               is_cut_aux (List.rev proved);
               is_hypothesis hypotheses;
-              is_known_theorem_aux !theorems;
-              is_instance_of_theorem_aux !theorems;
+              is_known_theorem_aux (Theorems.get_theorems());
+              is_instance_of_theorem_aux (Theorems.get_theorems());
             ]
         in
         begin
@@ -208,13 +235,18 @@ struct
             failwith "formula not compilable (msg TODO)"
         end
       | Call {theorem; params } :: l ->
-        let theorem = match theorem with Theorem t -> t
+        let (Theorem th,i) =
+          let theorem = match theorem with Theorem t -> t
+          in
+          Theorems.find_by_name ~name:theorem.name
         in
-        let substituted = Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
+        let substitute_with_theorem_params = Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
         in
         match keep_calls with
-        | Keep_calls -> (failwith "to implement1"  (*compile_aux ~depth:(depth+1) l*))
-        | Expand_calls -> ignore (substituted,lift);failwith "to implement2"
+        | Keep_calls ->
+          (*TODO SKE*)
+          (failwith "to implement1"  (*compile_aux ~depth:(depth+1) l*))
+        | Expand_calls -> ignore (substitute_with_theorem_params,lift);failwith "to implement2"
         (*BeginHyp (List.length theorem.premisses) :: (List.map (fun p -> HypDecl(substituted p)) theorem.premisses)  @
           (List.map (function kpt -> lift (depth + 1 + (*BeginHyp*)+ (List.length theorem.premisses)) kpt) theorem.demonstration)
           @ (EndHyp :: (compile_aux ~depth l))  *)
@@ -317,7 +349,7 @@ struct
     in
     List.iteri
       (fun step_index proof_term ->
-         match formula_from_proof_term step_index !theorems proof_term
+         match formula_from_proof_term step_index (Theorems.get_theorems()) proof_term
          with
          | Some f -> formula_stack := f :: !formula_stack
          | None -> failwith "None"
