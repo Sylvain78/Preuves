@@ -53,9 +53,7 @@ let add_chaining =
   print_endline "apres verif chaining ";
   match verif with 
   | Ok th -> 
-    theorems :=
-      th
-      :: !theorems
+    Theorems.add_theorem th
   | Error _ -> ()
 ;;
 print_endline "apres C6";;
@@ -85,8 +83,7 @@ let add_idem =
   match verif 
   with 
   | Ok (Theorem theorem) ->
-    theorems :=
-      (Theorem {theorem with kind = KTheorem}) :: !theorems
+    Theorems.add_theorem (Theorem {theorem with kind = KTheorem})
   | Error _ -> ()
 ;;
 
@@ -132,8 +129,7 @@ in
 match verif 
 with 
 | Ok (Theorem theorem) ->
-  theorems := 
-    (Theorem {theorem with kind = KTheorem}) ::!theorems
+  Theorems.add_theorem (Theorem {theorem with kind = KTheorem})
 | Error _ -> ()
 ;;
 

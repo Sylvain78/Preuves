@@ -30,7 +30,7 @@ module type THEOREMS = sig
   val theorems : t Dynarray.t
   val get_theorems : unit -> t list
   val add_theorem : t -> unit
-  val find_by_name : name:string -> (t * int) option
+  val find_by_name : name:string -> (t * int)
 end
 
 module type LOGIC = sig
@@ -77,7 +77,6 @@ module type LOGIC = sig
   val is_formula_at_end : formula -> step list -> bool
   val axioms : theorem list ref
   val add_axiom : theorem -> unit
-  val theorems : theorem list ref
   type theorem_unproved = (formula, step list) theorem_logic
   val is_instance_axiom : formula -> bool
   val compile :

@@ -176,7 +176,7 @@ and eval command  out_channel =
   in
   let module Th = (val session.theory)
   in
-  log_number "theorems" !Th.theorems;
+  log_number "theorems" (Th.Theorems.get_theorems());
   try
     match (command : Protocol_commands.command) with
     | Comment com ->
@@ -292,22 +292,25 @@ and eval command  out_channel =
             let verif_function = Th.verif ~keep_calls:session.mode.expand_calls
             and conclusion = Th.string_to_formula conclusion
             in
-            let theorem_to_prove_compiled =  {
-              Kernel.Logic.kind = kind;
-              Kernel.Logic.name = name;
-              params = List.map Th.string_to_formula params;
-              premisses = List.map Th.string_to_formula premisses;
-              conclusion;
-              demonstration= (List.map
-                                (function
-                                  | Protocol_commands.Step s ->
-                                    Th.(Single (string_to_formula s))
-                                  | Protocol_commands.Call (th, params) ->
-                                    Th.Call {theorem=List.find (function Th.Theorem theorem -> theorem.name =  th) !Th.theorems;
-                                       params=List.map Th.string_to_formula params}
-                                )
-                                demonstration);
-            }
+            let theorem_to_prove_compiled =
+              {
+                Kernel.Logic.kind = kind;
+                Kernel.Logic.name = name;
+                params = List.map Th.string_to_formula params;
+                premisses = List.map Th.string_to_formula premisses;
+                conclusion;
+                demonstration=
+                  (List.map
+                     (function
+                       | Protocol_commands.Step s ->
+                         Th.(Single (string_to_formula s))
+                       | Protocol_commands.Call (th, params) ->
+                         let theorem = fst(Th.Theorems.find_by_name ~name:th)
+                         in
+                         Th.Call {theorem; params = List.map Th.string_to_formula params}
+                     )
+                     demonstration);
+              }
             in
             let verif =
               try
@@ -331,15 +334,14 @@ and eval command  out_channel =
             match verif with
             | Ok (Theorem t) ->
               begin
-                Th.theorems := Th.Theorem {
-                    kind = Kernel.Logic.KTheorem;
-                    name = t.name;
-                    params = List.map Th.string_to_formula params;
-                    premisses = List.map Th.string_to_formula premisses;
-                    demonstration = t.demonstration;
-                    conclusion = conclusion;
-                  }
-                               :: !Th.theorems;
+                Th.Theorems.add_theorem (Theorem {
+                  kind = Kernel.Logic.KTheorem;
+                  name = t.name;
+                  params = List.map Th.string_to_formula params;
+                  premisses = List.map Th.string_to_formula premisses;
+                  demonstration = t.demonstration;
+                  conclusion = conclusion;
+                });
                 session.theory <- (module Th);
                 Protocol.Ok command
               end
@@ -354,7 +356,7 @@ and eval command  out_channel =
       if (session.mode.order = Session.Prop)
       then
         Protocol.Answer(Latex, Some LMath,(
-            List.filter (function Th.Theorem th -> th.name = theorem_name) (!Th.axioms @ !Th.theorems)
+            List.filter (function Th.Theorem th -> th.name = theorem_name) (!Th.axioms @ (Th.Theorems.get_theorems()))
             |> List.map (fun (Th.Theorem{
                 kind;
                 name;
@@ -410,25 +412,27 @@ and eval command  out_channel =
       begin
         match session.mode.order
         with
-        | Session.Prop -> Protocol.Answer(Latex, Some LMath,
-                                          ("\\begin{eqnarray*}" ^
-                                           (String.concat
-                                              "\\\\"
-                                              (List.map
-                                                 (function Th.Theorem t ->
-                                                    "\\textrm{" ^
-                                                    t.name ^
-                                                    "} & : & " ^
-                                                    (Th.printer_formula Format.str_formatter t.conclusion;
-                                                     Format.flush_str_formatter ())
-                                                 )
-                                                 !Th.theorems
-                                              )
-                                           ) ^
-                                           "\\end{eqnarray*}"
-                                          )
-                                         )
-        | First_order -> failwith "Unimplemented"
+        | Session.Prop ->
+          Protocol.Answer(Latex, Some LMath,
+                          ("\\begin{eqnarray*}" ^
+                           (String.concat
+                              "\\\\"
+                              (List.map
+                                 (function Th.Theorem t ->
+                                    "\\textrm{" ^
+                                    t.name ^
+                                    "} & : & " ^
+                                    (Th.printer_formula Format.str_formatter t.conclusion;
+                                     Format.flush_str_formatter ())
+                                 )
+                                 (Th.Theorems.get_theorems())
+                              )
+                           ) ^
+                           "\\end{eqnarray*}"
+                          )
+                         )
+        | First_order ->
+          failwith "Unimplemented"
       end
     | List `Files ->
       let answer =

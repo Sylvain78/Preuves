@@ -53,10 +53,10 @@ let add_chaining =
   in
   let verif = (verif ~keep_calls:Expand_calls chaining_unproved )          
   in
-  match verif with | Ok (Theorem chaining_proved) ->
-    theorems :=
-      (Theorem {chaining_proved with kind = Kernel.Logic.KTheorem}):: !theorems
-                   | Error _ -> ()
+  match verif with 
+  | Ok (Theorem chaining_proved) ->
+    Theorems.add_theorem (Theorem {chaining_proved with kind = Kernel.Logic.KTheorem})
+  | Error _ -> ()
 ;;
 let x1,x2,x3 = PVar 1, PVar 2, PVar 3
 let a,b,c=x1,x2,x3

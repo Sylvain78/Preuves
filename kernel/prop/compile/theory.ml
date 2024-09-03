@@ -41,7 +41,7 @@ struct
       let rec find_aux index  =
         if (index > limit)
         then
-          None
+          raise Not_found
         else
           let theorem =
             match Dynarray.get theorems index
@@ -49,7 +49,7 @@ struct
           in
           if theorem.name = name
           then
-            Some (Theorem theorem,index)
+            Theorem theorem,index
           else
             find_aux (index+1)
       in
@@ -205,6 +205,9 @@ struct
       end
     | None -> None
 
+  (** 
+   * {depth} use for lifting cuts when dealing with Call.
+  *)
   let compile ~keep_calls ?(hypotheses=[]) ~(demonstration: step list) () =
     let rec compile_aux ~depth ~(proof : demonstration) ~proved =
       let lift n  = function
@@ -234,18 +237,22 @@ struct
             Logs.err (fun m -> pp_formula Fmt.stdout f;m "compile: Invalid_demonstration ");
             failwith "formula not compilable (msg TODO)"
         end
-      | Call {theorem; params } :: l ->
+      | Call { theorem; params } as step :: demo_tail ->
+        let theorem = match theorem with Theorem theorem -> theorem
+        in
         let (Theorem th,i) =
-          let theorem = match theorem with Theorem t -> t
-          in
-          Theorems.find_by_name ~name:theorem.name
+          try Theorems.find_by_name ~name:theorem.name
+          with
+          | Not_found -> failwith ("Theorem " ^ theorem.name ^ "unknown.")
         in
         let substitute_with_theorem_params = Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
         in
         match keep_calls with
         | Keep_calls ->
-          (*TODO SKE*)
-          (failwith "to implement1"  (*compile_aux ~depth:(depth+1) l*))
+          compile_aux ~depth:(depth+1) 
+            ~proved:((substitute_with_theorem_params th.conclusion) :: proved)
+            ~proof:(match proof with Demonstration proof -> Demonstration (([Th(i,List.combine th.params params)],(step)) :: proof)) 
+            demo_tail
         | Expand_calls -> ignore (substitute_with_theorem_params,lift);failwith "to implement2"
         (*BeginHyp (List.length theorem.premisses) :: (List.map (fun p -> HypDecl(substituted p)) theorem.premisses)  @
           (List.map (function kpt -> lift (depth + 1 + (*BeginHyp*)+ (List.length theorem.premisses)) kpt) theorem.demonstration)

@@ -39,7 +39,7 @@ let verif_C8 =
   match (P.verif ~keep_calls:Expand_calls theorem_unproved) 
   with 
   |Ok (Theorem theorem) ->  
-    P.theorems := (Theorem {theorem with kind = KTheorem})::!P.theorems 
+    P.Theorems.add_theorem (Theorem {theorem with kind = KTheorem})
   | Error _ -> ()
 
 let add_chaining =
@@ -84,8 +84,7 @@ let add_chaining =
   match (P.verif  ~keep_calls:Expand_calls theorem_chaining_unproved)
   with
   | Ok (Theorem theorem) -> 
-    P.theorems :=
-      (Theorem {theorem with kind = KTheorem}) :: !P.theorems
+    Theorems.add_theorem (Theorem {theorem with kind = KTheorem})
   | Error _ -> ()
 ;;
 (*non A  \\implies  non B |   B  \\implies  A*)
@@ -136,8 +135,8 @@ in
 match P.verif ~keep_calls:Expand_calls contraposition_unproved
 with 
 | Ok (Theorem theorem) ->  
-  P.theorems := (Theorem {theorem with kind=KTheorem})
-                ::!P.theorems
+  Theorems.add_theorem (Theorem {theorem with kind=KTheorem})
+               
 | Error _ -> ()
 ;;
 
@@ -171,7 +170,7 @@ in
 match P.verif ~keep_calls:Expand_calls s1_unproved
 with 
 | Ok (Theorem theorem) ->
-  P.theorems := (Theorem {theorem with kind=KTheorem}) :: !P.theorems 
+  Theorems.add_theorem (Theorem {theorem with kind=KTheorem}) 
 | Error _ -> ()
 
 let demo = 

@@ -92,7 +92,7 @@ Parser.formule lexbuf
       let rec find_aux index  =
         if (index > limit)
         then
-          None
+          failwith ("Theorem " ^ name ^ " not found.")
         else
           let theorem =
             match Dynarray.get theorems index
@@ -100,7 +100,7 @@ Parser.formule lexbuf
           in
           if theorem.name = name
           then
-            Some (Theorem theorem,index)
+            Theorem theorem,index
           else
             find_aux (index+1)
       in
@@ -112,8 +112,6 @@ Parser.formule lexbuf
   let empty_demonstration = Demonstration []
   let axioms = axioms_prop
   let add_axiom ax = axioms := ax :: !axioms
-  let (theorems_prop : theorem list ref)  = ref []
-  let theorems = theorems_prop
   let string_to_formula = formula_from_string
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop
@@ -131,9 +129,9 @@ Parser.formule lexbuf
         (*Printexc.print_backtrace stderr; flush stderr;*)
         Some (
           Format.fprintf Format.str_formatter "Invalid demonstration of %a\n\ntheorems:\n%a\n\nhypotheses:%a\n\ndemonstration:%a\n\n" printer_formula f
-            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') (fun out (Theorem t) -> Format.pp_print_string out t.name) out l) !theorems
-            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_formula  out l) hypotheses
-            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_step  out l) demo ;
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") (fun out (Theorem t) -> Format.pp_print_string out t.name) out l) (Theorems.get_theorems())
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") printer_formula  out l) hypotheses
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") printer_step  out l) demo ;
           Format.flush_str_formatter()
         )
 
@@ -193,7 +191,7 @@ Parser.formule lexbuf
             | _ ->
               Logs.debug (fun m ->  m "NO");
               false)
-            (!theorems))
+            ((Theorems.get_theorems())))
         || is_instance_axiom f_i
         (*cut*)
         || (cut f_i (List.flatten @@ fst @@ List.split proved))

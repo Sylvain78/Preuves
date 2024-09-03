@@ -61,9 +61,7 @@ let add_chaining =
   match (verif ~keep_calls:Expand_calls chainging_unproved )          
   with
   | Ok(Theorem th) -> 
-    theorems :=
-      Theorem { th with kind = Kernel.Logic.KTheorem; }
-      :: !theorems
+     Theorems.add_theorem (Theorem { th with kind = Kernel.Logic.KTheorem; })
   | Error _ -> ();;
 
 
