@@ -44,7 +44,7 @@ let encode_command =
   | Prop -> encode_string "Prop"
   | First_Order -> encode_string "First_Order"
   | Keep_Notations -> encode_string  "Keep_Notations"
-  | Expand_Notations -> encode_string "Expand_notations"
+  | Expand_Notations -> encode_string "Expand_Notations"
   | Keep_Calls -> encode_string "Keep_Calls"
   | Expand_Calls -> encode_string "Expand_calls"
   | Compiled -> encode_string "Compiled"

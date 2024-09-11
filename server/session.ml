@@ -1,5 +1,5 @@
 type order = Prop | First_Order
-type expand_notations = Keep_Notations | Expand_notations (* expansion of notation *)
+type expand_notations = Keep_Notations | Expand_Notations (* expansion of notation *)
 type expand_calls = Kernel.Logic.keep_calls (* expansion of theorem calls *)
 type evaluation = Compiled | Interpreted (* Compilation of demonstration, or verification line by line*)
 

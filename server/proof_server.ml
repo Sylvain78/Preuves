@@ -90,7 +90,7 @@ let setup_logs =
 
 let session =
   {
-    mode = { verbose_level = 1; order = Session.Prop; expand_notations = Expand_notations; expand_calls = Expand_calls; evaluation = Interpreted };
+    mode = { verbose_level = 1; order = Session.Prop; expand_notations = Expand_Notations; expand_calls = Expand_calls; evaluation = Interpreted };
     name = "Init";
     history = [];
     theory = (module Kernel_prop_interp.Theory.Prop : Kernel.Logic.LOGIC);
@@ -197,7 +197,7 @@ and eval command  out_channel =
       session.mode.expand_notations<- Session.Keep_Notations;
       Protocol.Ok (command)
     | Expand_Notations ->
-      session.mode.expand_notations<- Session.Expand_notations;
+      session.mode.expand_notations<- Session.Expand_Notations;
       Protocol.Ok (command)
     | Keep_Calls ->
       session.mode.expand_calls<- Kernel.Logic.Keep_Calls;
