@@ -218,8 +218,10 @@ Parser.formule lexbuf
       match List.hd rev_t
       with
       | Single g when g = f -> true
-      | _ -> failwith "to implement"
-    with
+      | Single _ -> failwith "Formula not at the end, but didn't check the notation reductions in single step."
+      | Call ({theorem = Theorem theorem; params}) when (Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion) = f -> true 
+      | Call _ -> failwith "Formula not at the end, but didn't check the notation reductions in call."
+   with
     | Failure _ -> false
 
   let kernel_prop_interp_verif ~keep_calls theorem_unproved =
