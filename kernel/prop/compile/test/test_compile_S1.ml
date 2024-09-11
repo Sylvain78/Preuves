@@ -51,7 +51,7 @@ let add_chaining =
     conclusion = chaining;
   }
   in
-  let verif = (verif ~keep_calls:Expand_calls chaining_unproved )          
+  let verif = (verif ~keep_calls:Expand_Calls chaining_unproved )          
   in
   match verif with 
   | Ok (Theorem chaining_proved) ->
@@ -558,7 +558,7 @@ let demo_S1 =
 
 let test_verif _ =
   assert_bool "test_verif" 
-    (match Kernel_prop_compile.Theory.Prop.verif ~keep_calls:Expand_calls 
+    (match Kernel_prop_compile.Theory.Prop.verif ~keep_calls:Expand_Calls 
              {kind = KInvalid;name="diamond";params=[];premisses=[];conclusion=diamond;demonstration=(List.map (function f -> Kernel_prop_compile.Theory.Prop.Single f) demo)}
      with Ok _ -> true
         | _ -> false)

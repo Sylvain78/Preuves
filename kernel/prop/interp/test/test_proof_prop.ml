@@ -23,7 +23,7 @@ let test_invalid_empty_proof _ =
     ~printer:print_result 
     ~msg:"Invalid empty proof"
     (Error ("Formula is not at the end of the proof",Invalid_demonstration(invalid_empty_theorem))) 
-    (verif  ~keep_calls:Expand_calls invalid_empty_theorem)
+    (verif  ~keep_calls:Expand_Calls invalid_empty_theorem)
 
 let test_invalid_proof _ =
   let invalid_theorem = {
@@ -36,7 +36,7 @@ let test_invalid_proof _ =
   }
   in
   assert_equal ~printer:print_result (Error ("Invalid demonstration", Invalid_demonstration(invalid_theorem))) ~msg:"Invalid proof"
-    (verif ~keep_calls:Expand_calls invalid_theorem)
+    (verif ~keep_calls:Expand_Calls invalid_theorem)
 
 let test_invalid_proof_length_2 _ =
   let invalid_proof_length_2_theorem = {
@@ -50,7 +50,7 @@ let test_invalid_proof_length_2 _ =
   in
   assert_equal ~printer:print_result ~msg:"Invalid proof" 
     (Error ("Invalid demonstration", Invalid_demonstration({ invalid_proof_length_2_theorem with conclusion=x1 ; demonstration=[Single x1]})))
-    (verif ~keep_calls:Expand_calls invalid_proof_length_2_theorem)
+    (verif ~keep_calls:Expand_Calls invalid_proof_length_2_theorem)
 
 let test_invalid_proof_length_2_hyp _ =
   let invalid_proof_length_2_hyp_theorem = {
@@ -64,7 +64,7 @@ let test_invalid_proof_length_2_hyp _ =
   in
   assert_equal ~printer:print_result ~msg:"Invalid proof" 
     (Error ("Invalid demonstration", Invalid_demonstration(invalid_proof_length_2_hyp_theorem))) 
-    (verif ~keep_calls:Expand_calls invalid_proof_length_2_hyp_theorem)
+    (verif ~keep_calls:Expand_Calls invalid_proof_length_2_hyp_theorem)
 
 let test_S1_Bourbaki _ =
   (*let _ = notation_from_string "Notation\nimply\nParam\na b\nSyntax\na \"\\implies\" b\nSemantics\na \" \\implies \" b\nEnd"
@@ -75,7 +75,7 @@ let test_S1_Bourbaki _ =
   in
   assert_equal ~msg:"test_S0_Bourbaki"
     (Ok (Theorem {kind=KUnproved;name="S1";params=[];premisses=[];conclusion=f; demonstration=Demonstration [[f], Single f]}))
-    (verif ~keep_calls:Expand_calls s1_unproved)
+    (verif ~keep_calls:Expand_Calls s1_unproved)
 
 let proof_prop_suite = "Proof prop" >:::
                        [ "test invalid empty proof">::test_invalid_empty_proof;

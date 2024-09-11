@@ -164,7 +164,7 @@ Parser.formule lexbuf
         match keep_calls with
         | Keep_Calls ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step)
                    :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
-        | Expand_calls -> (List.map (fun f ->Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f)
+        | Expand_Calls -> (List.map (fun f ->Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f)
                          (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d)),
                        step)
                       :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())

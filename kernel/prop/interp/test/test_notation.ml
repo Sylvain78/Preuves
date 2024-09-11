@@ -48,7 +48,7 @@ let add_chaining =
     demonstration=demo_chaining
   }
   in
-  let verif = (print_endline "avant verif chaining";verif  ~keep_calls:Expand_calls theorem_chaining)          
+  let verif = (print_endline "avant verif chaining";verif  ~keep_calls:Expand_Calls theorem_chaining)          
   in
   print_endline "apres verif chaining ";
   match verif with 
@@ -78,7 +78,7 @@ let add_idem =
       conclusion = idem;
     }
   in
-  let verif = (verif  ~keep_calls:Expand_calls theorem_unproved)
+  let verif = (verif  ~keep_calls:Expand_Calls theorem_unproved)
   in
   match verif 
   with 
@@ -149,7 +149,7 @@ let f_unproved_demo = List.map (fun s -> Single(string_to_formula s)) [
 and f_unproved = string_to_formula "(\\mathbf{A} \\lor \\mathbf{A}) \\implies \\mathbf{A}"
 let f() =
 
-  verif ~keep_calls:Expand_calls {kind=KUnproved;name="";params=[];premisses=[];demonstration=f_unproved_demo; conclusion=f_unproved}
+  verif ~keep_calls:Expand_Calls {kind=KUnproved;name="";params=[];premisses=[];demonstration=f_unproved_demo; conclusion=f_unproved}
 
 let g_unproved =(string_to_formula "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}")
 and g_unproved_demo =
@@ -166,16 +166,16 @@ and g_unproved_demo =
       "((\\lnot \\mathbf{A}) => (\\lnot (\\mathbf{A} \\lor \\mathbf{A}))) => ((\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A})";
       "(\\mathbf{A} \\lor \\mathbf{A}) => \\mathbf{A}";
     ])
-let g() = verif ~keep_calls:Expand_calls {kind=KUnproved;name="";params=[];premisses=[];demonstration=g_unproved_demo; conclusion=g_unproved}
+let g() = verif ~keep_calls:Expand_Calls {kind=KUnproved;name="";params=[];premisses=[];demonstration=g_unproved_demo; conclusion=g_unproved}
 
 let test_without_notation _ =
   assert_equal ~printer:(function Ok (Theorem theorem) -> printer_demonstration Format.str_formatter  theorem.demonstration;Format.flush_str_formatter()  | Error (error,_) -> error) 
-    (Ok (Theorem{kind=KUnproved;name="";params=[];premisses=[];conclusion=f_unproved;demonstration = compile ~keep_calls:Expand_calls ~demonstration:f_unproved_demo ()})) 
+    (Ok (Theorem{kind=KUnproved;name="";params=[];premisses=[];conclusion=f_unproved;demonstration = compile ~keep_calls:Expand_Calls ~demonstration:f_unproved_demo ()})) 
     (f())
 
 let test_with_notation _ =
   assert_equal ~printer:(function Ok _ -> "Ok" | Error (error,_) -> error)
-    (Ok (Theorem {kind=KUnproved;name="";params=[];premisses=[];conclusion=g_unproved;demonstration = compile ~keep_calls:Expand_calls ~demonstration:g_unproved_demo ()}))
+    (Ok (Theorem {kind=KUnproved;name="";params=[];premisses=[];conclusion=g_unproved;demonstration = compile ~keep_calls:Expand_Calls ~demonstration:g_unproved_demo ()}))
     (g())
 
 let notation_suite =

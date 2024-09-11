@@ -1,6 +1,6 @@
 type keep_calls =
   | Keep_Calls
-  | Expand_calls
+  | Expand_Calls
 
 type kind =
   | KUnproved

@@ -36,7 +36,7 @@ let verif_C8 =
       conclusion = P.string_to_formula  "X_1 \\implies X_1";
     }
   in
-  match (P.verif ~keep_calls:Expand_calls theorem_unproved) 
+  match (P.verif ~keep_calls:Expand_Calls theorem_unproved) 
   with 
   |Ok (Theorem theorem) ->  
     P.Theorems.add_theorem (Theorem {theorem with kind = KTheorem})
@@ -81,7 +81,7 @@ let add_chaining =
       demonstration = demo_chaining;
     }
   in
-  match (P.verif  ~keep_calls:Expand_calls theorem_chaining_unproved)
+  match (P.verif  ~keep_calls:Expand_Calls theorem_chaining_unproved)
   with
   | Ok (Theorem theorem) -> 
     Theorems.add_theorem (Theorem {theorem with kind = KTheorem})
@@ -132,7 +132,7 @@ let contraposition_unproved =
     conclusion = contraposition;
   }
 in
-match P.verif ~keep_calls:Expand_calls contraposition_unproved
+match P.verif ~keep_calls:Expand_Calls contraposition_unproved
 with 
 | Ok (Theorem theorem) ->  
   Theorems.add_theorem (Theorem {theorem with kind=KTheorem})
@@ -167,7 +167,7 @@ let s1_unproved = {
   conclusion=s1;
 }
 in
-match P.verif ~keep_calls:Expand_calls s1_unproved
+match P.verif ~keep_calls:Expand_Calls s1_unproved
 with 
 | Ok (Theorem theorem) ->
   Theorems.add_theorem (Theorem {theorem with kind=KTheorem}) 
@@ -607,5 +607,5 @@ let verif_S3 =
   let s3_unproved =
     {kind = KUnproved;name="S3"; params=[];premisses=[];conclusion=s3;demonstration=demo_s3}
   in
-  (P.verif ~keep_calls:Expand_calls s3_unproved  )
+  (P.verif ~keep_calls:Expand_Calls s3_unproved  )
 ;;

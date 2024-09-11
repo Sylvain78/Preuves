@@ -28,7 +28,7 @@ let verif_tauto =
   in
   let theorem_unproved = {kind=Kernel.Logic.KTheorem; name="tautologie" ; params=[]; premisses=[]; conclusion=(string_to_formula "X_1 \\implies X_1"); demonstration=demo_tauto}
   in
-  match (verif ~keep_calls:Expand_calls theorem_unproved )
+  match (verif ~keep_calls:Expand_Calls theorem_unproved )
   with
   | Ok (Theorem theorem)->
     begin
@@ -63,7 +63,7 @@ let modus_ponens_unproved =
     ]) 
   in
   {kind = KUnproved;name="modus ponens";params=[];premisses=[];conclusion=modus_ponens;demonstration=modus_ponens_demo}
-let verif_cut = verif ~keep_calls:Expand_calls modus_ponens_unproved
+let verif_cut = verif ~keep_calls:Expand_Calls modus_ponens_unproved
 
 let add_chaining =
   let chaining =
@@ -103,7 +103,7 @@ let add_chaining =
       conclusion = chaining;
     }
   in
-  match (verif ~keep_calls:Expand_calls chaining_unproved ) 
+  match (verif ~keep_calls:Expand_Calls chaining_unproved ) 
   with
   | Ok (Theorem theorem) ->
     print_endline "C6 verified";
@@ -144,7 +144,7 @@ let contraposition_unproved = {
   premisses = [];
   demonstration = contraposition_demo;
   conclusion =contraposition;}
-let verif_contraposee = verif ~keep_calls:Expand_calls contraposition_unproved
+let verif_contraposee = verif ~keep_calls:Expand_Calls contraposition_unproved
 ;;
 match verif_contraposee 
 with 
@@ -214,7 +214,7 @@ let verif_tiers_exclus =
     and tout = \\lnot (X_1 \\implies X_1)
     in
   *)
-  verif ~keep_calls:Expand_calls tiers_exclus_unproved 
+  verif ~keep_calls:Expand_Calls tiers_exclus_unproved 
 
 (* |- (A \\implies C) \\implies (A \\implies (B \\implies C))*)
 let rajout = (string_to_formula "(X_1 \\implies X_3) \\implies (X_1 \\implies (X_2 \\implies X_3))")
@@ -242,7 +242,7 @@ let verif_rajout_hypothese =
     in
     let (X_1 \\implies X_3) = (X_1 \\implies X_3)
     and (X_2 \\implies X_3) = (b \\implies X_3)*)
-  verif ~keep_calls:Expand_calls rajout_demo_unproved
+  verif ~keep_calls:Expand_Calls rajout_demo_unproved
 
 (* |- F ou F \\implies F *)
 let ou_idempotent = (string_to_formula "(X_1 \\lor X_1) \\implies X_1")
@@ -260,7 +260,7 @@ and ou_idempotent_demo = (List.map (fun s -> Single(string_to_formula s)) [
     "(X_1\\lor X_1) \\implies X_1";
   ])
 let ou_idempotent_unproved = {kind=KUnproved;name="ou idempotent";params=[];premisses=[];conclusion=ou_idempotent;demonstration=ou_idempotent_demo}
-let verif_ou_idempotent = verif ~keep_calls:Expand_calls ou_idempotent_unproved
+let verif_ou_idempotent = verif ~keep_calls:Expand_Calls ou_idempotent_unproved
 
 (* |- (A ou B) \\implies (A \\implies C) \\implies (B \\implies C) \\implies C*)
 let ou_diamant = (string_to_formula "(X_1 \\lor X_2) \\implies ((X_1 \\implies X_3) \\implies ((X_2 \\implies X_3) \\implies X_3))")
@@ -768,7 +768,7 @@ and ou_diamant_demo =
       diamond;
     ])
 let ou_diamant_unproved = {kind=KUnproved;name="ou diamant";params=[];premisses=[];conclusion=ou_diamant;demonstration=ou_diamant_demo}
-let verif_ou_diamant = verif ~keep_calls:Expand_calls ou_diamant_unproved
+let verif_ou_diamant = verif ~keep_calls:Expand_Calls ou_diamant_unproved
 
 let test_tauto _ = assert_bool "tauto" (verif_tauto)
 let test_cut _ = 

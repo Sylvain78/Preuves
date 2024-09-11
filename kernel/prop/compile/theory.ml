@@ -253,7 +253,7 @@ struct
             ~proved:((substitute_with_theorem_params th.conclusion) :: proved)
             ~proof:(match proof with Demonstration proof -> Demonstration (([Th(i,List.combine th.params params)],(step)) :: proof)) 
             demo_tail
-        | Expand_calls -> ignore (substitute_with_theorem_params,lift);failwith "to implement2"
+        | Expand_Calls -> ignore (substitute_with_theorem_params,lift);failwith "to implement2"
         (*BeginHyp (List.length theorem.premisses) :: (List.map (fun p -> HypDecl(substituted p)) theorem.premisses)  @
           (List.map (function kpt -> lift (depth + 1 + (*BeginHyp*)+ (List.length theorem.premisses)) kpt) theorem.demonstration)
           @ (EndHyp :: (compile_aux ~depth l))  *)

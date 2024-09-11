@@ -46,7 +46,7 @@ let encode_command =
   | Keep_Notations -> encode_string  "Keep_Notations"
   | Expand_Notations -> encode_string "Expand_Notations"
   | Keep_Calls -> encode_string "Keep_Calls"
-  | Expand_Calls -> encode_string "Expand_calls"
+  | Expand_Calls -> encode_string "Expand_Calls"
   | Compiled -> encode_string "Compiled"
   | Interpreted -> encode_string "Interpreted"
   | Notation { name ; params; syntax; semantics }  -> 
