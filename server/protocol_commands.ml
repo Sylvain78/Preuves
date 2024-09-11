@@ -8,11 +8,11 @@ type command =
   | Comment of string
   | Verbose of int
   | Prop
-  | First_order
-  | Keep_notations
-  | Expand_notations
-  | Keep_calls
-  | Expand_calls
+  | First_Order
+  | Keep_Notations
+  | Expand_Notations
+  | Keep_Calls
+  | Expand_Calls
   | Compiled
   | Interpreted
   | Save of Modes.ascii_mode * string
@@ -42,7 +42,11 @@ let encode_command =
   function
   | Comment s -> encode_string s
   | Prop -> encode_string "Prop"
-  | First_order -> encode_string "First_order"
+  | First_Order -> encode_string "First_Order"
+  | Keep_Notations -> encode_string  "Keep_Notations"
+  | Expand_Notations -> encode_string "Expand_notations"
+  | Keep_Calls -> encode_string "Keep_Calls"
+  | Expand_Calls -> encode_string "Expand_calls"
   | Compiled -> encode_string "Compiled"
   | Interpreted -> encode_string "Interpreted"
   | Notation { name ; params; syntax; semantics }  -> 
@@ -70,4 +74,4 @@ let encode_command =
     let b = Bytes.create 0
     in 
       Bytes.concat b (List.map encode_string (["User"; user]))
-    | _ -> failwith "unimplemented1"
+    | _ -> failwith "Command unknown"

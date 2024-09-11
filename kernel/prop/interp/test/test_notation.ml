@@ -124,7 +124,7 @@ let theorem_contraposition_unproved = {
   conclusion=string_to_formula "(((\\lnot X_1) \\implies (\\lnot X_2)) \\implies (X_2 \\implies X_1))";}
 in
 let verif =
-  verif ~keep_calls:Keep_calls theorem_contraposition_unproved 
+  verif ~keep_calls:Keep_Calls theorem_contraposition_unproved 
 in 
 match verif 
 with 

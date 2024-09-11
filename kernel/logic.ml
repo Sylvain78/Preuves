@@ -1,5 +1,5 @@
 type keep_calls =
-  | Keep_calls
+  | Keep_Calls
   | Expand_calls
 
 type kind =

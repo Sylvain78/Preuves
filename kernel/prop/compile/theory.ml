@@ -248,7 +248,7 @@ struct
         let substitute_with_theorem_params = Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params
         in
         match keep_calls with
-        | Keep_calls ->
+        | Keep_Calls ->
           compile_aux ~depth:(depth+1) 
             ~proved:((substitute_with_theorem_params th.conclusion) :: proved)
             ~proof:(match proof with Demonstration proof -> Demonstration (([Th(i,List.combine th.params params)],(step)) :: proof)) 

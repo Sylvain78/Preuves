@@ -4,9 +4,11 @@ let keywords = Hashtbl.create 17
 let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v) 
 [ 
       ("Prop",PROP) ;
-      ("First_order", FIRST_ORDER) ;
+      ("First_Order", FIRST_ORDER) ;
       ("Keep_Notations",KEEP_NOTATIONS);
       ("Expand_Notations",EXPAND_NOTATIONS);
+      ("Keep_Calls",KEEP_CALLS);
+      ("Expand_Calls",EXPAND_CALLS);
       ("Compiled", COMPILED);
       ("Interpreted", INTERPRETED);
       ("Notation",NOTATION) ; 

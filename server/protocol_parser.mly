@@ -6,6 +6,8 @@ open Protocol_commands
 %token FIRST_ORDER
 %token KEEP_NOTATIONS // keep notations in condensed form at most possible
 %token EXPAND_NOTATIONS //expand notations if needed
+%token KEEP_CALLS // keep calls
+%token EXPAND_CALLS //expand calls with corresponding theorem's demonstration (substituted with calling params)
 %token INTERPRETED //Interpret line by line as string
 %token COMPILED //Compile demo to AST + list of strings
 %token FAST // accept instance of theorems
@@ -86,9 +88,11 @@ theorem:
 mode:
 | VERBOSE NUMBER { Verbose $2 }
 | PROP { Prop }
-| FIRST_ORDER { First_order }
-| KEEP_NOTATIONS { Keep_notations}
-| EXPAND_NOTATIONS { Expand_notations }
+| FIRST_ORDER { First_Order }
+| KEEP_NOTATIONS { Keep_Notations}
+| EXPAND_NOTATIONS { Expand_Notations }
+| KEEP_CALLS { Keep_Calls }
+| EXPAND_CALLS { Expand_Calls }
 | COMPILED { Compiled }
 | INTERPRETED { Interpreted }
 ;

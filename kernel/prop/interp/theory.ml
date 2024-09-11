@@ -162,7 +162,7 @@ Parser.formule lexbuf
         let theorem = match theorem with Theorem t -> t
         in
         match keep_calls with
-        | Keep_calls ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step)
+        | Keep_Calls ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step)
                    :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
         | Expand_calls -> (List.map (fun f ->Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f)
                          (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d)),

@@ -90,7 +90,7 @@ let setup_logs =
 
 let session =
   {
-    mode = { verbose_level = 1; order = Session.Prop; expand_notations = Keep_notations; expand_calls = Keep_calls; evaluation = Interpreted };
+    mode = { verbose_level = 1; order = Session.Prop; expand_notations = Expand_notations; expand_calls = Expand_calls; evaluation = Interpreted };
     name = "Init";
     history = [];
     theory = (module Kernel_prop_interp.Theory.Prop : Kernel.Logic.LOGIC);
@@ -190,19 +190,19 @@ and eval command  out_channel =
       Logs.info(fun m -> m "Kernel_prop_interp");
       session.mode.order<-Session.Prop;
       Protocol.Ok (command)
-    | First_order ->
-      session.mode.order<-Session.First_order;
+    | First_Order ->
+      session.mode.order<-Session.First_Order;
       Protocol.Ok (command)
-    | Keep_notations ->
-      session.mode.expand_notations<- Session.Keep_notations;
+    | Keep_Notations ->
+      session.mode.expand_notations<- Session.Keep_Notations;
       Protocol.Ok (command)
-    | Expand_notations ->
+    | Expand_Notations ->
       session.mode.expand_notations<- Session.Expand_notations;
       Protocol.Ok (command)
-    | Keep_calls ->
-      session.mode.expand_calls<- Kernel.Logic.Keep_calls;
+    | Keep_Calls ->
+      session.mode.expand_calls<- Kernel.Logic.Keep_Calls;
       Protocol.Ok (command)
-    | Expand_calls ->
+    | Expand_Calls ->
       session.mode.expand_calls<- Kernel.Logic.Expand_calls;
       Protocol.Ok (command)
     | Compiled ->
@@ -254,7 +254,7 @@ and eval command  out_channel =
           (* print_string("{"^(Buffer.contents buf)^"}");Stdlib.flush Stdlib.stdout; *)
           ignore @@ Kernel_prop_interp.Parser.notation_from_string (Buffer.contents buf);
           Protocol.Ok command
-        | First_order -> Protocol.Error "Notation first_order : unimplemented"
+        | First_Order -> Protocol.Error "Notation first_order : unimplemented"
       end
     | Protocol_commands.Axiom { name ; formula } ->
       if (session.mode.order = Session.Prop)
@@ -283,7 +283,7 @@ and eval command  out_channel =
       begin
         let module Th = (val session.theory)
         in
-        Logs.info (fun m -> m "%s" ((function Prop -> "Prop" | First_order -> "First_order") session.mode.order));
+        Logs.info (fun m -> m "%s" ((function Prop -> "Prop" | First_Order -> "First_Order") session.mode.order));
         match session.mode.order
         with
         | Session.Prop ->
@@ -348,7 +348,7 @@ and eval command  out_channel =
             | Error (msg, exc) ->
               Protocol.Error ("Theorem " ^ name ^ " not verified.\n" ^ msg ^ (match Th.print_invalid_demonstration exc with None -> "" | Some s -> s))
           end
-        | First_order -> failwith "unimplemented"
+        | First_Order -> failwith "unimplemented"
       end
     | Show theorem_name ->
       let module Th = (val session.theory)
@@ -388,7 +388,7 @@ and eval command  out_channel =
         | Session.Prop ->
           Protocol.Answer (Latex, Some LMath,
                            (String.concat
-                              "\n"
+                              "\\\\"
                               (List.map
                                  (function Th.Theorem t ->
                                     t.name ^
@@ -404,7 +404,7 @@ and eval command  out_channel =
 
 
 
-        | First_order -> failwith "Unimplemented"
+        | First_Order -> failwith "Unimplemented"
       end
     | List `Theorems ->
       let module Th = (val session.theory)
@@ -431,12 +431,12 @@ and eval command  out_channel =
                            "\\end{eqnarray*}"
                           )
                          )
-        | First_order ->
+        | First_Order ->
           failwith "Unimplemented"
       end
     | List `Files ->
       let answer =
-        let dir = Unix.opendir session.user
+        let dir = Unix.opendir "."
         in
         let dir_list = ref []
         in
@@ -461,6 +461,7 @@ and eval command  out_channel =
         );
         Unix.chdir user;
         session.user <- user;
+        Logs.debug (fun m -> m "dir : %s" (Unix.getcwd()));
         Protocol.Ok command
       end
   with
