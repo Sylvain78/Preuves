@@ -54,6 +54,11 @@ struct
             find_aux (index+1)
       in
       find_aux 0
+    let invalidate_theorem theorem_name = 
+      let theorem = 
+        match fst(find_by_name ~name:theorem_name) with 
+        | Theorem theorem -> theorem
+      in theorem.kind <- KInvalid
   end
 
   type step = step_compile =
