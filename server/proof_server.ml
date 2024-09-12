@@ -256,7 +256,7 @@ and eval command  out_channel =
           Protocol.Ok command
         | First_Order -> Protocol.Error "Notation first_order : unimplemented"
       end
-    | Protocol_commands.Axiom { name ; formula } ->
+    | Axiom { name ; formula } ->
       if (session.mode.order = Session.Prop)
       then
         begin
@@ -290,7 +290,8 @@ and eval command  out_channel =
           begin
             Logs.info (fun m -> m "%s" ((function Compiled -> "Compiled" | Interpreted -> "Interpreted") session.mode.evaluation));
             let verif_function = Th.verif ~keep_calls:session.mode.expand_calls
-            and conclusion = Th.string_to_formula conclusion
+            and conclusion = 
+              Th.string_to_formula conclusion
             in
             let theorem_to_prove_compiled =
               {
@@ -350,12 +351,17 @@ and eval command  out_channel =
           end
         | First_Order -> failwith "unimplemented"
       end
+    | Invalidate theorem_name ->
+      let module Th = (val session.theory)
+      in
+      Th.Theorems.invalidate_theorem theorem_name;
+      Protocol.Warning("Invalidated " ^ theorem_name)
     | Show theorem_name ->
       let module Th = (val session.theory)
       in
       if (session.mode.order = Session.Prop)
       then
-        Protocol.Answer(Latex, Some LMath,(
+        Protocol.Answer(Latex, Some LMath, (
             List.filter (function Th.Theorem th -> th.name = theorem_name) (!Th.axioms @ (Th.Theorems.get_theorems()))
             |> List.map (fun (Th.Theorem{
                 kind;

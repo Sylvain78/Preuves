@@ -17,7 +17,7 @@ let kind_to_string = function
   | KAssumed -> "Assumed"
 
 type ('formula, 'demonstration) theorem_logic = {
-  kind : kind;
+  mutable kind : kind;
   name : string;
   params : 'formula list;
   premisses : 'formula list;
@@ -30,6 +30,7 @@ module type THEOREMS = sig
   val theorems : t Dynarray.t
   val get_theorems : unit -> t list
   val add_theorem : t -> unit
+  val invalidate_theorem : string -> unit
   val find_by_name : name:string -> (t * int)
 end
 

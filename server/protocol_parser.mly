@@ -30,6 +30,7 @@ open Protocol_commands
 %token LIST
 %token AXIOMS
 %token THEOREMS
+%token INVALIDATE
 %token FILES
 %token USER
 %token SHOW
@@ -138,3 +139,5 @@ info :
 | LIST FILES { List `Files }
 | SHOW IDENT { Show $2 }
 | USER IDENT { User $2 }
+| INVALIDATE IDENT { Invalidate $2 }
+;

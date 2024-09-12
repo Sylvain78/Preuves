@@ -27,6 +27,7 @@ let _ = List.iter (fun (k,v) -> Hashtbl.add keywords k v)
       ("Premisses", PREMISSES) ;
       ("Conclusion", CONCLUSION) ;
       ("Demonstration", DEMONSTRATION) ;
+      ("Invalidate", INVALIDATE);
       ("Save", SAVE) ;
       ("Load", LOAD) ;
       ("binary", Binary);
