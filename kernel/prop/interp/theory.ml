@@ -41,7 +41,9 @@ Parser.formule lexbuf
     | PNeg f1 , PNeg g1 -> equiv_notation f1 g1
     | PAnd(f1, f2) , PAnd(g1, g2)
     | POr(f1, f2) , POr(g1, g2)
-    | PImpl(f1, f2) , PImpl(g1, g2) ->  (equiv_notation f2 g2) && (equiv_notation f1 g1)
+    | PImpl(f1, f2) , PImpl(g1, g2)
+    | PImpl(f1, f2), POr(PNeg g1, g2)
+    | POr(PNeg f1, f2),PImpl(g1, g2) ->  (equiv_notation f2 g2) && (equiv_notation f1 g1)
     | PApply_notation {apply_notation_prop=apply_notation_prop_f; apply_notation_prop_params = apply_notation_prop_params_f},
       PApply_notation {apply_notation_prop=apply_notation_prop_g; apply_notation_prop_params=apply_notation_prop_params_g} ->
       if (apply_notation_prop_f.notation_prop_name = apply_notation_prop_g.notation_prop_name)
@@ -105,22 +107,40 @@ Parser.formule lexbuf
             find_aux (index+1)
       in
       find_aux 0
+    let invalidate_theorem theorem_name = 
+      let theorem = 
+        match fst(find_by_name ~name:theorem_name) with 
+        | Theorem theorem -> theorem
+      in theorem.kind <- KInvalid
+
   end
 
   exception Invalid_demonstration of theorem_unproved
+  exception Premisses_not_verified of formula list
 
   let empty_demonstration = Demonstration []
   let axioms = axioms_prop
   let add_axiom ax = axioms := ax :: !axioms
-  let string_to_formula = formula_from_string
+  let string_to_formula s = 
+    try 
+      formula_from_string s
+    with Dyp.Syntax_error -> failwith ("Unparsable formula : $" ^ s ^ "$")
   let formula_to_string = to_string_formula_prop
   let printer_formula = printer_formula_prop
   let string_to_notation = notation_from_string
   let printer_step ff = function
     | Single f -> Format.fprintf ff "Single(%a)" printer_formula f
-    | Call{theorem; params} -> Format.fprintf ff "Call(%s,%a)" (match theorem with Theorem t -> t).name
-        (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',')
-            printer_formula out l) params
+    | Call{theorem=Theorem theorem; params} -> 
+      let print_formula_list = (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_formula out l)
+      in
+      Format.fprintf ff "Call(%s,%a)[%a]" theorem.name
+        print_formula_list  params 
+        print_formula_list 
+        (match theorem.demonstration 
+         with Demonstration  l -> 
+           List.map (function f -> Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f)
+             (List.flatten (List.map fst l))
+        ) 
   let printer_demonstration ff (Demonstration d) =
     (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_step) ff (snd @@ List.split d)
 
@@ -154,61 +174,84 @@ Parser.formule lexbuf
 
   let compile ~keep_calls ?(hypotheses=[]) ~demonstration () =
     let rec compile_aux ~keep_calls ?(hypotheses=[]) ~demonstration ()   =
+      let subst = Substitution.simultaneous_substitution_formula_prop
+      in
       match demonstration
       with
       | [] ->  []
       | Single f as step:: l ->  ([f],step) :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
-      | Call {theorem ; params } as step :: l ->
-        let theorem = match theorem with Theorem t -> t
-        in
+      | Call {theorem = Theorem theorem ; params } as step :: l ->
         match keep_calls with
         | Keep_Calls ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step)
-                   :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
-        | Expand_Calls -> (List.map (fun f ->Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f)
-                         (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d)),
-                       step)
-                      :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
+                         :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
+        | Expand_Calls -> (List.map (fun f ->subst  ~vars:theorem.params ~terms:params f)
+                             (theorem.premisses @ (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d))),
+                           step)
+                          :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
     in
     Demonstration (compile_aux ~keep_calls ~hypotheses ~demonstration ())
 
-  let rec verif_prop ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:demonstration ) ~(original_proof:theorem_unproved) =
+  let rec verif_prop ~keep_calls ~name ~(hypotheses:formula list) ~(proved:(formula list * step) list) ~(to_prove:demonstration ) ~(original_proof:theorem_unproved) =
+    let verif_formula hypotheses proved f =
+      (*Formula is an hypothesis*)
+      List.mem f hypotheses
+      (*Formula already present *)
+      || List.mem f (List.flatten @@ fst @@ List.split proved)
+      (*Formula is an instance of a theorem or axiom *)
+      || (List.exists (fun (Theorem th) ->
+          try
+            Logs.debug (fun m -> m " %a instance of %s (%a) ?" pp_formula f th.name pp_formula th.conclusion);
+            ignore(instance f th.conclusion);
+            Logs.debug (fun m ->  m "YES");
+            true
+          with
+          | _ ->
+            Logs.debug (fun m ->  m "NO");
+            false)
+          (List.filter (function Theorem th -> match th.kind with KAssumed | KAxiom | KTheorem -> true | KInvalid | KUnproved -> false) (Theorems.get_theorems())))
+      || is_instance_axiom f
+      (*cut*)
+      || (cut f (List.flatten @@ fst @@ List.split proved))
+      (*application of notations*)
+      || List.exists (fun f' -> equiv_notation f f') (List.flatten @@ fst @@ List.split proved)
+    in
+      let subst = Substitution.simultaneous_substitution_formula_prop
+      in
     match to_prove with
-    | Demonstration [] -> Ok (Theorem { original_proof with demonstration = Demonstration(List.rev proved)})
+    | Demonstration [] ->
+      let demonstration = Demonstration(List.rev proved)
+      in
+      printer_demonstration Format.std_formatter demonstration;
+      Ok (Theorem { original_proof with demonstration = demonstration})
     | Demonstration (([f_i],(Single f as step))::p)  when f = f_i-> 
-      if (
-        (*Formula is an hypothesis*)
-        List.mem f_i hypotheses
-        (*Formula already present *)
-        || List.mem f_i (List.flatten @@ fst @@ List.split proved)
-        (*Formula is an instance of a theorem or axiom *)
-        || (List.exists (fun (Theorem th) ->
-            try
-              Logs.debug (fun m -> m " %a instance of %s (%a) ?" pp_formula f_i th.name pp_formula th.conclusion);
-              ignore(instance f_i th.conclusion);
-              Logs.debug (fun m ->  m "YES");
-              true
-            with
-            | _ ->
-              Logs.debug (fun m ->  m "NO");
-              false)
-            ((Theorems.get_theorems())))
-        || is_instance_axiom f_i
-        (*cut*)
-        || (cut f_i (List.flatten @@ fst @@ List.split proved))
-        (*application of notations*)
-        || List.exists (fun f -> equiv_notation f_i f) (List.flatten @@ fst @@ List.split proved)
-      )
+      if (verif_formula hypotheses proved f_i)
       then
         begin
           Logs.debug (fun m -> m "%a Proved" pp_formula f_i);
-          verif_prop ~name ~hypotheses ~proved:(([f_i],step) :: proved) ~to_prove:(Demonstration p) ~original_proof
+          verif_prop ~keep_calls ~name ~hypotheses ~proved:(([f_i],step) :: proved) ~to_prove:(Demonstration p) ~original_proof
         end
       else
         begin
           Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
           Error ("Invalid demonstration", Invalid_demonstration {kind=KUnproved;name;params = []; premisses=hypotheses; conclusion=f_i; demonstration=List.rev (step::(snd @@ List.split proved))})
         end
-    | _ -> failwith "to implement"
+    | Demonstration ((l,(Call({theorem = Theorem theorem; params}) as step))::p)  
+      when (subst  ~vars:theorem.params ~terms:params theorem.conclusion) = List.(hd (rev l)) -> 
+      begin
+        match keep_calls with 
+        | Expand_Calls -> 
+          verif_prop ~keep_calls ~name ~hypotheses ~proved ~to_prove:(Demonstration ((List.map (function f -> ([f],Single f)) l) @ p)) ~original_proof
+        | Keep_Calls -> 
+         match   List.find_all (fun f -> not (verif_formula hypotheses proved (subst  ~vars:theorem.params ~terms:params f))) theorem.premisses
+         with
+         | (_::_) as l-> Error ("Premisses of " ^ theorem.name ^ "not verified", Premisses_not_verified l)
+         | [] -> verif_prop ~keep_calls ~name ~hypotheses ~proved:(([(subst ~vars:theorem.params ~terms:params theorem.conclusion)],step) :: proved) ~to_prove:(Demonstration p) ~original_proof 
+      end
+    | d -> 
+      begin 
+        Format.fprintf Format.std_formatter "XYX Dem(%a)" printer_demonstration d;
+        failwith "to implement (unknown shape of Demonstration)"
+      end
 
   (* f is at the end of the proof *)
   let is_formula_at_end f t =
@@ -219,16 +262,16 @@ Parser.formule lexbuf
       with
       | Single g when g = f -> true
       | Single _ -> failwith "Formula not at the end, but didn't check the notation reductions in single step."
-      | Call ({theorem = Theorem theorem; params}) when (Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion) = f -> true 
+      | Call ({theorem = Theorem theorem; params}) when equiv_notation (Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)  f -> true 
       | Call _ -> failwith "Formula not at the end, but didn't check the notation reductions in call."
-   with
+    with
     | Failure _ -> false
 
   let kernel_prop_interp_verif ~keep_calls theorem_unproved =
     let compiled_proof =
       compile ~keep_calls ~demonstration:theorem_unproved.demonstration ()
     in
-    verif_prop ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:compiled_proof ~original_proof:theorem_unproved
+    verif_prop ~keep_calls ~name:theorem_unproved.name ~hypotheses:theorem_unproved.premisses ~proved:[] ~to_prove:compiled_proof ~original_proof:theorem_unproved
   ;;
 
   (*displaced in theories/Bourbaki_Logic.prf
