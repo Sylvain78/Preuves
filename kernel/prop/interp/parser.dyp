@@ -35,7 +35,7 @@ notation :
 formula1:
     | "X_" ['0'-'9']+  { PVar (int_of_string $2) }
     | "X_{" ['0'-'9']+ "}" { PVar (int_of_string $2) }
-    | "\\mathbf{" ['a'-'z''A'-'Z'] "}" { PMetaVar ($2) }
+    | "\\mathbf{" ['a'-'z''A'-'Z']+ "}" { PMetaVar ($2) }
     | "(" formula1 ")" { $2 }
     | "\\lnot" formula1 { PNeg($2) }
     | formula1 "\\implies" formula1 { PImpl($1,$3) }
