@@ -347,7 +347,7 @@ and eval command  out_channel =
                 Protocol.Ok command
               end
             | Error (msg, exc) ->
-              Protocol.Error ("Theorem " ^ name ^ " not verified.\n" ^ msg ^ (match Th.print_invalid_demonstration exc with None -> "" | Some s -> s))
+              Protocol.Error ("Theorem $" ^ name ^ "$ not verified.\n" ^ msg ^ (match Th.print_invalid_demonstration exc with None -> "" | Some s -> s))
           end
         | First_Order -> failwith "unimplemented"
       end

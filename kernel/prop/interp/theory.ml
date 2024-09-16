@@ -154,6 +154,11 @@ Parser.formule lexbuf
             (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") printer_step  out l) demo ;
           Format.flush_str_formatter()
         )
+      | Premisses_not_verified lf -> Some (
+          Format.fprintf Format.str_formatter "[$%a$]" 
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  "$,$\n") printer_formula  out l) lf;
+          Format.flush_str_formatter()
+        )
 
 (*
 
@@ -244,7 +249,7 @@ Parser.formule lexbuf
         | Keep_Calls -> 
          match   List.find_all (fun f -> not (verif_formula hypotheses proved (subst  ~vars:theorem.params ~terms:params f))) theorem.premisses
          with
-         | (_::_) as l-> Error ("Premisses of " ^ theorem.name ^ "not verified", Premisses_not_verified l)
+         | (_::_) as l-> Error ("Premisses of $" ^ theorem.name ^ "$ not verified", Premisses_not_verified (List.map (subst  ~vars:theorem.params ~terms:params) l))
          | [] -> verif_prop ~keep_calls ~name ~hypotheses ~proved:(([(subst ~vars:theorem.params ~terms:params theorem.conclusion)],step) :: proved) ~to_prove:(Demonstration p) ~original_proof 
       end
     | d -> 
