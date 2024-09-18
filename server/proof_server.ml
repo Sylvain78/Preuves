@@ -290,7 +290,7 @@ and eval command  out_channel =
           begin
             Logs.info (fun m -> m "%s" ((function Compiled -> "Compiled" | Interpreted -> "Interpreted") session.mode.evaluation));
             let verif_function = Th.verif ~keep_calls:session.mode.expand_calls
-            and conclusion = 
+            and conclusion =
               Th.string_to_formula conclusion
             in
             let theorem_to_prove_compiled =
@@ -366,21 +366,19 @@ and eval command  out_channel =
             |> List.map (fun (Th.Theorem{
                 kind;
                 name;
+                params;
+                premisses;
+                demonstration;
                 conclusion;
-                _
-              }:Th.theorem) -> (Kernel.Logic.kind_to_string kind) ^ " " ^
-                               name ^
-                               ":" ^
-                               (*TODO "(" ^
-                                 (String.concat ", " @@
-                                 List.map (function
-                                         | PMetaVar s -> s
-                                 | PVar i -> if i>0 && i<10
-                                 then "X_"^ (string_of_int i)
-                                 else "X_{"^ (string_of_int i) ^ "}")
-                                 parameters_prop) ^
-                                 ") : " ^*)
-                               (Th.formula_to_string conclusion)
+              }:Th.theorem) -> (Kernel.Logic.kind_to_string kind) ^ " " ^ name
+                               ^ "(" ^ (Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out ", " ) Th.printer_formula Format.str_formatter params;Format.flush_str_formatter()) ^ ") :"
+                               ^ (Th.formula_to_string conclusion)^"\n"
+                               ^ "Premisses : \n" ^ (Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out ", " ) Th.printer_formula Format.str_formatter premisses;Format.flush_str_formatter()) ^ "\n"
+                               ^ "Demonstration :\n[" ^
+                               (Th.printer_demonstration Format.str_formatter demonstration;Format.flush_str_formatter ())
+                               ^ "]"
+
+
               )
             |> String.concat "\n"))
       else
@@ -429,7 +427,8 @@ and eval command  out_channel =
                                     t.name ^
                                     "} & : & " ^
                                     (Th.printer_formula Format.str_formatter t.conclusion;
-                                     Format.flush_str_formatter ())
+                                     Format.flush_str_formatter ()) ^
+                                    "(" ^(Kernel.Logic.kind_to_string  t.kind)^ ")"
                                  )
                                  (Th.Theorems.get_theorems())
                               )

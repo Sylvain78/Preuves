@@ -6,7 +6,7 @@ module Prop:(LOGIC
               and type notation = notation_prop
               and type demonstration = Theorem.demonstration_prop
               and type theorem = Theorem.theorem_prop
-            ) = 
+            ) =
 struct
 
 
@@ -68,7 +68,7 @@ Parser.formule lexbuf
                               with
                               | PImpl(g1,g2) -> g2 = f && List.mem g1 p
                               | PApply_notation _ -> failwith "cut : get_semantique evaluates to another notation"
-                              | _ -> false                                                                         
+                              | _ -> false
                             end
                           | _ -> false) p
 
@@ -107,9 +107,9 @@ Parser.formule lexbuf
             find_aux (index+1)
       in
       find_aux 0
-    let invalidate_theorem theorem_name = 
-      let theorem = 
-        match fst(find_by_name ~name:theorem_name) with 
+    let invalidate_theorem theorem_name =
+      let theorem =
+        match fst(find_by_name ~name:theorem_name) with
         | Theorem theorem -> theorem
       in theorem.kind <- KInvalid
 
@@ -121,8 +121,8 @@ Parser.formule lexbuf
   let empty_demonstration = Demonstration []
   let axioms = axioms_prop
   let add_axiom ax = axioms := ax :: !axioms
-  let string_to_formula s = 
-    try 
+  let string_to_formula s =
+    try
       formula_from_string s
     with Dyp.Syntax_error -> failwith ("Unparsable formula : $" ^ s ^ "$")
   let formula_to_string = to_string_formula_prop
@@ -130,17 +130,17 @@ Parser.formule lexbuf
   let string_to_notation = notation_from_string
   let printer_step ff = function
     | Single f -> Format.fprintf ff "Single(%a)" printer_formula f
-    | Call{theorem=Theorem theorem; params} -> 
+    | Call{theorem=Theorem theorem; params} ->
       let print_formula_list = (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_char out  ',') printer_formula out l)
       in
       Format.fprintf ff "Call(%s,%a)[%a]" theorem.name
-        print_formula_list  params 
-        print_formula_list 
-        (match theorem.demonstration 
-         with Demonstration  l -> 
+        print_formula_list  params
+        print_formula_list
+        (match theorem.demonstration
+         with Demonstration  l ->
            List.map (function f -> Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params f)
              (List.flatten (List.map fst l))
-        ) 
+        )
   let printer_demonstration ff (Demonstration d) =
     (Format.pp_print_list ~pp_sep:Format.pp_print_newline printer_step) ff (snd @@ List.split d)
 
@@ -149,13 +149,13 @@ Parser.formule lexbuf
         (*Printexc.print_backtrace stderr; flush stderr;*)
         Some (
           Format.fprintf Format.str_formatter "Invalid demonstration of %a\n\ntheorems:\n%a\n\nhypotheses:%a\n\ndemonstration:%a\n\n" printer_formula f
-            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") (fun out (Theorem t) -> Format.pp_print_string out t.name) out l) (Theorems.get_theorems())
+            (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") (fun out (Theorem t) -> Format.pp_print_string out (t.name^(Kernel.Logic.kind_to_string t.kind))) out l) (Theorems.get_theorems())
             (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") printer_formula  out l) hypotheses
             (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  ",\n") printer_step  out l) demo ;
           Format.flush_str_formatter()
         )
       | Premisses_not_verified lf -> Some (
-          Format.fprintf Format.str_formatter "[$%a$]" 
+          Format.fprintf Format.str_formatter "[$%a$]"
             (fun out l -> Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_string out  "$,$\n") printer_formula  out l) lf;
           Format.flush_str_formatter()
         )
@@ -186,13 +186,17 @@ Parser.formule lexbuf
       | [] ->  []
       | Single f as step:: l ->  ([f],step) :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
       | Call {theorem = Theorem theorem ; params } as step :: l ->
-        match keep_calls with
-        | Keep_Calls ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step)
-                         :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
-        | Expand_Calls -> (List.map (fun f ->subst  ~vars:theorem.params ~terms:params f)
-                             (theorem.premisses @ (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d))),
-                           step)
-                          :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
+        if (theorem.kind = KInvalid)
+        then
+          (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
+        else
+          match keep_calls with
+          | Keep_Calls ->  ([(Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)],step)
+                           :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
+          | Expand_Calls -> (List.map (fun f ->subst  ~vars:theorem.params ~terms:params f)
+                               (theorem.premisses @ (List.flatten @@ fst @@ List.split (match theorem.demonstration with Demonstration d -> d))),
+                             step)
+                            :: (compile_aux ~keep_calls ~hypotheses ~demonstration:l ())
     in
     Demonstration (compile_aux ~keep_calls ~hypotheses ~demonstration ())
 
@@ -228,7 +232,7 @@ Parser.formule lexbuf
       in
       printer_demonstration Format.std_formatter demonstration;
       Ok (Theorem { original_proof with demonstration = demonstration})
-    | Demonstration (([f_i],(Single f as step))::p)  when f = f_i-> 
+    | Demonstration (([f_i],(Single f as step))::p)  when f = f_i->
       if (verif_formula hypotheses proved f_i)
       then
         begin
@@ -240,20 +244,21 @@ Parser.formule lexbuf
           Logs.debug (fun m -> m "Not proved : %a" pp_formula f_i);
           Error ("Invalid demonstration", Invalid_demonstration {kind=KUnproved;name;params = []; premisses=hypotheses; conclusion=f_i; demonstration=List.rev (step::(snd @@ List.split proved))})
         end
-    | Demonstration ((l,(Call({theorem = Theorem theorem; params}) as step))::p)  
-      when (subst  ~vars:theorem.params ~terms:params theorem.conclusion) = List.(hd (rev l)) -> 
+    | Demonstration ((l,(Call({theorem = Theorem theorem; params}) as step))::p)
+      when (subst  ~vars:theorem.params ~terms:params theorem.conclusion) = List.(hd (rev l)) ->
       begin
-        match keep_calls with 
-        | Expand_Calls -> 
-          verif_prop ~keep_calls ~name ~hypotheses ~proved ~to_prove:(Demonstration ((List.map (function f -> ([f],Single f)) l) @ p)) ~original_proof
-        | Keep_Calls -> 
-         match   List.find_all (fun f -> not (verif_formula hypotheses proved (subst  ~vars:theorem.params ~terms:params f))) theorem.premisses
+        match keep_calls with
+        | Expand_Calls ->
+          verif_prop ~keep_calls ~name ~hypotheses ~proved
+            ~to_prove:(Demonstration ((List.map (function f -> ([f],Single f)) ((List.map (subst ~vars:theorem.params ~terms:params )theorem.premisses) @ l) @ p))) ~original_proof
+        | Keep_Calls ->
+         match   List.find_all (fun f -> not (verif_formula hypotheses proved (subst ~vars:theorem.params ~terms:params f))) theorem.premisses
          with
          | (_::_) as l-> Error ("Premisses of $" ^ theorem.name ^ "$ not verified", Premisses_not_verified (List.map (subst  ~vars:theorem.params ~terms:params) l))
-         | [] -> verif_prop ~keep_calls ~name ~hypotheses ~proved:(([(subst ~vars:theorem.params ~terms:params theorem.conclusion)],step) :: proved) ~to_prove:(Demonstration p) ~original_proof 
+         | [] -> verif_prop ~keep_calls ~name ~hypotheses ~proved:(([(subst ~vars:theorem.params ~terms:params theorem.conclusion)],step) :: proved) ~to_prove:(Demonstration p) ~original_proof
       end
-    | d -> 
-      begin 
+    | d ->
+      begin
         Format.fprintf Format.std_formatter "XYX Dem(%a)" printer_demonstration d;
         failwith "to implement (unknown shape of Demonstration)"
       end
@@ -267,8 +272,12 @@ Parser.formule lexbuf
       with
       | Single g when g = f -> true
       | Single _ -> failwith "Formula not at the end, but didn't check the notation reductions in single step."
-      | Call ({theorem = Theorem theorem; params}) when equiv_notation (Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)  f -> true 
-      | Call _ -> failwith "Formula not at the end, but didn't check the notation reductions in call."
+      | Call ({theorem = Theorem theorem; params}) when equiv_notation (Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion)  f -> true
+      | Call ({theorem = Theorem theorem; params}) ->
+        begin
+          Logs.debug (fun m -> m "[is_formula_at_end]formula =%a,last_demo = %a "pp_formula f pp_formula (Substitution.simultaneous_substitution_formula_prop ~vars:theorem.params ~terms:params theorem.conclusion));
+          failwith "Formula not at the end, but didn't check the notation reductions in call."
+        end
     with
     | Failure _ -> false
 
@@ -469,11 +478,13 @@ proof_verification ~hyp:[] (formula_from_string "X_1 \\lor \\lnot X_1")
     })::!theorems_prop;;
    *)
 
-
   let verif ~keep_calls theorem_unproved =
     if not (is_formula_at_end theorem_unproved.conclusion  theorem_unproved.demonstration)
     then
-      Error ("Formula is not at the end of the proof", Invalid_demonstration theorem_unproved)
+      begin
+        Logs.debug (fun m -> m "Conclusion :\n%a" pp_formula theorem_unproved.conclusion);
+        Error ("Formula is not at the end of the proof", Invalid_demonstration theorem_unproved)
+      end
     else
       kernel_prop_interp_verif ~keep_calls theorem_unproved
 
