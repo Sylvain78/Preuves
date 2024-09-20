@@ -71,8 +71,16 @@ let encode_command =
          encode_string name;
          encode_string ("\\("^conclusion^"\\)")]
       )
-    | User user -> 
+  | Axiom {name;formula}-> 
+    let b = Bytes.create 0
+    in
+    Bytes.concat b 
+      ([ encode_string "Axiom";
+         encode_string name;
+         encode_string ("\\(" ^ formula ^ "\\)")]
+      )
+  | User user -> 
     let b = Bytes.create 0
     in 
-      Bytes.concat b (List.map encode_string (["User"; user]))
-    | _ -> failwith "Command unknown"
+    Bytes.concat b (List.map encode_string (["User"; user]))
+  | _ -> failwith "Command unknown"
