@@ -1,0 +1,29 @@
+Axiom S1
+Param
+$\mathbf{A}$
+Conclusion
+$(\mathbf{A} \lor \mathbf{A}) => \mathbf{A}$
+
+Axiom S2 
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+Conclusion
+$\mathbf{A} => (\mathbf{A} \lor \mathbf{B})$
+
+Axiom S3 
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+Conclusion
+$(\mathbf{A} \lor \mathbf{B}) => (\mathbf{B} \lor \mathbf{A})$
+
+Axiom S4
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+$\mathbf{C}$
+Conclusion
+$(\mathbf{A} \implies \mathbf{B}) \implies ((\mathbf{C} \lor \mathbf{A}) \implies (\mathbf{C} \lor \mathbf{B}))$
+
+

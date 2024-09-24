@@ -1,0 +1,15 @@
+Theorem
+C12
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+Premisses
+Conclusion
+$(\mathbf{A} \implies \mathbf{B}) \implies ((\lnot \mathbf{B}) \implies (\lnot \mathbf{A}))$
+Demonstration
+C11 ( $\mathbf{B}$ )
+S4 ( $\mathbf{B}$ $\lnot \lnot \mathbf{B}$ $\lnot \mathbf{A}$ )
+C1 ( $\mathbf{B} \implies \lnot \lnot \mathbf{B}$   $(\lnot \mathbf{A} \lor \mathbf{B}) \implies ((\lnot \mathbf{A}) \lor \lnot \lnot \mathbf{B})$ )
+S3 ( $\lnot \mathbf{A}$ $\lnot \lnot \mathbf{B}$ )
+C6 ( $\lnot \mathbf{A} \lor \mathbf{B}$ $\lnot \mathbf{A} \lor \lnot \lnot \mathbf{B}$ $(\lnot \lnot \mathbf{B}) \lor \lnot \mathbf{A}$)
+End

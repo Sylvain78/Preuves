@@ -1,0 +1,14 @@
+Theorem
+C10
+Param
+$\mathbf{A}$
+Premisses
+Conclusion
+$(\mathbf{A} \lor \lnot \mathbf{A})$
+Demonstration
+C8 ( $\mathbf{A}$ )
+S3 ( $\lnot \mathbf{A}$ $\mathbf{A}$ )
+C1 ( $\lnot \mathbf{A} \lor \mathbf{A}$ $\mathbf{A} \lor \lnot \mathbf{A}$ )
+End
+
+

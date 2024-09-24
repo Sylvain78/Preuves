@@ -1,0 +1,10 @@
+Theorem
+C11
+Param
+$\mathbf{A}$
+Premisses
+Conclusion
+$\mathbf{A} \implies \lnot \lnot \mathbf{A}$
+Demonstration
+C10 ( $\lnot \mathbf{A}$ )
+End

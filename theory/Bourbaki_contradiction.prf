@@ -1,0 +1,15 @@
+Theorem
+Contradiction
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+Premisses
+$\mathbf{A}$
+$\lnot \mathbf{A}$
+Conclusion
+$\mathbf{B}$
+Demonstration
+S2 ( $\lnot \mathbf{A}$ $\mathbf{B}$ )
+C1 ($\lnot \mathbf{A}$ $(\lnot \mathbf{A}) \lor \mathbf{B}$ )
+C1 ( $\mathbf{A}$ $\mathbf{B}$ )
+End

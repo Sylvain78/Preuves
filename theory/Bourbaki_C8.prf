@@ -1,0 +1,12 @@
+Theorem
+C8
+Param
+$\mathbf{A}$
+Premisses
+Conclusion
+$\mathbf{A} \implies \mathbf{A}$
+Demonstration
+S2 ( $\mathbf{A}$ $\mathbf{A}$ )
+S1 ( $\mathbf{A}$ )
+C6 ( $\mathbf{A}$ $\mathbf{A} \lor \mathbf{A}$ $\mathbf{A}$ )
+End

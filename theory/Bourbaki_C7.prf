@@ -1,0 +1,13 @@
+Theorem
+C7
+Param
+$\mathbf{A}$
+$\mathbf{b}$
+Premisses
+Conclusion
+$\mathbf{B} \implies (\mathbf{A} \lor \mathbf{B})$
+Demonstration
+S2 ( $\mathbf{B}$ $\mathbf{A}$ )
+S3 ( $\mathbf{B}$ $\mathbf{A}$ )
+C6 ( $\mathbf{B}$ $\mathbf{B} \lor \mathbf{A}$ $\mathbf{A} \lor \mathbf{B}$ )
+End

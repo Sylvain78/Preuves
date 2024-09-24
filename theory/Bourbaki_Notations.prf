@@ -1,0 +1,10 @@
+Notation
+imply
+Param
+a b
+Syntax
+a "=>" b
+Semantics
+a "\implies" b
+End
+

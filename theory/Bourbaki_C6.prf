@@ -1,0 +1,21 @@
+#Invalidate
+#C1
+
+Theorem
+C6
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+$\mathbf{C}$
+Premisses
+$\mathbf{A} \implies \mathbf{B}$
+$\mathbf{B} \implies \mathbf{C}$
+Conclusion
+$\mathbf{A} \implies \mathbf{C}$
+Demonstration
+S4 ( $\mathbf{B}$ $\mathbf{C}$ $\lnot \mathbf{A}$ )
+C1 ( $\mathbf{B} \implies \mathbf{C}$ $(\mathbf{A} \implies \mathbf{B}) \implies (\mathbf{A} \implies \mathbf{C})$ )
+C1 ( $\mathbf{A} \implies \mathbf{B}$ $\mathbf{A} \implies \mathbf{C}$ )
+End
+
+

@@ -1,0 +1,20 @@
+Theorem
+C13
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+$\mathbf{C}$
+Premisses
+$\mathbf{A} \implies \mathbf{B}$
+Conclusion
+$(\mathbf{B} \implies \mathbf{C}) \implies (\mathbf{A} \implies \mathbf{C})$
+Demonstration
+C12 ( $\mathbf{A}$ $\mathbf{B}$ )
+C1 ( $\mathbf{A} \implies \mathbf{B}$ $(\lnot \mathbf{B}) \implies \lnot \mathbf{A}$ )
+S4 ( $\lnot \mathbf{B}$ $\lnot \mathbf{A}$ $\mathbf{C}$ )
+C1 ( $(\lnot \mathbf{B}) \implies \lnot \mathbf{A}$ $(\mathbf{C} \lor \lnot \mathbf{B}) \implies (\mathbf{C} \lor \lnot \mathbf{A})$  )
+S3 ( $(\lnot \mathbf{B}) \lor \mathbf{C}$ $\mathbf{C} \lor \lnot \mathbf{B}$ )
+C6 ( $(\lnot \mathbf{B}) \lor \mathbf{C}$ $\mathbf{C} \lor \lnot \mathbf{B}$ $\mathbf{C} \lor \lnot \mathbf{A}$ )
+S3 ( $\mathbf{C} \lor \lnot \mathbf{A}$  $(\lnot \mathbf{A}) \lor \mathbf{C}$ )
+C6 ( $(\lnot \mathbf{B}) \lor \mathbf{C}$ $\mathbf{C} \lor \lnot \mathbf{A}$ $(\lnot \mathbf{A}) \lor \mathbf{C}$ )
+End

@@ -1,0 +1,12 @@
+Theorem
+S2
+Param
+$\mathbf{A}$
+$\mathbf{B}$
+Premisses
+Conclusion
+$\mathbf{A} => (\mathbf{A} \lor \mathbf{B})$
+Demonstration
+$\mathbf{A} => (\mathbf{A} \lor \mathbf{B})$
+End
+
