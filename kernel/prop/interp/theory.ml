@@ -76,7 +76,7 @@ Parser.formule lexbuf
   type formula = formula_prop
   type notation = notation_prop
   type step = step_prop =
-      Single of formula
+    | Single of formula
     | Call of { theorem : theorem; params : formula list; }
   and demonstration = demonstration_prop = Demonstration of (formula list * step) list [@@unboxed]
   and theorem = theorem_prop = Theorem of (formula, demonstration) Kernel.Logic.theorem_logic [@@unboxed]
@@ -230,7 +230,7 @@ Parser.formule lexbuf
     | Demonstration [] ->
       let demonstration = Demonstration(List.rev proved)
       in
-      printer_demonstration Format.std_formatter demonstration;
+      (* printer_demonstration Format.std_formatter demonstration;*)
       Ok (Theorem { original_proof with demonstration = demonstration})
     | Demonstration (([f_i],(Single f as step))::p)  when f = f_i->
       if (verif_formula hypotheses proved f_i)
@@ -257,9 +257,8 @@ Parser.formule lexbuf
          | (_::_) as l-> Error ("Premisses of $" ^ theorem.name ^ "$ not verified", Premisses_not_verified (List.map (subst  ~vars:theorem.params ~terms:params) l))
          | [] -> verif_prop ~keep_calls ~name ~hypotheses ~proved:(([(subst ~vars:theorem.params ~terms:params theorem.conclusion)],step) :: proved) ~to_prove:(Demonstration p) ~original_proof
       end
-    | d ->
+    | _ ->
       begin
-        Format.fprintf Format.std_formatter "XYX Dem(%a)" printer_demonstration d;
         failwith "to implement (unknown shape of Demonstration)"
       end
 
