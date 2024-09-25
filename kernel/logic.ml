@@ -38,13 +38,13 @@ module type LOGIC = sig
   type formula
   type notation
   type demonstration
-  and  theorem = Theorem of (formula, demonstration) theorem_logic [@@unboxed]
-  and  step =
+  type theorem = Theorem of (formula, demonstration) theorem_logic [@@unboxed]
+  type step =
     | Single of formula
     | Call of
         {
           theorem : theorem;
-          params :  formula list
+          params : formula list
         }
   module Theorems : (THEOREMS with type t = theorem)
   (*

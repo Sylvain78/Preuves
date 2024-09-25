@@ -1,11 +1,5 @@
 (* open Protocol_commands*)
 
-let decode lexbuf  =
-  try Protocol_parser.phrase Protocol_lexer.token lexbuf
-  with 
-  | Failure s' -> failwith ("Protocol decode failure (" ^ s' ^ ")")
-  | Stdlib.Parsing.Parse_error -> failwith ("Protocol decode parse_error : " ^ Lexing.(lexeme lexbuf) ^"XXX")
-
 type output = Latex | Text
 type latex_output = LMath | LText
 
@@ -15,6 +9,12 @@ type answer =
   | Warning of string
   | Error of string
   | Quit
+
+let decode lexbuf  =
+  try Protocol_parser.phrase Protocol_lexer.token lexbuf
+  with
+  | Failure s' -> failwith ("Protocol decode failure (" ^ s' ^ ")")
+  | Stdlib.Parsing.Parse_error -> Unknown (Lexing.(lexeme lexbuf))
 
 let encode_answer = function
   | Ok c -> Bytes.(cat (of_string "Ok") (Protocol_commands.encode_command c))

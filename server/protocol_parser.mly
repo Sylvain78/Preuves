@@ -10,8 +10,6 @@ open Protocol_commands
 %token EXPAND_CALLS //expand calls with corresponding theorem's demonstration (substituted with calling params)
 %token INTERPRETED //Interpret line by line as string
 %token COMPILED //Compile demo to AST + list of strings
-%token FAST // accept instance of theorems
-%token PARANOID // substitute theorems proofs with local hypothesis, and insert result in gloabl demo
 %token NOTATION
 %token PARAM
 %token SYNTAX
@@ -41,7 +39,6 @@ open Protocol_commands
 %token<int> NUMBER
 %token<string> IDENT
 %token<string> QUOTED_STRING
-%token<string> STRING
 %token<string> FORMULA
 %start phrase
 %type<Protocol_commands.command> phrase
@@ -69,7 +66,10 @@ notation:
 axiom:
  AXIOM 
  IDENT 
- FORMULA { Axiom{name=$2 ; formula=$3} }
+ PARAM
+ formula_list
+ CONCLUSION
+ FORMULA { Axiom{name=$2 ; params=$4; formula=$6} }
 ;
 
 theorem:
@@ -117,6 +117,7 @@ formula_list :
 |  FORMULA formula_list { $1::$2 }
 | { [] }
 ;
+
 
 term_proof_list:
 | FORMULA term_proof_list { Step $1::$2 }

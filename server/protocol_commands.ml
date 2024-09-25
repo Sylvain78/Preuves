@@ -19,13 +19,14 @@ type command =
   | Load of Modes.ascii_mode * string
   | Notation of { name:string ; params: string list ; syntax : notation_element list ; semantics : notation_element list }
   | Theorem of {name:string ; params: string list; premisses: string list; conclusion : string ; demonstration : demonstration_step list; kind : Kernel.Logic.kind} 
-  | Axiom of {name:string; formula:string} 
+  | Axiom of {name:string; params: string list; formula:string}
   | Invalidate of string
   | History
   | Show of string
   | List of [`Axioms | `Theorems | `Files]
   | User of string
   | Quit
+  | Unknown of string
 
 let encode_string s =
   let l = String.length s
@@ -71,7 +72,7 @@ let encode_command =
          encode_string name;
          encode_string ("\\("^conclusion^"\\)")]
       )
-  | Axiom {name;formula}-> 
+  | Axiom {name;formula; _ }->
     let b = Bytes.create 0
     in
     Bytes.concat b 
