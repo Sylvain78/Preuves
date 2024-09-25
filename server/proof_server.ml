@@ -182,6 +182,7 @@ and eval command  out_channel =
     | Comment com ->
       Logs.info (fun m -> m "comment :%s" com);
       Protocol.Ok(command)
+    | Unknown s -> Protocol.Error s
     | Quit -> raise Exit
     | Verbose level ->
       session.mode.verbose_level <- level;
@@ -256,7 +257,7 @@ and eval command  out_channel =
           Protocol.Ok command
         | First_Order -> Protocol.Error "Notation first_order : unimplemented"
       end
-    | Axiom { name ; formula } ->
+    | Axiom { name; params; formula } ->
       if (session.mode.order = Session.Prop)
       then
         begin
@@ -269,7 +270,7 @@ and eval command  out_channel =
             begin
               Th.add_axiom (Theorem { kind=KAxiom;
                                       demonstration=Th.empty_demonstration;
-                                      params = [];
+                                      params = List.map Th.string_to_formula params;
                                       premisses = [];
                                       name = name;
                                       conclusion=Th.string_to_formula formula
@@ -306,7 +307,13 @@ and eval command  out_channel =
                        | Protocol_commands.Step s ->
                          Th.(Single (string_to_formula s))
                        | Protocol_commands.Call (th, params) ->
-                         let theorem = fst(Th.Theorems.find_by_name ~name:th)
+                         let theorem = 
+                           try
+                             fst(Th.Theorems.find_by_name ~name:th)
+                           with
+                           | Failure _ ->
+                             try List.find (function Th.Theorem {name; _} -> name = th) !Th.axioms
+                             with Not_found -> failwith ("Axiom/Theorem " ^ th ^ " not found")
                          in
                          Th.Call {theorem; params = List.map Th.string_to_formula params}
                      )
@@ -485,20 +492,8 @@ and repl in_channel out_channel =
   in
   while true
   do
-    let lexbuf_contents lb =
-      let open Lexing in
-      let pos = lb.lex_curr_pos in
-      let len = lb.lex_buffer_len - lb.lex_curr_pos in
-      (Bytes.to_string (Bytes.sub lb.lex_buffer pos len))
-    in
-    Format.print_string "#<lexbuf:<";
-    Format.print_string (lexbuf_contents lexbuf);
-    Format.print_string ">>";
-    Stdlib.(flush stdout);
-
     let command = decode lexbuf
     in
-    Logs.debug (fun m -> m "command read\n");
     let answer = eval command out_channel
     in
     if (!session_level = 0)
