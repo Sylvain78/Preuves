@@ -48,7 +48,7 @@ module First_order (Signature : SIGNATURE) : LOGIC with type formula := Formula_
     | Cut of cut 
     | Generalisation of generalisation
   let rules = [Cut cut; Generalisation generalisation]
-  let axiom f = f= L.of_string "v1"
+  let axiom (_:string) f = f= L.of_string "v1"
   let heuristic_proof ?(premisses = empty_family) formula = ignore (premisses,formula);None
   type demonstration
   let verification _ = false

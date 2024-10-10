@@ -1,0 +1,158 @@
+%mltop {
+type formula = Prop.Formula_Prop.formula (*=
+           | PVar of int 
+           | PNeg of formula
+	   | PAnd of formula  * formula
+           | POr of formula * formula
+           | PImpl of formula * formula*)
+           (*| PApply_notation of  apply_notation*)
+
+}
+
+{ 
+type (*formula = [ PAnd of formula  * formula
+           | PApply_notation of  apply_notation
+           | PImpl of formula * formula
+           | PNeg of formula
+           | POr of formula * formula
+           | PVar of int ]
+and*) apply_notation =
+    {
+      apply_notation : notation;
+      apply_notation_params : formula list; (*SKE TODO create database of notations*)
+    }
+  and notation =
+    {
+      notation_name : string;
+      notation_params : notation_element list;
+      notation_notation : notation_element list;
+      notation_semantique : notation_element list;
+    }  
+  and  notation_element = Param of string | String of string
+
+type phrase = 
+  | F of formula
+  | N of notation
+
+let parser = ref None
+let rec notation_elements_to_regexp = function
+  | [] -> []
+  | Param _ ::l -> (Dyp.Non_ter("formula1", Dyp.No_priority)) :: notation_elements_to_regexp l
+  | String s ::l -> Dyp.Regexp(Dyp.RE_String s) :: notation_elements_to_regexp l
+
+let string_without_quote s = ( String.sub s 1 (String.length s - 2))
+}
+
+%start phrase
+%layout [' ' '\t' '\n']
+
+%lexer
+
+let lowercase = ['a'-'z']
+let uppercase = ['A'-'Z']
+let digit = ['0'-'9']
+let ident = (lowercase|uppercase)(lowercase|uppercase|digit)*
+let any_string = '"' (['\000'-'\033'] | ['\035'-'\255'])* '"'
+
+%parser
+
+phrase :
+     | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.Dyp.pp_dev] } formula { F $2 }
+     | ...@{(),match !parser with | None -> [] | Some pp -> [Dyp.Parser pp.Dyp.pp_dev] } notation { N $2 } 
+
+formula :
+     | formula1 eof { $1 }
+
+notation :
+     | notation1 eof { $1 }
+
+formula1:
+    | "X_" ['0'-'9']+  { (PVar (int_of_string $2): formula) }
+    | "X_{" ['0'-'9']+ "}" { (PVar (int_of_string $2): formula) }
+    /*| "\\mathbf{" ['a'-'z''A'-'Z']+ "}" { (PMetaVar ($2): formula)  }*/
+    | "(" formula1 ")" { $2 }
+    | "\\lnot" formula1 { (PNeg($2): formula)  }
+    | formula1 "\\implies" formula1 { (PImpl($1,$3): formula)  }
+    | formula1 "\\land" formula1 { (PAnd($1,$3): formula)  }
+    | formula1 "\\lor" formula1 { (POr($1,$3): formula)  }
+
+/*SKE Example of notation
+"
+Notation
+equiv
+Param
+a b
+Syntax
+a "\equiv" b
+Semantics
+"(" a "\imply" b ")/\\(" b "\imply" a ")"
+End
+"
+*/
+
+notation1:
+    | "Notation" '\n' ['a'-'z']+ '\n'
+    "Param" '\n' param_list '\n'
+    "Syntax" '\n' syntax '\n' /*Extract params list*/
+    "Semantics" '\n' semantique '\n'
+    "End" ...@{ 
+        let notation =
+            {
+               notation_name = $3;
+               notation_params = $7;
+               notation_notation = $11;
+               notation_semantique = $15;
+            }
+        in
+        (*let rule       = ("formula1", notation_elements_to_regexp $11, "default_priority",[])
+        and action _ l = Obj_formula1 (PApply_notation({apply_notation = notation;
+						    apply_notation_params = List.filter_map  (function Obj_formula1 e -> Some e | _ -> None) l
+						   })),
+			 []
+        in*)
+        notation,
+        (*[ Dyp.Add_rules [(rule,action)] ; Dyp.Keep_grammar]
+        *) []}
+
+	{parser := Some dyp.Dyp.parser_pilot; $18}
+
+param_list:
+    | param* { $1 }
+param:
+    | ident { Param $1 }
+semantique:
+    |  syntax  { $1 }
+term_syntax:
+    | ident { Param $1 }
+    | any_string { String (string_without_quote $1) }
+syntax:
+    | term_syntax+  { $1 }
+
+%%
+{
+let formula_from_string s = 
+  let pp = match !parser with
+        | None -> let pp = pp() in parser := Some pp; pp
+        | Some p -> p
+      in
+  let lexbuf = Dyp.from_string pp s
+  in
+  match phrase lexbuf
+  with 
+  |  [ (F f,_) ] -> f
+  | _ -> failwith "formula : multiple interpretations"
+;;
+Prop.Formula_Prop.parser := Some formula_from_string
+;;
+let notation_from_string s = 
+  let pp = match !parser with
+        | None -> let pp = pp() in parser := Some pp; pp
+        | Some p -> p
+  in
+  let lexbuf = Dyp.from_string pp s
+  in
+  match phrase lexbuf
+  with 
+  | [ (N n,_) ] -> n
+  | _ -> failwith "notation : multiple interpretations"
+}

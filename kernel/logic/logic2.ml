@@ -36,7 +36,7 @@ module type LOGIC = sig
   type rule 
   val rules : rule list
   (* axiom can be explicit or implicit*)
-  val axiom : formula family
+  val axiom : string -> (formula family)
 
   val heuristic_proof :
     ?premisses:formula family -> formula -> demonstration option
