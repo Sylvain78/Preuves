@@ -7,15 +7,9 @@ module Formula_Prop :
       | PAnd of formula * formula
       | POr of formula * formula
       | PImpl of formula * formula
-    val parser : (string -> formula) option ref
     val of_string : (string -> formula)
     val to_string : (formula -> string)
-    val c1 : formula -> int
-    val a : formula
-    val b : formula
-    val c : formula
-    val d : formula
-  end
+     end
 module Prop :
   sig
     val name : string

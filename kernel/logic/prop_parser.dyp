@@ -1,5 +1,5 @@
 %mltop {
-type formula = Prop.Formula_Prop.formula (*=
+type formula = PFormula.formula (*=
            | PVar of int 
            | PNeg of formula
 	   | PAnd of formula  * formula
@@ -10,6 +10,7 @@ type formula = Prop.Formula_Prop.formula (*=
 }
 
 { 
+
 type (*formula = [ PAnd of formula  * formula
            | PApply_notation of  apply_notation
            | PImpl of formula * formula
@@ -141,9 +142,7 @@ let formula_from_string s =
   with 
   |  [ (F f,_) ] -> f
   | _ -> failwith "formula : multiple interpretations"
-;;
-Prop.Formula_Prop.parser := Some formula_from_string
-;;
+
 let notation_from_string s = 
   let pp = match !parser with
         | None -> let pp = pp() in parser := Some pp; pp

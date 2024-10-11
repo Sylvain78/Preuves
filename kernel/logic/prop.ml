@@ -2,29 +2,15 @@ open Logic2
 
 module Formula_Prop = struct
   let name = "\\mathfrak{L}_\\bullet"
-
-  type formula =
+  type formula = PFormula.formula = 
     | PVar of int
     | PNeg of formula
     | PAnd of formula * formula
     | POr of formula * formula
     | PImpl of formula * formula
-
-  let parser = ref None
-  let of_string s =  
-    match !parser with
-    | Some (parser:string -> formula) -> parser s
-    | None -> failwith "Prop parser absent"
-
+  let of_string  = Prop_parser.formula_from_string
   let to_string _ = ""
-  let c1 = function PVar _ | PAnd _ | POr _ | PImpl _ | _ -> 0
-  let a = PVar 0
-  let b = PAnd (a, a)
-  let c = POr (b, b)
-  let d = PImpl (c, c);;
-
-  ignore (d, c1)
-end
+ end
 
 module Prop : LOGIC with type formula = Formula_Prop.formula = struct
   let name = "Prop"
