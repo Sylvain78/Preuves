@@ -29,8 +29,19 @@ module Prop : LOGIC with type formula = Formula_Prop.formula = struct
   (*TODO regle coupure*)
   let a1 = L.(PImpl(PVar 1, PImpl (PVar 2, PVar 1)))(*L.of_string "X_1 \\implies (X_2 \\implies X_1)"*)
   let a2 = L.(PImpl(PImpl(PVar 1,PImpl(PVar 2, PVar 3)),PImpl(PImpl(PVar 1, PVar 2),PImpl(PVar 1,PVar 3))))(*L.of_string "(X_1 \\implies (X_2 \\implies X_3)) \\implies ((X_1 \\implies X_2) \\implies (X_1 \\implies X_3))"*)
-  let axiom (_:string)  = function f -> List.mem f [a1 ; a2]
-
+  let axiomes = ["A_1"; "A_2" ; "A_3"; "A_4"; "A_5"; "A_6; ""A_7"; "A_8"; "A_9" ]
+  let axiom (axiom:string) f =
+    match axiom with 
+    | "A_1" -> is_instance f a1
+    | "A_2" -> is_instance f a2
+    | "A_3" -> is_instance f a3
+    | "A_4" -> is_instance f a4
+    | "A_5" -> is_instance f a5
+    | "A_6" -> is_instance f a6
+    | "A_7" -> is_instance f a7
+    | "A_8" -> is_instance f a8
+    | "A_9" -> is_instance f a9
+    | _ -> false
   let heuristic_proof ?(premisses = empty_family) formula =
     ignore (premisses, formula);
     None
