@@ -137,7 +137,7 @@ let axiome_separation =
    groupe_variables_neutres = c;
    variables_libres_utilisees_predicat = [x];
    formula =  (FForall(a, FForall(c, FExists(b, FForall(x, equiv ((TV x) &= (TV b))
-                                                      (FAnd ((TV x) &= (TV a), fx)))))))
+                                                          (FAnd ((TV x) &= (TV a), fx)))))))
   }
 
 let axiome_remplacement =
@@ -150,21 +150,21 @@ let axiome_remplacement =
      let fxy,fxz=FAtomic_formula(Relation(f,[TV x;TV y;TV c])),FAtomic_formula(Relation(f,[TV x;TV z;TV c]))
      in
      FForall(a,FForall(c,((FForall(x,FForall(y,FForall(z,
-                                                  FImply(FImply(FAnd(fxy, fxz), FAtomic_formula(Eq(TV y, TV z)))
-                                                        ,
-                                                        FExists(b,FForall(y,(
-                                                            FImply(
-                                                              FExists(x, FImply((TV x) &= (TV a) , fxy))
+                                                       FImply(FImply(FAnd(fxy, fxz), FAtomic_formula(Eq(TV y, TV z)))
                                                               ,
-                                                              ((TV y) &= (TV b)))))))
-                                                 )))))))
+                                                              FExists(b,FForall(y,(
+                                                                  FImply(
+                                                                    FExists(x, FAnd((TV x) &= (TV a) , fxy))
+                                                                    ,
+                                                                    ((TV y) &= (TV b)))))))
+                                                      )))))))
   }
 
 let test_dehornoy test_ctxt =
   let sepf1 = FForall(a, FExists(b, FForall(x, (equiv ((TV x) &= (TV b)) (FAnd((TV x) &= (TV a), (TV x) &= (TV x)) )))))
   and sepf2 = FForall(a, FForall(c, FExists(b, FForall(x, (equiv ((TV x) &= (TV b)) (FAnd((TV x) &= (TV a), FNeg ((TV x) &= (TV c))) ))))))
   and sepf3 = FForall(a, FExists(b, FForall(x, (equiv ((TV x) &= (TV b)) 
-                                               (FAnd((TV x) &= (TV a), FExists(y, FImply ((TV y) &= (TV x), (TV x) &= (TV y)))))))))
+                                                  (FAnd((TV x) &= (TV a), FExists(y, FImply ((TV y) &= (TV x), (TV x) &= (TV y)))))))))
   in
   assert_equal ~printer:printer sepf1 (apply_schema ~schema:axiome_separation ~predicat:((TV x) &= (TV x)));
   assert_equal ~printer:printer sepf2 (apply_schema ~schema:axiome_separation ~predicat:(FNeg ((TV x) &= (TV c))));
