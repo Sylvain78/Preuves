@@ -65,8 +65,30 @@ type 'th terme = Terme of assemblage * 'th  (*constraint 'th = #theorie, but mut
 type 'th bien_forme = (*constraint 'th = #theorie, but mutually recursive type and class type are forbidden*)
         | T of 'th terme 
         | R of 'th relation
+type 'th construction_formative = 'th bien_forme list
 type 'th axiome = Axiome of { nom : string ; axiome : 'th relation }
-type 'th axiome_implicite = Axiome_implicite of {nom : string ; regle : ('th bien_forme list) -> 'th relation} (*constraint 'th = #theorie, but mutually recursive type and class type are forbidden*)
+type 'th axiome_implicite = Axiome_implicite of {nom : string ; params : 'th bien_forme list ; regle : ('th bien_forme list) -> 'th relation} (*constraint 'th = #theorie, but mutually recursive type and class type are forbidden*)
+let rec is_instance (Axiome_implicite schema:'th axiome_implicite) (construction_formative: 'th construction_formative)  (relation :'th relation) aux =
+        match schema.params with 
+        | [] -> 
+                if relation = schema.regle [] 
+                then []
+                else raise Not_found
+        | param :: tail_params ->
+                let f' = 
+                        List.find (function f ->  
+                                try
+                                        ignore @@ is_instance (Axiome_implicite {schema with params = tail_params; regle = (fun lf -> schema.regle (f::lf) )}) construction_formative relation (f::aux);
+                                        true
+                                with 
+                                | _ -> false)
+
+                                  (*TODO filtrer les lettres en sus*)
+                                  (List.filter (function f1 -> match (f1,param) with (T _ , T _) -> true | (R _, R _) -> true | _ -> false) construction_formative)
+                in 
+                f'::aux
+
+
 type 'th demonstration = Demonstration of ('th relation * 'th relation list) (*constraint 'th = #theorie, but mutually recursive type and class type are forbidden*)
 class ['th] theorie signes (axiomes_explicites : 'th axiome list) (axiomes_implicites : 'th axiome_implicite list)=
 object(self : 'th)
@@ -75,12 +97,21 @@ object(self : 'th)
   method constantes = 
           let set = LettreSet.empty in
           List.fold_left collecte_lettres set (List.map (function Axiome { axiome=Relation(assemblage,_); _ } -> assemblage.assemblage) axiomes_explicites)
-  method verifie_theoreme  = function 
-                | Demonstration(r, (Relation(a, t))::l) when t = self  -> List.mem a (List.map (function Axiome { axiome=Relation(assemblage,_); _ } -> assemblage) axiomes_explicites)
+        method verifie_theoreme construction_formative  = function 
+                | Demonstration(r, (Relation(a, t))::l) when t = self  -> 
+                                List.mem a (List.map (function Axiome { axiome=Relation(assemblage,_); _ } -> assemblage) axiomes_explicites)
+                             || 
+                             (try 
+                                ignore @@ List.find (function schema -> 
+                                        try 
+                                                ignore @@ is_instance schema construction_formative (Relation(a,t)) []; 
+                                                true
+                                        with _ -> false) axiomes_implicites ; true 
+                             with _ -> false)
                 | _ -> false
 end
 
-                   
+
 
 class logique  = 
 object(self : 'logique)
