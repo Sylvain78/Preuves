@@ -4,6 +4,6 @@
 
 (library 
  (name kernel_prop_compile)
- (instrumentation (backend bisect_ppx))
+ (instrumentation (backend bisect_ppx_ng))
   (modules (:standard))
  (libraries logs fmt fmt.tty utilities kernel_prop_interp))

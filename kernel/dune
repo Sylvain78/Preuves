@@ -4,5 +4,5 @@
 
 (library 
   (name kernel)
-  (instrumentation (backend bisect_ppx))
+  (instrumentation (backend bisect_ppx_ng))
   (modules (:standard)))
