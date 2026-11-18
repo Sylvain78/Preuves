@@ -9,7 +9,7 @@ type signe += Tau of int
 type signe += Ou
 type signe += Non
 type signe += Lettre of lettre
-type signe += Specifique of lettre
+type signe += Specifique of string * int
 
 type assemblage = signe list
 
@@ -37,7 +37,7 @@ let concat_assemblage (a:assemblage) (b:assemblage) : assemblage =
     ) 
       b)
 
-let tau_ (x:lettre) (ass:assemblage) : assemblage =
+let tau (x:lettre) (ass:assemblage) : assemblage =
   let n = max_tau ass
   in
   Tau (n+1) :: (List.map (function 
